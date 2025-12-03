@@ -160,14 +160,17 @@
             Electricity
           </a>
           <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
-            <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="message-square" class="w-4.5 h-4.5"></i></span>
-            Discussions
+            <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="hammer" class="w-4.5 h-4.5"></i></span>
+            Roads &amp; Infra
           </a>
           <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
             <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="help-circle" class="w-4.5 h-4.5"></i></span>
             Help Center
           </a>
-          
+          <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
+            <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="message-square" class="w-4.5 h-4.5"></i></span>
+            Discussions
+          </a>
 
           <div class="pt-8">
             <h3 class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">My Account</h3>
@@ -192,9 +195,31 @@
             <input type="text" placeholder="Filter requests..." class="w-full pl-9 pr-4 py-1.5 text-sm outline-none text-slate-700 placeholder:text-slate-400" />
           </div>
           <div class="flex items-center gap-2 border-l border-slate-200 pl-2">
-            <button class="flex items-center gap-1 text-xs font-medium text-slate-600 hover:bg-slate-50 px-3 py-1.5 rounded border border-slate-200">
-              Sort <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
-            </button>
+            <div class="relative">
+              <button id="sortBtn" class="flex items-center gap-1 text-xs font-medium text-slate-600 hover:bg-slate-50 px-3 py-1.5 rounded border border-slate-200">
+                Sort <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+              </button>
+              <!-- Sort Dropdown -->
+              <div id="sortDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+                <button class="sort-option w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-between" data-sort="newest">
+                  <span>Newest</span>
+                  <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+                </button>
+                <button class="sort-option w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-between" data-sort="oldest">
+                  <span>Oldest</span>
+                  <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+                </button>
+                <div class="border-t border-slate-100 my-1"></div>
+                <button class="sort-option w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-between" data-sort="water">
+                  <span>Water Supply</span>
+                  <i data-lucide="droplets" class="w-3.5 h-3.5 text-blue-500"></i>
+                </button>
+                <button class="sort-option w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-between" data-sort="electricity">
+                  <span>Electricity</span>
+                  <i data-lucide="zap" class="w-3.5 h-3.5 text-yellow-500"></i>
+                </button>
+              </div>
+            </div>
             <button class="flex items-center gap-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded shadow-sm transition-colors">
               <i data-lucide="plus" class="w-3.5 h-3.5"></i> New Discussion
             </button>

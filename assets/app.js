@@ -41,4 +41,47 @@
       });
     });
   }
+
+  // Sort Dropdown functionality
+  const sortBtn = document.getElementById('sortBtn');
+  const sortDropdown = document.getElementById('sortDropdown');
+
+  if (sortBtn && sortDropdown) {
+    // Toggle dropdown on button click
+    sortBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sortDropdown.classList.toggle('hidden');
+      lucide.createIcons();
+    });
+
+    // Handle sort option clicks
+    sortDropdown.querySelectorAll('.sort-option').forEach(option => {
+      option.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const sortType = option.dataset.sort;
+        const sortText = option.querySelector('span').textContent;
+        
+        // Update button text to show selected sort
+        const btnText = sortBtn.childNodes[0];
+        btnText.textContent = sortText + ' ';
+        
+        // Close dropdown
+        sortDropdown.classList.add('hidden');
+        
+        // Here you would implement actual sorting logic
+        console.log('Sorting by:', sortType);
+        
+        // Visual feedback - highlight selected option
+        sortDropdown.querySelectorAll('.sort-option').forEach(opt => {
+          opt.classList.remove('bg-blue-50', 'text-blue-700');
+        });
+        option.classList.add('bg-blue-50', 'text-blue-700');
+      });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      sortDropdown.classList.add('hidden');
+    });
+  }
 })();
