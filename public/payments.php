@@ -40,10 +40,10 @@
         
         <!-- Navigation Breadcrumb -->
         <div class="flex items-center gap-2 mb-6">
-            <button class="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors text-sm font-medium" id="backBtn">
+            <a href="user-dashboard.php" class="flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors text-sm font-medium">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 Back to Dashboard
-            </button>
+            </a>
             <span class="text-slate-300">/</span>
             <span class="text-slate-800 font-semibold text-sm">Payments & Billing</span>
         </div>

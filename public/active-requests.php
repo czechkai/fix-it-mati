@@ -45,13 +45,13 @@
             
             <!-- Breadcrumb / Back Navigation -->
             <div class="breadcrumb">
-                <button class="back-btn" id="backBtn">
+                <a href="user-dashboard.php" class="back-btn">
                     <svg class="icon icon-sm" viewBox="0 0 24 24">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
                     Back to Dashboard
-                </button>
+                </a>
                 <span class="breadcrumb-separator">/</span>
                 <span class="breadcrumb-current">Active Requests</span>
             </div>

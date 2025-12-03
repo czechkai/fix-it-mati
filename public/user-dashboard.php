@@ -84,7 +84,7 @@
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- HERO CARDS -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group">
+      <a href="active-requests.php" class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
           <i data-lucide="clock" class="w-16 h-16"></i>
         </div>
@@ -96,9 +96,9 @@
           <div class="text-2xl font-bold mb-1">2</div>
           <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">In Progress</div>
         </div>
-      </div>
+      </a>
 
-      <div class="bg-gradient-to-br from-sky-400 to-blue-500 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group">
+      <a href="payments.php" class="bg-gradient-to-br from-sky-400 to-blue-500 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
           <i data-lucide="credit-card" class="w-16 h-16"></i>
         </div>
@@ -110,9 +110,9 @@
           <div class="text-2xl font-bold mb-1">₱1,250.00</div>
           <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">Due: Oct 25, 2023</div>
         </div>
-      </div>
+      </a>
 
-      <div class="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group">
+      <a href="announcements.php" class="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
           <i data-lucide="megaphone" class="w-16 h-16"></i>
         </div>
@@ -124,7 +124,7 @@
           <div class="text-2xl font-bold mb-1">1 New</div>
           <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">Water interruption</div>
         </div>
-      </div>
+      </a>
 
       <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
