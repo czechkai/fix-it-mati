@@ -160,17 +160,14 @@
             Electricity
           </a>
           <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
-            <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="hammer" class="w-4.5 h-4.5"></i></span>
-            Roads &amp; Infra
+            <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="message-square" class="w-4.5 h-4.5"></i></span>
+            Discussions
           </a>
           <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
             <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="help-circle" class="w-4.5 h-4.5"></i></span>
             Help Center
           </a>
-          <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
-            <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="message-square" class="w-4.5 h-4.5"></i></span>
-            Discussions
-          </a>
+          
 
           <div class="pt-8">
             <h3 class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">My Account</h3>
