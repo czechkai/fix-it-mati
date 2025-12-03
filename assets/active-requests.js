@@ -170,12 +170,6 @@ function attachEventListeners() {
         }
     });
     
-    // Back button
-    document.getElementById('backBtn').addEventListener('click', function() {
-        // Navigate back to dashboard
-        alert('Navigate back to dashboard');
-    });
-    
     // Menu button (mobile)
     document.getElementById('menuBtn').addEventListener('click', function() {
         // Toggle mobile menu

@@ -146,15 +146,6 @@ function renderTransactionHistory() {
 
 // Attach event listeners
 function attachEventListeners() {
-    // Back button
-    const backBtn = document.getElementById('backBtn');
-    if (backBtn) {
-        backBtn.addEventListener('click', function() {
-            alert('Navigate back to dashboard');
-            // In a real app: window.location.href = 'index.php';
-        });
-    }
-    
     // Notification button
     const notificationBtn = document.getElementById('notificationBtn');
     if (notificationBtn) {
