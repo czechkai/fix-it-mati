@@ -200,6 +200,13 @@
         </div>
     </div>
 
+    <script src="../assets/api-client.js"></script>
     <script src="../assets/active-requests.js"></script>
+    <script>
+        // Initialize the page after DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+        });
+    </script>
 </body>
 </html>

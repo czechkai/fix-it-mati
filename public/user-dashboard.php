@@ -418,13 +418,139 @@
     </div>
   </div>
 
+  <!-- API Client -->
+  <script src="../assets/api-client.js"></script>
   <!-- App JS -->
   <script src="../assets/app.js"></script>
   <script>
     // Initialize Lucide icons after DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
+      
+      // Load dashboard data from API
+      loadDashboardData();
     });
+
+    async function loadDashboardData() {
+      try {
+        // Load request statistics
+        const stats = await RequestsAPI.getStatistics();
+        
+        // Update hero cards with real data
+        updateHeroCards(stats);
+        
+        // Load recent requests
+        const requests = await RequestsAPI.getAll({ limit: 3, sort: 'newest' });
+        updateRecentRequests(requests);
+        
+        // Load notifications count
+        const notificationCount = await NotificationsAPI.getUnreadCount();
+        updateNotificationBadge(notificationCount.count);
+        
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        // Continue with mock data if API fails
+      }
+    }
+
+    function updateHeroCards(stats) {
+      // Update Active Requests card
+      const activeCount = document.querySelector('[href="active-requests.php"] .text-2xl');
+      if (activeCount && stats.active !== undefined) {
+        activeCount.textContent = stats.active;
+      }
+
+      // Update Total Amount Due (mock for now - would come from billing API)
+      // Total Amount Due card already has mock data
+
+      // Update Resolved Issues card
+      const resolvedCount = document.querySelectorAll('.text-2xl')[3];
+      if (resolvedCount && stats.resolved !== undefined) {
+        resolvedCount.textContent = stats.resolved;
+      }
+    }
+
+    function updateRecentRequests(requests) {
+      if (!requests || !requests.data) return;
+
+      const requestsContainer = document.querySelector('.bg-white.border.border-slate-200.rounded-lg.shadow-sm.divide-y');
+      if (!requestsContainer) return;
+
+      // Keep the header
+      const header = requestsContainer.querySelector('.px-4.py-3.bg-slate-50\\/50');
+      
+      // Clear existing items except header
+      const items = requestsContainer.querySelectorAll('.p-4.hover\\:bg-slate-50');
+      items.forEach(item => item.remove());
+
+      // Add new items from API
+      requests.data.slice(0, 3).forEach(req => {
+        const item = createRequestItem(req);
+        requestsContainer.insertBefore(item, requestsContainer.querySelector('.p-3.text-center'));
+      });
+
+      lucide.createIcons();
+    }
+
+    function createRequestItem(request) {
+      const item = document.createElement('div');
+      item.className = 'p-4 hover:bg-slate-50 transition-colors group cursor-pointer';
+      
+      const statusColors = {
+        pending: 'text-slate-500',
+        'in-progress': 'text-amber-600',
+        completed: 'text-green-600',
+        cancelled: 'text-red-600'
+      };
+      
+      const categoryIcons = {
+        'water': 'droplets',
+        'electricity': 'zap',
+        'roads': 'hammer',
+        'waste': 'trash-2'
+      };
+
+      const icon = categoryIcons[request.category?.toLowerCase()] || 'file-text';
+      const statusColor = statusColors[request.status?.toLowerCase()] || 'text-slate-500';
+      const statusText = request.status?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Pending';
+
+      item.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="mt-1 flex-shrink-0">
+            <i data-lucide="${icon}" class="w-4 h-4 text-blue-500"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <h4 class="text-base font-medium text-slate-900 group-hover:text-blue-600 transition-colors truncate">${request.title || 'Untitled Request'}</h4>
+              ${request.priority === 'high' ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Pinned</span>' : ''}
+            </div>
+            <div class="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500">
+              <span class="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">#${request.id}</span>
+              <span class="font-medium ${statusColor}">${statusText}</span>
+              <span>Opened on ${UIHelpers.formatDate(request.created_at || new Date())}</span>
+              <span class="hidden sm:inline">&bull;</span>
+              <span class="flex items-center gap-1 text-slate-400 group-hover:text-blue-500"><i data-lucide="message-square" class="w-3 h-3"></i> 0</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Add click handler to view details
+      item.addEventListener('click', () => {
+        window.location.href = `active-requests.php?id=${request.id}`;
+      });
+
+      return item;
+    }
+
+    function updateNotificationBadge(count) {
+      const badge = document.querySelector('.notification-btn .absolute');
+      if (badge && count > 0) {
+        badge.classList.remove('hidden');
+      } else if (badge) {
+        badge.classList.add('hidden');
+      }
+    }
   </script>
 </body>
 </html>

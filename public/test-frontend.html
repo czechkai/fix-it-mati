@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend API Integration Test - FixItMati</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-slate-800 mb-6">Frontend API Integration Test</h1>
+        
+        <div class="space-y-6">
+            <!-- Test 1: API Client Loaded -->
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+                <h2 class="text-xl font-semibold text-slate-700 mb-3">1. API Client Status</h2>
+                <div id="test1Result" class="text-sm"></div>
+            </div>
+
+            <!-- Test 2: Request Statistics -->
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+                <h2 class="text-xl font-semibold text-slate-700 mb-3">2. Request Statistics API</h2>
+                <button onclick="testRequestStats()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-3">
+                    Test GET /api/requests/statistics
+                </button>
+                <div id="test2Result" class="text-sm"></div>
+            </div>
+
+            <!-- Test 3: Get All Requests -->
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+                <h2 class="text-xl font-semibold text-slate-700 mb-3">3. Get All Requests</h2>
+                <button onclick="testGetRequests()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-3">
+                    Test GET /api/requests
+                </button>
+                <div id="test3Result" class="text-sm"></div>
+            </div>
+
+            <!-- Test 4: Payment Gateways -->
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+                <h2 class="text-xl font-semibold text-slate-700 mb-3">4. Payment Gateways API</h2>
+                <button onclick="testPaymentGateways()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-3">
+                    Test GET /api/payments/gateways
+                </button>
+                <div id="test4Result" class="text-sm"></div>
+            </div>
+
+            <!-- Test 5: Create Request (Mock) -->
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+                <h2 class="text-xl font-semibold text-slate-700 mb-3">5. Create Service Request</h2>
+                <button onclick="testCreateRequest()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-3">
+                    Test POST /api/requests
+                </button>
+                <div id="test5Result" class="text-sm"></div>
+            </div>
+
+            <!-- Test 6: Process Payment (Mock) -->
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+                <h2 class="text-xl font-semibold text-slate-700 mb-3">6. Process Payment</h2>
+                <button onclick="testProcessPayment()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-3">
+                    Test POST /api/payments/process
+                </button>
+                <div id="test6Result" class="text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/api-client.js"></script>
+    <script>
+        // Test 1: Check if API Client is loaded
+        function checkAPIClient() {
+            const result = document.getElementById('test1Result');
+            
+            if (typeof ApiClient !== 'undefined' && 
+                typeof RequestsAPI !== 'undefined' && 
+                typeof PaymentsAPI !== 'undefined' && 
+                typeof NotificationsAPI !== 'undefined') {
+                result.innerHTML = '<span class="text-green-600 font-semibold">✓ PASS:</span> All API modules loaded successfully';
+            } else {
+                result.innerHTML = '<span class="text-red-600 font-semibold">✗ FAIL:</span> API Client not loaded properly';
+            }
+        }
+
+        // Test 2: Request Statistics
+        async function testRequestStats() {
+            const result = document.getElementById('test2Result');
+            result.innerHTML = '<span class="text-blue-600">⟳ Loading...</span>';
+            
+            try {
+                const stats = await RequestsAPI.getStatistics();
+                result.innerHTML = `
+                    <span class="text-green-600 font-semibold">✓ SUCCESS:</span>
+                    <pre class="mt-2 p-3 bg-slate-50 rounded text-xs overflow-auto">${JSON.stringify(stats, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <span class="text-red-600 font-semibold">✗ ERROR:</span> ${error.message}
+                    <pre class="mt-2 p-3 bg-red-50 rounded text-xs">${error.stack || 'No stack trace'}</pre>
+                `;
+            }
+        }
+
+        // Test 3: Get All Requests
+        async function testGetRequests() {
+            const result = document.getElementById('test3Result');
+            result.innerHTML = '<span class="text-blue-600">⟳ Loading...</span>';
+            
+            try {
+                const requests = await RequestsAPI.getAll({ limit: 5 });
+                result.innerHTML = `
+                    <span class="text-green-600 font-semibold">✓ SUCCESS:</span> Found ${requests.data ? requests.data.length : 0} requests
+                    <pre class="mt-2 p-3 bg-slate-50 rounded text-xs overflow-auto max-h-64">${JSON.stringify(requests, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <span class="text-red-600 font-semibold">✗ ERROR:</span> ${error.message}
+                    <pre class="mt-2 p-3 bg-red-50 rounded text-xs">${error.stack || 'No stack trace'}</pre>
+                `;
+            }
+        }
+
+        // Test 4: Payment Gateways
+        async function testPaymentGateways() {
+            const result = document.getElementById('test4Result');
+            result.innerHTML = '<span class="text-blue-600">⟳ Loading...</span>';
+            
+            try {
+                const gateways = await PaymentsAPI.getGateways();
+                result.innerHTML = `
+                    <span class="text-green-600 font-semibold">✓ SUCCESS:</span> Found ${gateways.gateways ? gateways.gateways.length : 0} gateways
+                    <pre class="mt-2 p-3 bg-slate-50 rounded text-xs overflow-auto">${JSON.stringify(gateways, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <span class="text-red-600 font-semibold">✗ ERROR:</span> ${error.message}
+                    <pre class="mt-2 p-3 bg-red-50 rounded text-xs">${error.stack || 'No stack trace'}</pre>
+                `;
+            }
+        }
+
+        // Test 5: Create Request
+        async function testCreateRequest() {
+            const result = document.getElementById('test5Result');
+            result.innerHTML = '<span class="text-blue-600">⟳ Creating...</span>';
+            
+            try {
+                const newRequest = await RequestsAPI.create({
+                    title: 'Test Request from Frontend',
+                    description: 'Testing frontend API integration',
+                    category: 'water',
+                    priority: 'medium',
+                    location: 'Test Location',
+                    user_id: 1
+                });
+                result.innerHTML = `
+                    <span class="text-green-600 font-semibold">✓ SUCCESS:</span> Request created with ID ${newRequest.id || newRequest.data?.id || 'N/A'}
+                    <pre class="mt-2 p-3 bg-slate-50 rounded text-xs overflow-auto">${JSON.stringify(newRequest, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <span class="text-red-600 font-semibold">✗ ERROR:</span> ${error.message}
+                    <pre class="mt-2 p-3 bg-red-50 rounded text-xs">${error.stack || 'No stack trace'}</pre>
+                `;
+            }
+        }
+
+        // Test 6: Process Payment
+        async function testProcessPayment() {
+            const result = document.getElementById('test6Result');
+            result.innerHTML = '<span class="text-blue-600">⟳ Processing...</span>';
+            
+            try {
+                const payment = await PaymentsAPI.process({
+                    gateway: 'stripe',
+                    amount: 1250.00,
+                    currency: 'PHP',
+                    description: 'Test payment from frontend'
+                });
+                result.innerHTML = `
+                    <span class="text-green-600 font-semibold">✓ SUCCESS:</span> Payment processed
+                    <pre class="mt-2 p-3 bg-slate-50 rounded text-xs overflow-auto">${JSON.stringify(payment, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <span class="text-red-600 font-semibold">✗ ERROR:</span> ${error.message}
+                    <pre class="mt-2 p-3 bg-red-50 rounded text-xs">${error.stack || 'No stack trace'}</pre>
+                `;
+            }
+        }
+
+        // Run initial test on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkAPIClient();
+        });
+    </script>
+</body>
+</html>

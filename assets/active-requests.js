@@ -1,49 +1,78 @@
 // Active Requests Page JavaScript
 
-// Mock Data for Active Requests
-const activeRequests = [
-    {
-        id: 101,
-        ticketNumber: "SR-2023-8892",
-        title: "Leaking Pipe - Main Street Extension",
-        category: "Water Supply",
-        status: "In Progress",
-        date: "Oct 20, 2023",
-        location: "123 Main St. Ext, Brgy. Central, Mati City",
-        description: "Severe water leak observed near the sidewalk. Water is pooling on the road. Suspected main line burst.",
-        assignedTo: "Juan Dela Cruz (Team A)",
-        estimatedCompletion: "Oct 24, 2023 - 5:00 PM",
-        timeline: [
-            { status: "Request Submitted", date: "Oct 20, 10:00 AM", completed: true },
-            { status: "Received by Water Dept", date: "Oct 20, 10:15 AM", completed: true },
-            { status: "Technician Assigned", date: "Oct 21, 08:30 AM", completed: true },
-            { status: "Inspection in Progress", date: "Oct 21, 09:45 AM", completed: true, current: true },
-            { status: "Repair Scheduled", date: "Pending", completed: false },
-            { status: "Issue Resolved", date: "Pending", completed: false }
-        ]
-    },
-    {
-        id: 102,
-        ticketNumber: "SR-2023-8901",
-        title: "No Electricity - Purok 4",
-        category: "Electricity",
-        status: "Pending Review",
-        date: "Oct 22, 2023",
-        location: "Purok 4, Brgy. Dahican",
-        description: "Whole street has no power since last night's storm.",
-        assignedTo: "Unassigned",
-        estimatedCompletion: "TBD",
-        timeline: [
-            { status: "Request Submitted", date: "Oct 22, 08:00 AM", completed: true },
-            { status: "Pending Review", date: "Oct 22, 08:05 AM", completed: true, current: true },
-            { status: "Technician Assigned", date: "Pending", completed: false },
-            { status: "Issue Resolved", date: "Pending", completed: false }
-        ]
-    }
-];
-
 // State management
-let selectedRequestId = 101;
+let selectedRequestId = null;
+let activeRequests = [];
+
+// Initialize the page
+async function init() {
+    try {
+        // Load requests from API
+        const response = await RequestsAPI.getAll({ status: 'active,in-progress,pending' });
+        activeRequests = response.data || [];
+        
+        // Select first request if available
+        if (activeRequests.length > 0) {
+            selectedRequestId = activeRequests[0].id;
+        }
+        
+        renderRequestsList();
+        renderDetailView();
+    } catch (error) {
+        console.error('Failed to load requests:', error);
+        UIHelpers.showError('Failed to load requests. Using demo data.');
+        
+        // Fallback to mock data
+        loadMockData();
+        renderRequestsList();
+        renderDetailView();
+    }
+    
+    attachEventListeners();
+}
+
+// Fallback mock data
+function loadMockData() {
+    activeRequests = [
+        {
+            id: 101,
+            title: "Leaking Pipe - Main Street Extension",
+            category: "water",
+            status: "in-progress",
+            created_at: "2023-10-20T10:00:00Z",
+            location: "123 Main St. Ext, Brgy. Central, Mati City",
+            description: "Severe water leak observed near the sidewalk. Water is pooling on the road. Suspected main line burst.",
+            assigned_to: "Juan Dela Cruz (Team A)",
+            estimated_completion: "2023-10-24T17:00:00Z",
+            timeline: [
+                { status: "Request Submitted", date: "Oct 20, 10:00 AM", completed: true },
+                { status: "Received by Water Dept", date: "Oct 20, 10:15 AM", completed: true },
+                { status: "Technician Assigned", date: "Oct 21, 08:30 AM", completed: true },
+                { status: "Inspection in Progress", date: "Oct 21, 09:45 AM", completed: true, current: true },
+                { status: "Repair Scheduled", date: "Pending", completed: false },
+                { status: "Issue Resolved", date: "Pending", completed: false }
+            ]
+        },
+        {
+            id: 102,
+            title: "No Electricity - Purok 4",
+            category: "electricity",
+            status: "pending",
+            created_at: "2023-10-22T08:00:00Z",
+            location: "Purok 4, Brgy. Dahican",
+            description: "Whole street has no power since last night's storm.",
+            assigned_to: null,
+            estimated_completion: null,
+            timeline: [
+                { status: "Request Submitted", date: "Oct 22, 08:00 AM", completed: true },
+                { status: "Pending Review", date: "Oct 22, 08:05 AM", completed: true, current: true },
+                { status: "Technician Assigned", date: "Pending", completed: false },
+                { status: "Issue Resolved", date: "Pending", completed: false }
+            ]
+        }
+    ];
+    selectedRequestId = 101;
+}
 
 // SVG Icons as strings
 const icons = {
@@ -76,24 +105,35 @@ function init() {
 // Render the requests list
 function renderRequestsList() {
     const listContainer = document.getElementById('requestsList');
+    if (!listContainer) return;
     
     listContainer.innerHTML = activeRequests.map(req => {
         const isActive = selectedRequestId === req.id;
-        const categoryIcon = req.category === 'Water Supply' ? icons.droplets : icons.zap;
-        const statusClass = req.status === 'In Progress' ? 'status-in-progress' : 'status-pending';
+        const categoryIcon = req.category === 'water' ? '<svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>' : 
+                             '<svg class="icon icon-xs" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>';
+        
+        const statusMap = {
+            'pending': 'status-pending',
+            'in-progress': 'status-in-progress',
+            'completed': 'status-completed'
+        };
+        const statusClass = statusMap[req.status] || 'status-pending';
+        
+        const statusDisplay = req.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const categoryDisplay = req.category.charAt(0).toUpperCase() + req.category.slice(1);
         
         return `
             <div class="request-card ${isActive ? 'active' : ''}" data-request-id="${req.id}">
                 <div class="request-card-header">
-                    <span class="ticket-number">${req.ticketNumber}</span>
-                    <span class="status-badge ${statusClass}">${req.status}</span>
+                    <span class="ticket-number">SR-2023-${req.id}</span>
+                    <span class="status-badge ${statusClass}">${statusDisplay}</span>
                 </div>
                 <h3 class="request-title">${req.title}</h3>
                 <div class="request-meta">
                     ${categoryIcon}
-                    <span>${req.category}</span>
+                    <span>${categoryDisplay}</span>
                     <span>•</span>
-                    <span>${req.date}</span>
+                    <span>${new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 </div>
             </div>
         `;
@@ -105,54 +145,69 @@ function renderDetailView() {
     const currentRequest = activeRequests.find(r => r.id === selectedRequestId);
     if (!currentRequest) return;
     
+    const mapIcon = '<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+    const calendarIcon = '<svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+    
     // Update header
-    document.getElementById('detailTitle').textContent = currentRequest.title;
-    document.getElementById('detailStatus').textContent = currentRequest.status;
-    document.getElementById('detailLocation').innerHTML = `${icons.mapPin} ${currentRequest.location}`;
-    document.getElementById('detailDate').innerHTML = `${icons.calendar} Filed: ${currentRequest.date}`;
+    const titleEl = document.getElementById('detailTitle');
+    const statusEl = document.getElementById('detailStatus');
+    const locationEl = document.getElementById('detailLocation');
+    const dateEl = document.getElementById('detailDate');
+    
+    if (titleEl) titleEl.textContent = currentRequest.title;
+    if (statusEl) statusEl.textContent = currentRequest.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    if (locationEl) locationEl.innerHTML = `${mapIcon} ${currentRequest.location}`;
+    if (dateEl) dateEl.innerHTML = `${calendarIcon} Filed: ${new Date(currentRequest.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     
     // Update timeline
     const timelineContainer = document.getElementById('timeline');
-    timelineContainer.innerHTML = currentRequest.timeline.map((step, index) => {
-        let dotClass = 'pending';
-        let dotIcon = icons.circle;
-        let contentClass = '';
+    if (timelineContainer && currentRequest.timeline) {
+        const checkCircle = '<svg class="icon icon-xs icon-fill" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+        const circle = '<svg class="icon icon-xs icon-fill" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle></svg>';
         
-        if (step.completed) {
-            dotClass = 'completed';
-            dotIcon = icons.checkCircle;
-        } else if (step.current) {
-            dotClass = 'current';
-            dotIcon = icons.circle;
-        } else {
-            contentClass = 'faded';
-        }
-        
-        const noteHtml = step.current ? `
-            <div class="timeline-note">
-                Technician is currently assessing the damage at the site. Please keep lines open.
-            </div>
-        ` : '';
-        
-        return `
-            <div class="timeline-item ${contentClass}">
-                <div class="timeline-dot ${dotClass}">
-                    ${dotIcon}
+        timelineContainer.innerHTML = currentRequest.timeline.map((step, index) => {
+            let dotClass = 'pending';
+            let dotIcon = circle;
+            let contentClass = '';
+            
+            if (step.completed) {
+                dotClass = 'completed';
+                dotIcon = checkCircle;
+            } else if (step.current) {
+                dotClass = 'current';
+                dotIcon = circle;
+            } else {
+                contentClass = 'faded';
+            }
+            
+            const noteHtml = step.current ? `
+                <div class="timeline-note">
+                    Technician is currently assessing the damage at the site. Please keep lines open.
                 </div>
-                <div class="timeline-content">
-                    <span class="timeline-status">${step.status}</span>
-                    <span class="timeline-date">${step.date}</span>
-                    ${noteHtml}
+            ` : '';
+            
+            return `
+                <div class="timeline-item ${contentClass}">
+                    <div class="timeline-dot ${dotClass}">
+                        ${dotIcon}
+                    </div>
+                    <div class="timeline-content">
+                        <span class="timeline-status">${step.status}</span>
+                        <span class="timeline-date">${step.date}</span>
+                        ${noteHtml}
+                    </div>
                 </div>
-            </div>
-        `;
-    }).join('');
+            `;
+        }).join('');
+    }
     
     // Update assigned technician
-    document.getElementById('technicianName').textContent = currentRequest.assignedTo;
+    const techName = document.getElementById('technicianName');
+    if (techName) techName.textContent = currentRequest.assigned_to || 'Unassigned';
     
     // Update description
-    document.getElementById('issueDescription').textContent = currentRequest.description;
+    const descEl = document.getElementById('issueDescription');
+    if (descEl) descEl.textContent = currentRequest.description;
 }
 
 // Attach event listeners

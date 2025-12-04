@@ -144,6 +144,7 @@
         </div>
     </main>
 
+    <script src="../assets/api-client.js"></script>
     <script src="../assets/payments.js"></script>
     <script>lucide.createIcons();</script>
 </body>

@@ -123,6 +123,7 @@
 
     </div>
 
+    <script src="../assets/api-client.js"></script>
     <script src="../assets/announcements.js"></script>
     <script>lucide.createIcons();</script>
 </body>

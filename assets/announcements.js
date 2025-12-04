@@ -4,18 +4,48 @@
 let selectedCategory = 'All';
 let expandedId = 1;
 let discussionModal = { isOpen: false, announcementTitle: '' };
+let announcements = [];
 
-// Mock Data
-const announcements = [
-    {
-        id: 1,
-        title: "URGENT: Scheduled Water Interruption in Brgy. Central",
-        category: "Water Supply",
-        type: "Urgent",
-        date: "Oct 24, 2023",
-        time: "2 hours ago",
-        author: "Mati Water District",
-        content: `Please be advised of a scheduled maintenance activity on October 28, 2023, from 8:00 AM to 5:00 PM. 
+// Initialize the page
+async function init() {
+    try {
+        // Load notifications from API
+        const response = await NotificationsAPI.getAll({ type: 'announcement', limit: 20 });
+        announcements = response.data || [];
+        
+        // If no announcements from API, use mock data
+        if (announcements.length === 0) {
+            loadMockAnnouncements();
+        }
+        
+        renderAnnouncements();
+    } catch (error) {
+        console.error('Failed to load announcements:', error);
+        UIHelpers.showError('Failed to load announcements. Using demo data.');
+        
+        // Fallback to mock data
+        loadMockAnnouncements();
+        renderAnnouncements();
+    }
+    
+    attachEventListeners();
+    
+    // Initialize Lucide icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
+
+// Load mock announcements (fallback)
+function loadMockAnnouncements() {
+    announcements = [
+        {
+            id: 1,
+            title: "URGENT: Scheduled Water Interruption in Brgy. Central",
+            category: "Water Supply",
+            type: "Urgent",
+            created_at: "2023-10-24T10:00:00Z",
+            message: `Please be advised of a scheduled maintenance activity on October 28, 2023, from 8:00 AM to 5:00 PM. 
       
 This will affect the following areas:
 - Main Street Extension
@@ -23,42 +53,46 @@ This will affect the following areas:
 - City Hall Compound
 
 Reason: Replacement of 600mm main valve. Residents are advised to store enough water for consumption.`,
-        pinned: true
-    },
-    {
-        id: 2,
-        title: "Advisory on Illegal Electrical Connections",
-        category: "Electricity",
-        type: "Warning",
-        date: "Oct 18, 2023",
-        time: "1 week ago",
-        author: "Davao Light",
-        content: "The City Government warns against illegal tapping of electrical lines. Violators will face penalties under the Anti-Pilferage of Electricity Act.",
-        pinned: false
-    },
-    {
-        id: 3,
-        title: "New Online Payment Partners: GCash & Maya",
-        category: "Billing",
-        type: "News",
-        date: "Oct 22, 2023",
-        time: "2 days ago",
-        author: "City Treasurer's Office",
-        content: "Great news! You can now pay your utility bills directly through the FixItMati app using GCash and Maya. No need to visit the payment center.",
-        pinned: false
-    },
-    {
-        id: 4,
-        title: "Power Line Maintenance: Purok 2",
-        category: "Electricity",
-        type: "Maintenance",
-        date: "Oct 25, 2023",
-        time: "5 hours ago",
-        author: "Davao Light",
-        content: "Routine vegetation clearing near power lines will be conducted. Expect brief power fluctuations.",
-        pinned: false
-    }
-];
+            metadata: {
+                author: "Mati Water District",
+                priority: "high"
+            }
+        },
+        {
+            id: 2,
+            title: "Advisory on Illegal Electrical Connections",
+            category: "Electricity",
+            type: "Warning",
+            created_at: "2023-10-18T10:00:00Z",
+            message: "The City Government warns against illegal tapping of electrical lines. Violators will face penalties under the Anti-Pilferage of Electricity Act.",
+            metadata: {
+                author: "Davao Light"
+            }
+        },
+        {
+            id: 3,
+            title: "New Online Payment Partners: GCash & Maya",
+            category: "Billing",
+            type: "News",
+            created_at: "2023-10-22T10:00:00Z",
+            message: "Great news! You can now pay your utility bills directly through the FixItMati app using GCash and Maya. No need to visit the payment center.",
+            metadata: {
+                author: "City Treasurer's Office"
+            }
+        },
+        {
+            id: 4,
+            title: "Power Line Maintenance: Purok 2",
+            category: "Electricity",
+            type: "Maintenance",
+            created_at: "2023-10-25T05:00:00Z",
+            message: "Routine vegetation clearing near power lines will be conducted. Expect brief power fluctuations.",
+            metadata: {
+                author: "Davao Light"
+            }
+        }
+    ];
+}
 
 // Filter announcements based on selected category
 function getFilteredAnnouncements() {
@@ -132,11 +166,17 @@ function renderAnnouncements() {
     
     // Update feed title
     const feedTitle = document.getElementById('feedTitle');
-    feedTitle.textContent = selectedCategory === 'All' ? 'Latest Announcements' : `${selectedCategory} Updates`;
+    if (feedTitle) {
+        feedTitle.textContent = selectedCategory === 'All' ? 'Latest Announcements' : `${selectedCategory} Updates`;
+    }
     
     // Update count
     const feedCount = document.getElementById('feedCount');
-    feedCount.textContent = `Showing ${filtered.length} posts`;
+    if (feedCount) {
+        feedCount.textContent = `Showing ${filtered.length} posts`;
+    }
+    
+    if (!container) return;
     
     if (filtered.length === 0) {
         container.innerHTML = `
@@ -152,50 +192,51 @@ function renderAnnouncements() {
             const iconName = getIconName(item.category);
             const iconColor = getIconColor(item.category);
             
+            // Calculate relative time
+            const timeAgo = getTimeAgo(item.created_at);
+            const formattedDate = UIHelpers.formatDate(item.created_at);
+            const isPinned = item.metadata?.priority === 'high';
+            
             return `
-                <div class="announcement-card ${item.pinned ? 'pinned' : ''}" data-id="${item.id}">
+                <div class="announcement-card ${isPinned ? 'pinned' : ''}" data-id="${item.id}">
                     <div class="announcement-header" onclick="toggleExpand(${item.id})">
                         <div class="announcement-header-content">
                             <div class="announcement-info">
                                 <div class="announcement-badges">
                                     <span class="type-badge ${typeClass}">${item.type}</span>
-                                    ${item.pinned ? '<span class="pinned-badge"><i data-lucide="alert-triangle" style="width: 10px; height: 10px;"></i> Pinned</span>' : ''}
-                                    <span class="time-badge"><i data-lucide="clock" style="width: 12px; height: 12px;"></i> ${item.time}</span>
+                                    ${isPinned ? '<span class="pinned-badge"><i data-lucide="alert-triangle" style="width: 10px; height: 10px;"></i> Pinned</span>' : ''}
+                                    <span class="time-badge"><i data-lucide="clock" style="width: 12px; height: 12px;"></i> ${timeAgo}</span>
                                 </div>
                                 <h3 class="announcement-title">${item.title}</h3>
                                 <div class="announcement-meta">
-                                    <span class="announcement-author">
-                                        <i data-lucide="${iconName}" class="${iconColor}" style="width: 16px; height: 16px;"></i>
-                                        ${item.author}
-                                    </span>
+                                    <div class="announcement-meta-item">
+                                        <i data-lucide="${iconName}" class="${iconColor}" style="width: 14px; height: 14px;"></i>
+                                        <span>${item.category}</span>
+                                    </div>
                                     <span>•</span>
-                                    <span>${item.date}</span>
+                                    <span>${formattedDate}</span>
+                                    <span>•</span>
+                                    <span class="meta-author">${item.metadata?.author || 'System'}</span>
                                 </div>
                             </div>
-                            <div class="chevron-icon">
-                                <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" style="width: 20px; height: 20px;"></i>
-                            </div>
+                            <button class="expand-btn ${isExpanded ? 'expanded' : ''}">
+                                <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
+                            </button>
                         </div>
                     </div>
-                    ${isExpanded ? `
-                        <div class="announcement-body animate-slide-in">
-                            <div class="announcement-content-wrapper">
-                                <div class="announcement-content">${item.content}</div>
-                                <div class="discussion-area">
-                                    <div class="discussion-info">
-                                        <i data-lucide="info" class="discussion-info-icon" style="width: 16px; height: 16px;"></i>
-                                        <p class="discussion-info-text">
-                                            <strong>Comments are turned off.</strong><br/>
-                                            Have a question or concern about this advisory? Start a thread in the community discussions.
-                                        </p>
-                                    </div>
-                                    <button class="discuss-btn" onclick="openDiscussionModal('${item.title.replace(/'/g, "\\'")}')">
-                                        <i data-lucide="message-square" style="width: 14px; height: 14px;"></i> Discuss in Community
-                                    </button>
-                                </div>
-                            </div>
+                    <div class="announcement-body ${isExpanded ? 'expanded' : ''}">
+                        <p class="announcement-text">${item.message || item.content || 'No details available.'}</p>
+                        <div class="announcement-actions">
+                            <button class="action-btn primary" onclick="markAsRead(${item.id})">
+                                <i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i>
+                                Mark as Read
+                            </button>
+                            <button class="action-btn secondary" onclick="openDiscussion('${item.title}')">
+                                <i data-lucide="message-square" style="width: 14px; height: 14px;"></i>
+                                Discuss
+                            </button>
                         </div>
-                    ` : ''}
+                    </div>
                 </div>
             `;
         }).join('');
@@ -207,94 +248,44 @@ function renderAnnouncements() {
     }
 }
 
+// Calculate time ago
+function getTimeAgo(dateString) {
+    const now = new Date();
+    const date = new Date(dateString);
+    const seconds = Math.floor((now - date) / 1000);
+    
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+    return UIHelpers.formatDate(dateString);
+}
+
 // Toggle expand/collapse announcement
 function toggleExpand(id) {
     expandedId = expandedId === id ? null : id;
     renderAnnouncements();
 }
 
-// Open discussion modal
-function openDiscussionModal(title) {
-    discussionModal = { isOpen: true, announcementTitle: title };
-    renderModal();
-}
-
-// Close discussion modal
-function closeDiscussionModal() {
-    discussionModal = { isOpen: false, announcementTitle: '' };
-    renderModal();
-}
-
-// Submit discussion
-function submitDiscussion() {
-    const textarea = document.getElementById('discussionMessage');
-    const message = textarea ? textarea.value.trim() : '';
-    
-    if (message) {
-        alert('Your query has been posted to the Discussions tab!');
-        closeDiscussionModal();
-    } else {
-        alert('Please enter your message.');
-    }
-}
-
-// Render modal
-function renderModal() {
-    const modalContainer = document.getElementById('discussionModal');
-    
-    if (discussionModal.isOpen) {
-        modalContainer.innerHTML = `
-            <div class="modal-overlay animate-zoom-in">
-                <div class="modal-backdrop" onclick="closeDiscussionModal()"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 class="modal-title">
-                            <i data-lucide="message-square" class="text-green-600" style="width: 18px; height: 18px;"></i>
-                            Start New Discussion
-                        </h3>
-                        <button class="modal-close" onclick="closeDiscussionModal()">
-                            <i data-lucide="x" style="width: 20px; height: 20px;"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="modal-field">
-                            <label class="modal-label">Topic Reference</label>
-                            <div class="modal-reference">
-                                Re: ${discussionModal.announcementTitle}
-                            </div>
-                        </div>
-                        <div class="modal-field">
-                            <label class="modal-label">Your Query / Message</label>
-                            <textarea 
-                                id="discussionMessage"
-                                rows="4"
-                                class="modal-textarea"
-                                placeholder="e.g., Will this water interruption affect Purok 5 as well?"
-                            ></textarea>
-                            <p class="modal-hint">This will be posted publicly in the Discussions tab.</p>
-                        </div>
-                        <div class="modal-actions">
-                            <button class="modal-btn modal-btn-cancel" onclick="closeDiscussionModal()">
-                                Cancel
-                            </button>
-                            <button class="modal-btn modal-btn-submit" onclick="submitDiscussion()">
-                                <i data-lucide="send" style="width: 16px; height: 16px;"></i> Post Discussion
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        modalContainer.classList.remove('hidden');
+// Mark announcement as read
+async function markAsRead(id) {
+    try {
+        await NotificationsAPI.markAsRead(id);
+        UIHelpers.showSuccess('Announcement marked as read');
         
-        // Reinitialize icons
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
-    } else {
-        modalContainer.innerHTML = '';
-        modalContainer.classList.add('hidden');
+        // Remove from list or update visually
+        announcements = announcements.filter(a => a.id !== id);
+        renderAnnouncements();
+    } catch (error) {
+        console.error('Failed to mark as read:', error);
+        UIHelpers.showError('Failed to mark as read');
     }
+}
+
+// Open discussion modal
+function openDiscussion(title) {
+    alert(`Start discussion about: ${title}`);
+    // In production, this would open a modal or redirect to discussion page
 }
 
 // Attach event listeners
@@ -310,11 +301,18 @@ function attachEventListeners() {
     });
 }
 
-// Make functions globally accessible
-window.toggleExpand = toggleExpand;
-window.openDiscussionModal = openDiscussionModal;
-window.closeDiscussionModal = closeDiscussionModal;
-window.submitDiscussion = submitDiscussion;
+// Render filter buttons
+function renderFilters() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        const value = btn.getAttribute('data-value');
+        if (value === selectedCategory) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {

@@ -1,66 +1,114 @@
 // Payments Page JavaScript
 
-// Mock Data for Bills
-const bills = [
-    {
-        id: 1,
-        type: "Water",
-        label: "Mati Water District",
-        amount: 450.00,
-        period: "Sept 15 - Oct 15",
-        consumption: "24 m³",
-        due: "Oct 25, 2023",
-        iconName: "droplets",
-        iconColor: "text-blue-500",
-        status: "Unpaid"
-    },
-    {
-        id: 2,
-        type: "Garbage",
-        label: "City Environment Office",
-        amount: 150.00,
-        period: "October 2023",
-        consumption: "Fixed Rate",
-        due: "Oct 30, 2023",
-        iconName: "hammer",
-        iconColor: "text-green-600",
-        status: "Unpaid"
-    },
-    {
-        id: 3,
-        type: "Electricity",
-        label: "Davao Light (Linked)",
-        amount: 650.00,
-        period: "Sept 01 - Oct 01",
-        consumption: "128 kWh",
-        due: "Oct 20, 2023",
-        iconName: "zap",
-        iconColor: "text-amber-500",
-        status: "Overdue"
-    }
-];
-
-// Mock Data for Transaction History
-const history = [
-    { id: 101, date: "Sep 25, 2023", amount: 1100.00, method: "GCash", status: "Paid", ref: "TRX-998822" },
-    { id: 102, date: "Aug 25, 2023", amount: 1050.00, method: "Visa **** 4242", status: "Paid", ref: "TRX-776611" }
-];
-
-// Calculate total due
-function calculateTotal() {
-    return bills.reduce((acc, bill) => acc + bill.amount, 0);
-}
+// State management
+let bills = [];
+let history = [];
+let availableGateways = [];
 
 // Initialize the page
-function init() {
-    renderTotalCard();
-    renderBillsList();
-    renderTransactionHistory();
+async function init() {
+    try {
+        // Load available payment gateways
+        const gatewaysResponse = await PaymentsAPI.getGateways();
+        availableGateways = gatewaysResponse.gateways || [];
+        
+        // Load payment history
+        const historyResponse = await PaymentsAPI.getHistory({ limit: 5 });
+        history = historyResponse.data || [];
+        
+        // For now, use mock bills data (would come from billing API in production)
+        loadMockBills();
+        
+        renderTotalCard();
+        renderBillsList();
+        renderTransactionHistory();
+    } catch (error) {
+        console.error('Failed to load payment data:', error);
+        UIHelpers.showError('Failed to load payment data. Using demo data.');
+        
+        // Fallback to mock data
+        loadMockBills();
+        loadMockHistory();
+        renderTotalCard();
+        renderBillsList();
+        renderTransactionHistory();
+    }
+    
     attachEventListeners();
+    
     // Initialize Lucide icons after content is rendered
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
+}
+
+// Load mock bills data (placeholder until billing API is implemented)
+function loadMockBills() {
+    bills = [
+        {
+            id: 1,
+            type: "Water",
+            label: "Mati Water District",
+            amount: 450.00,
+            period: "Sept 15 - Oct 15",
+            consumption: "24 m³",
+            due: "Oct 25, 2023",
+            iconName: "droplets",
+            iconColor: "text-blue-500",
+            status: "Unpaid"
+        },
+        {
+            id: 2,
+            type: "Garbage",
+            label: "City Environment Office",
+            amount: 150.00,
+            period: "October 2023",
+            consumption: "Fixed Rate",
+            due: "Oct 30, 2023",
+            iconName: "hammer",
+            iconColor: "text-green-600",
+            status: "Unpaid"
+        },
+        {
+            id: 3,
+            type: "Electricity",
+            label: "Davao Light (Linked)",
+            amount: 650.00,
+            period: "Sept 01 - Oct 01",
+            consumption: "128 kWh",
+            due: "Oct 20, 2023",
+            iconName: "zap",
+            iconColor: "text-amber-500",
+            status: "Overdue"
+        }
+    ];
+}
+
+// Load mock history (fallback)
+function loadMockHistory() {
+    history = [
+        { 
+            id: 101, 
+            created_at: "2023-09-25T10:00:00Z", 
+            amount: 1100.00, 
+            gateway: "gcash", 
+            status: "completed", 
+            transaction_id: "TRX-998822" 
+        },
+        { 
+            id: 102, 
+            created_at: "2023-08-25T10:00:00Z", 
+            amount: 1050.00, 
+            gateway: "stripe", 
+            status: "completed", 
+            transaction_id: "TRX-776611" 
+        }
+    ];
+}
+
+// Calculate total due
+function calculateTotal() {
+    return bills.reduce((acc, bill) => acc + bill.amount, 0);
 }
 
 // Render total card
@@ -68,7 +116,46 @@ function renderTotalCard() {
     const totalDue = calculateTotal();
     const amountElement = document.getElementById('totalAmount');
     if (amountElement) {
-        amountElement.textContent = `₱${totalDue.toFixed(2)}`;
+        amountElement.textContent = UIHelpers.formatCurrency(totalDue);
+    }
+}
+
+// Render transaction history
+function renderTransactionHistory() {
+    const listContainer = document.getElementById('transactionList');
+    if (!listContainer) return;
+    
+    listContainer.innerHTML = history.map(tx => {
+        const gatewayNames = {
+            'gcash': 'GCash',
+            'stripe': 'Visa **** 4242',
+            'paypal': 'PayPal',
+            'paymongo': 'PayMongo'
+        };
+        const methodDisplay = gatewayNames[tx.gateway] || tx.gateway;
+        
+        return `
+            <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="bg-green-100 p-1.5 rounded-full text-green-600">
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-slate-800">Payment via ${methodDisplay}</p>
+                        <p class="text-xs text-slate-500">${UIHelpers.formatDate(tx.created_at)} • ${tx.transaction_id}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="font-bold text-slate-900">${UIHelpers.formatCurrency(tx.amount)}</div>
+                    <div class="text-xs text-green-600 font-medium capitalize">${tx.status}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Reinitialize icons after rendering
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
     }
 }
 
@@ -154,12 +241,51 @@ function attachEventListeners() {
         });
     }
     
-    // Pay All button
+    // Pay All button - Process payment via API
     const payAllBtn = document.getElementById('payAllBtn');
     if (payAllBtn) {
-        payAllBtn.addEventListener('click', function() {
+        payAllBtn.addEventListener('click', async function() {
             const total = calculateTotal();
-            alert(`Proceed to payment: ₱${total.toFixed(2)}`);
+            
+            // Show payment gateway selection
+            const gateway = prompt('Select payment gateway:\n1. GCash\n2. PayMongo\n3. Stripe\n\nEnter 1, 2, or 3:');
+            const gatewayMap = { '1': 'gcash', '2': 'paymongo', '3': 'stripe' };
+            const selectedGateway = gatewayMap[gateway];
+            
+            if (!selectedGateway) {
+                alert('Invalid selection');
+                return;
+            }
+            
+            UIHelpers.showLoading(payAllBtn, 'Processing...');
+            
+            try {
+                const result = await PaymentsAPI.process({
+                    gateway: selectedGateway,
+                    amount: total,
+                    currency: 'PHP',
+                    description: 'Utility bills payment',
+                    metadata: {
+                        bills: bills.map(b => b.id).join(',')
+                    }
+                });
+                
+                UIHelpers.hideLoading(payAllBtn);
+                
+                if (result.status === 'success' || result.status === 'completed') {
+                    UIHelpers.showSuccess(`Payment successful! Transaction ID: ${result.transaction_id}`);
+                    
+                    // Reload payment history
+                    const historyResponse = await PaymentsAPI.getHistory({ limit: 5 });
+                    history = historyResponse.data || [];
+                    renderTransactionHistory();
+                } else {
+                    UIHelpers.showError('Payment failed. Please try again.');
+                }
+            } catch (error) {
+                UIHelpers.hideLoading(payAllBtn);
+                UIHelpers.showError(`Payment error: ${error.message}`);
+            }
         });
     }
     
@@ -171,33 +297,33 @@ function attachEventListeners() {
         });
     }
     
-    // Payment method buttons
+    // Payment method buttons - Quick pay shortcuts
     const gcashBtn = document.getElementById('gcashBtn');
     if (gcashBtn) {
-        gcashBtn.addEventListener('click', function() {
-            alert('Pay with GCash');
+        gcashBtn.addEventListener('click', async function() {
+            await processPayment('gcash');
         });
     }
     
     const mayaBtn = document.getElementById('mayaBtn');
     if (mayaBtn) {
-        mayaBtn.addEventListener('click', function() {
-            alert('Pay with Maya');
+        mayaBtn.addEventListener('click', async function() {
+            await processPayment('paymongo'); // Maya through PayMongo
         });
     }
     
     const cardBtn = document.getElementById('cardBtn');
     if (cardBtn) {
-        cardBtn.addEventListener('click', function() {
-            alert('Pay with Card');
+        cardBtn.addEventListener('click', async function() {
+            await processPayment('stripe');
         });
     }
-    
+
     // View All transactions button
     const viewAllBtn = document.getElementById('viewAllBtn');
     if (viewAllBtn) {
         viewAllBtn.addEventListener('click', function() {
-            alert('View all transactions');
+            window.location.href = 'payment-history.php';
         });
     }
     
@@ -205,15 +331,48 @@ function attachEventListeners() {
     const reportBtn = document.getElementById('reportBtn');
     if (reportBtn) {
         reportBtn.addEventListener('click', function() {
-            alert('Report billing issue');
+            window.location.href = 'user-dashboard.php'; // Redirect to create request
         });
     }
 }
 
+// Helper function to process payment
+async function processPayment(gateway) {
+    const total = calculateTotal();
+    
+    const confirmed = confirm(`Proceed with payment of ${UIHelpers.formatCurrency(total)} via ${gateway.toUpperCase()}?`);
+    if (!confirmed) return;
+    
+    try {
+        const result = await PaymentsAPI.process({
+            gateway: gateway,
+            amount: total,
+            currency: 'PHP',
+            description: 'Utility bills payment',
+            metadata: {
+                bills: bills.map(b => b.id).join(',')
+            }
+        });
+        
+        if (result.status === 'success' || result.status === 'completed') {
+            UIHelpers.showSuccess(`Payment successful! Transaction ID: ${result.transaction_id}`);
+            
+            // Reload payment history
+            const historyResponse = await PaymentsAPI.getHistory({ limit: 5 });
+            history = historyResponse.data || [];
+            renderTransactionHistory();
+        } else {
+            UIHelpers.showError('Payment failed. Please try again.');
+        }
+    } catch (error) {
+        UIHelpers.showError(`Payment error: ${error.message}`);
+    }
+}
+
 // Download receipt function
-function downloadReceipt(refNumber) {
-    alert(`Download receipt for ${refNumber}`);
-    // In a real app: window.location.href = `download-receipt.php?ref=${refNumber}`;
+function downloadReceipt(transactionId) {
+    alert(`Download receipt for transaction: ${transactionId}`);
+    // In production, this would trigger a PDF download
 }
 
 // Initialize when DOM is ready
