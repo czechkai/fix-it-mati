@@ -8,12 +8,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FixItMati Dashboard</title>
+  <!-- Check authentication client-side -->
+  <script>
+    // Redirect to login if not authenticated - must happen IMMEDIATELY
+    (function() {
+      const token = sessionStorage.getItem('auth_token');
+      if (!token) {
+        window.location.replace('login.php');
+        // Stop execution
+        throw new Error('Not authenticated');
+      }
+    })();
+  </script>
   <!-- Tailwind CSS via CDN for utility classes similar to original -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons CDN to replace lucide-react -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- App styles -->
-  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body class="min-h-screen bg-slate-50 font-sans text-slate-800">
   <!-- HEADER -->
@@ -44,15 +56,53 @@
         </div>
         <!-- Right Actions -->
         <div class="flex items-center gap-3">
-          <button class="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>New Request</span>
-          </button>
-          <div class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full cursor-pointer">
+          <div class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full cursor-pointer" id="notificationBtn">
             <i data-lucide="bell" class="w-5 h-5"></i>
-            <span class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+            <span class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" id="notificationDot"></span>
           </div>
-          <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 border-2 border-white shadow-sm cursor-pointer"></div>
+          <!-- Profile Dropdown -->
+          <div class="relative">
+            <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 border-2 border-white shadow-sm cursor-pointer" id="profileBtn"></div>
+            
+            <!-- Profile Dropdown Menu -->
+            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
+              <div class="p-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="h-12 w-12 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-lg" id="profileAvatarLarge"></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-slate-900 truncate" id="profileName">Loading...</p>
+                    <p class="text-sm text-slate-500 truncate" id="profileEmail">Loading...</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="p-2">
+                <a href="user-dashboard.php" class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
+                  <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                  <span>Dashboard</span>
+                </a>
+                <a href="active-requests.php" class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
+                  <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                  <span>My Requests</span>
+                </a>
+                <a href="payments.php" class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
+                  <i data-lucide="credit-card" class="w-4 h-4"></i>
+                  <span>Payments</span>
+                </a>
+                <button id="profileSettingsBtn" class="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
+                  <i data-lucide="settings" class="w-4 h-4"></i>
+                  <span>Settings</span>
+                </button>
+              </div>
+              
+              <div class="p-2 border-t border-slate-100">
+                <button id="logoutBtn" class="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                  <i data-lucide="log-out" class="w-4 h-4"></i>
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -61,23 +111,29 @@
   <!-- SUB-NAV -->
   <div class="bg-white border-b border-slate-200 hidden md:block overflow-x-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <nav class="flex -mb-px space-x-8" id="tabsNav">
-        <button data-tab="dashboard" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-blue-500 text-blue-600">
-          <i data-lucide="home" class="w-4 h-4"></i> Dashboard
-        </button>
-        <button data-tab="my requests" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
-          <i data-lucide="file-text" class="w-4 h-4"></i> My Requests
-        </button>
-        <button data-tab="announcements" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
-          <i data-lucide="megaphone" class="w-4 h-4"></i> Announcements
-        </button>
-        <button data-tab="discussions" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
-          <i data-lucide="message-square" class="w-4 h-4"></i> Discussions
-        </button>
-        <button data-tab="payments" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
-          <i data-lucide="credit-card" class="w-4 h-4"></i> Payments
-        </button>
-      </nav>
+      <div class="flex items-center justify-between">
+        <nav class="flex -mb-px space-x-8" id="tabsNav">
+          <button data-tab="dashboard" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-blue-500 text-blue-600">
+            <i data-lucide="home" class="w-4 h-4"></i> Dashboard
+          </button>
+          <button data-tab="my requests" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
+            <i data-lucide="file-text" class="w-4 h-4"></i> My Requests
+          </button>
+          <button data-tab="announcements" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
+            <i data-lucide="megaphone" class="w-4 h-4"></i> Announcements
+          </button>
+          <button data-tab="discussions" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
+            <i data-lucide="message-square" class="w-4 h-4"></i> Discussions
+          </button>
+          <button data-tab="payments" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
+            <i data-lucide="credit-card" class="w-4 h-4"></i> Payments
+          </button>
+        </nav>
+        <a href="create-request.php" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors my-2">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          New Request
+        </a>
+      </div>
     </div>
   </div>
 
@@ -147,22 +203,18 @@
       <div class="hidden lg:block lg:col-span-3">
         <nav class="space-y-1">
           <h3 class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Categories</h3>
-          <a href="#" class="bg-blue-50 text-blue-700 border-l-4 border-blue-600 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
+          <button data-category="all" class="category-filter w-full bg-blue-50 text-blue-700 border-l-4 border-blue-600 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
             <span class="text-blue-600 mr-3 flex-shrink-0"><i data-lucide="file-text" class="w-4.5 h-4.5"></i></span>
             All Requests
-          </a>
-          <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
+          </button>
+          <button data-category="water" class="category-filter w-full text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors text-left">
             <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="droplets" class="w-4.5 h-4.5"></i></span>
             Water Supply
-          </a>
-          <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
+          </button>
+          <button data-category="electricity" class="category-filter w-full text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors text-left">
             <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="zap" class="w-4.5 h-4.5"></i></span>
             Electricity
-          </a>
-          <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
-            <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="hammer" class="w-4.5 h-4.5"></i></span>
-            Roads &amp; Infra
-          </a>
+          </button>
           <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
             <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="help-circle" class="w-4.5 h-4.5"></i></span>
             Help Center
@@ -192,7 +244,7 @@
         <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-sm mb-4 flex items-center justify-between gap-2">
           <div class="flex-1 relative">
             <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-            <input type="text" placeholder="Filter requests..." class="w-full pl-9 pr-4 py-1.5 text-sm outline-none text-slate-700 placeholder:text-slate-400" />
+            <input type="text" id="globalSearch" placeholder="Filter requests..." class="w-full pl-9 pr-4 py-1.5 text-sm outline-none text-slate-700 placeholder:text-slate-400" />
           </div>
           <div class="flex items-center gap-2 border-l border-slate-200 pl-2">
             <div class="relative">
@@ -292,27 +344,6 @@
             </div>
           </div>
 
-          <!-- Item 3 -->
-          <div class="p-4 hover:bg-slate-50 transition-colors group cursor-pointer">
-            <div class="flex items-start gap-3">
-              <div class="mt-1 flex-shrink-0">
-                <i data-lucide="hammer" class="w-4 h-4 text-gray-500"></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <h4 class="text-base font-medium text-slate-900 group-hover:text-blue-600 transition-colors truncate">Pothole Repair Request</h4>
-                </div>
-                <div class="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500">
-                  <span class="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">#103</span>
-                  <span class="font-medium text-green-600">Resolved</span>
-                  <span>Opened on Oct 10, 2023</span>
-                  <span class="hidden sm:inline">&bull;</span>
-                  <span class="flex items-center gap-1 text-slate-400 group-hover:text-blue-500"><i data-lucide="message-square" class="w-3 h-3"></i> 8</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div class="p-3 text-center border-t border-slate-100">
             <button class="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline">View all requests</button>
           </div>
@@ -383,6 +414,11 @@
     </div>
   </main>
 
+  <!-- Floating Action Button (Mobile) -->
+  <a href="create-request.php" class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all hover:scale-110 z-40">
+    <i data-lucide="plus" class="w-6 h-6"></i>
+  </a>
+
   <!-- FOOTER -->
   <footer class="bg-white border-t border-slate-200 mt-12 py-8">
     <div class="max-w-7xl mx-auto px-4 text-center">
@@ -419,138 +455,8 @@
   </div>
 
   <!-- API Client -->
-  <script src="../assets/api-client.js"></script>
-  <!-- App JS -->
-  <script src="../assets/app.js"></script>
-  <script>
-    // Initialize Lucide icons after DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {
-      lucide.createIcons();
-      
-      // Load dashboard data from API
-      loadDashboardData();
-    });
-
-    async function loadDashboardData() {
-      try {
-        // Load request statistics
-        const stats = await RequestsAPI.getStatistics();
-        
-        // Update hero cards with real data
-        updateHeroCards(stats);
-        
-        // Load recent requests
-        const requests = await RequestsAPI.getAll({ limit: 3, sort: 'newest' });
-        updateRecentRequests(requests);
-        
-        // Load notifications count
-        const notificationCount = await NotificationsAPI.getUnreadCount();
-        updateNotificationBadge(notificationCount.count);
-        
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-        // Continue with mock data if API fails
-      }
-    }
-
-    function updateHeroCards(stats) {
-      // Update Active Requests card
-      const activeCount = document.querySelector('[href="active-requests.php"] .text-2xl');
-      if (activeCount && stats.active !== undefined) {
-        activeCount.textContent = stats.active;
-      }
-
-      // Update Total Amount Due (mock for now - would come from billing API)
-      // Total Amount Due card already has mock data
-
-      // Update Resolved Issues card
-      const resolvedCount = document.querySelectorAll('.text-2xl')[3];
-      if (resolvedCount && stats.resolved !== undefined) {
-        resolvedCount.textContent = stats.resolved;
-      }
-    }
-
-    function updateRecentRequests(requests) {
-      if (!requests || !requests.data) return;
-
-      const requestsContainer = document.querySelector('.bg-white.border.border-slate-200.rounded-lg.shadow-sm.divide-y');
-      if (!requestsContainer) return;
-
-      // Keep the header
-      const header = requestsContainer.querySelector('.px-4.py-3.bg-slate-50\\/50');
-      
-      // Clear existing items except header
-      const items = requestsContainer.querySelectorAll('.p-4.hover\\:bg-slate-50');
-      items.forEach(item => item.remove());
-
-      // Add new items from API
-      requests.data.slice(0, 3).forEach(req => {
-        const item = createRequestItem(req);
-        requestsContainer.insertBefore(item, requestsContainer.querySelector('.p-3.text-center'));
-      });
-
-      lucide.createIcons();
-    }
-
-    function createRequestItem(request) {
-      const item = document.createElement('div');
-      item.className = 'p-4 hover:bg-slate-50 transition-colors group cursor-pointer';
-      
-      const statusColors = {
-        pending: 'text-slate-500',
-        'in-progress': 'text-amber-600',
-        completed: 'text-green-600',
-        cancelled: 'text-red-600'
-      };
-      
-      const categoryIcons = {
-        'water': 'droplets',
-        'electricity': 'zap',
-        'roads': 'hammer',
-        'waste': 'trash-2'
-      };
-
-      const icon = categoryIcons[request.category?.toLowerCase()] || 'file-text';
-      const statusColor = statusColors[request.status?.toLowerCase()] || 'text-slate-500';
-      const statusText = request.status?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Pending';
-
-      item.innerHTML = `
-        <div class="flex items-start gap-3">
-          <div class="mt-1 flex-shrink-0">
-            <i data-lucide="${icon}" class="w-4 h-4 text-blue-500"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-1">
-              <h4 class="text-base font-medium text-slate-900 group-hover:text-blue-600 transition-colors truncate">${request.title || 'Untitled Request'}</h4>
-              ${request.priority === 'high' ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Pinned</span>' : ''}
-            </div>
-            <div class="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500">
-              <span class="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">#${request.id}</span>
-              <span class="font-medium ${statusColor}">${statusText}</span>
-              <span>Opened on ${UIHelpers.formatDate(request.created_at || new Date())}</span>
-              <span class="hidden sm:inline">&bull;</span>
-              <span class="flex items-center gap-1 text-slate-400 group-hover:text-blue-500"><i data-lucide="message-square" class="w-3 h-3"></i> 0</span>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Add click handler to view details
-      item.addEventListener('click', () => {
-        window.location.href = `active-requests.php?id=${request.id}`;
-      });
-
-      return item;
-    }
-
-    function updateNotificationBadge(count) {
-      const badge = document.querySelector('.notification-btn .absolute');
-      if (badge && count > 0) {
-        badge.classList.remove('hidden');
-      } else if (badge) {
-        badge.classList.add('hidden');
-      }
-    }
-  </script>
+  <script src="assets/api-client.js?v=6"></script>
+  <!-- Dashboard JS -->
+  <script src="assets/dashboard.js?v=2"></script>
 </body>
 </html>

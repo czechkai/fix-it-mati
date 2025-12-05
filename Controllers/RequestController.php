@@ -321,7 +321,7 @@ class RequestController
         }
 
         if (!empty($data['category'])) {
-            $validCategories = ['water', 'electricity', 'roads', 'other'];
+            $validCategories = ['water', 'electricity'];
             if (!in_array($data['category'], $validCategories)) {
                 $errors[] = "Invalid category. Must be one of: " . implode(', ', $validCategories);
             }

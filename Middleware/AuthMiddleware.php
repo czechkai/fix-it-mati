@@ -33,7 +33,13 @@ class AuthMiddleware {
             $payload = $this->authService->verifyToken($token);
             
             if ($payload) {
-                // Token is valid - attach user data to request
+                // Token is valid - normalize user data
+                // JWT uses 'user_id' but controllers expect 'id'
+                if (isset($payload['user_id']) && !isset($payload['id'])) {
+                    $payload['id'] = $payload['user_id'];
+                }
+                
+                // Attach user data to request
                 $request->setUser($payload);
                 return null;
             }
@@ -44,7 +50,20 @@ class AuthMiddleware {
         // Try session authentication (for web)
         if ($this->authService->check()) {
             // User is authenticated, allow request to proceed
-            $request->setUser($this->authService->user());
+            $userObj = $this->authService->user();
+            
+            // Convert User object to array for consistency with JWT payload
+            if ($userObj) {
+                $user = [
+                    'id' => $userObj->id,
+                    'user_id' => $userObj->id,
+                    'email' => $userObj->email,
+                    'role' => $userObj->role,
+                    'full_name' => $userObj->full_name
+                ];
+                $request->setUser($user);
+            }
+            
             return null;
         }
         

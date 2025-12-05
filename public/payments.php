@@ -6,7 +6,7 @@
     <title>Payments & Billing - FixItMati</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="stylesheet" href="assets/style.css">
 </head>
 <body class="min-h-screen bg-slate-50 font-sans text-slate-800">
     <!-- HEADER -->
@@ -144,8 +144,8 @@
         </div>
     </main>
 
-    <script src="../assets/api-client.js"></script>
-    <script src="../assets/payments.js"></script>
+    <script src="assets/api-client.js?v=6"></script>
+    <script src="assets/payments.js?v=2"></script>
     <script>lucide.createIcons();</script>
 </body>
 </html>

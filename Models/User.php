@@ -174,7 +174,7 @@ class User {
         
         $sql = "INSERT INTO users (email, full_name, phone, address, account_number, role, password_hash, created_at, updated_at) 
                 VALUES (:email, :full_name, :phone, :address, :account_number, :role, :password_hash, NOW(), NOW()) 
-                RETURNING id";
+                RETURNING id, email, full_name, phone, address, account_number, role, created_at, updated_at";
         
         try {
             $stmt = $conn->prepare($sql);
@@ -189,7 +189,17 @@ class User {
             ]);
             
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Populate the object with the returned data
             $this->id = $result['id'];
+            $this->email = $result['email'];
+            $this->full_name = $result['full_name'];
+            $this->phone = $result['phone'];
+            $this->address = $result['address'];
+            $this->account_number = $result['account_number'];
+            $this->role = $result['role'];
+            $this->created_at = $result['created_at'];
+            $this->updated_at = $result['updated_at'];
             
             return true;
         } catch (Exception $e) {

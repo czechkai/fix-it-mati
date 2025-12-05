@@ -71,7 +71,8 @@ class AuthService {
             return [
                 'success' => true,
                 'message' => 'Registration successful',
-                'user' => $user->toArray()
+                'user' => $user->toArray(),
+                'user_object' => $user // Return object for token generation
             ];
             
         } catch (Exception $e) {

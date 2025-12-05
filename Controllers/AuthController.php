@@ -27,7 +27,13 @@ class AuthController {
         $result = $this->authService->register($data);
         
         if ($result['success']) {
-            return Response::created($result['user'], $result['message']);
+            // Generate JWT token for the new user (use user_object, not array)
+            $token = $this->authService->generateToken($result['user_object']);
+            
+            return Response::created([
+                'user' => $result['user'],
+                'token' => $token
+            ], $result['message']);
         }
         
         return Response::validationError(
@@ -80,13 +86,24 @@ class AuthController {
      * Get currently authenticated user
      */
     public function me(Request $request): Response {
-        $user = $this->authService->user();
+        // Get user from request (set by AuthMiddleware)
+        $user = $request->user();
         
         if (!$user) {
             return Response::unauthorized('Not authenticated');
         }
         
-        return Response::success($user->toArray());
+        // If user is already an array (from JWT), return it
+        if (is_array($user)) {
+            return Response::success($user);
+        }
+        
+        // If user is a User object (from session), convert to array
+        if (is_object($user) && method_exists($user, 'toArray')) {
+            return Response::success($user->toArray());
+        }
+        
+        return Response::success($user);
     }
     
     /**

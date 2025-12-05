@@ -31,19 +31,30 @@ A web-based platform for managing municipal service requests, announcements, and
    - Test database connection
 
 3. **Start the development server**
+   
+   **Option 1: Using the start script (Recommended)**
    ```bash
-   cd public
+   start.bat
+   ```
+   
+   **Option 2: Manual start**
+   ```bash
    php -S localhost:8000
    ```
 
 4. **Open your browser**
-   - Navigate to `http://localhost:8000/user-dashboard.php`
+   - Navigate to `http://localhost:8000` (redirects to login)
+   - Or go directly to `http://localhost:8000/login.php`
 
 ## 📁 Project Structure
 
 ```
 fix-it-mati/
+├── index.php               # Root router (handles all requests)
+├── start.bat               # Quick server start script
 ├── public/                 # Web-accessible files
+│   ├── login.php           # Login page
+│   ├── register.php        # Registration page
 │   ├── user-dashboard.php  # Main dashboard
 │   ├── active-requests.php # Service requests page
 │   ├── announcements.php   # Announcements feed

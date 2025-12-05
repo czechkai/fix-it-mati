@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS service_requests (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    category VARCHAR(50) NOT NULL, -- 'Water Supply', 'Electricity', 'Roads & Infra', 'Other'
+    category VARCHAR(50) NOT NULL, -- 'Water Supply', 'Electricity'
     status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'in-progress', 'completed', 'cancelled'
     priority VARCHAR(20) DEFAULT 'normal', -- 'low', 'normal', 'high', 'urgent'
     location TEXT,
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS payment_items (
     payment_id UUID NOT NULL REFERENCES payments(id) ON DELETE CASCADE,
     description VARCHAR(255) NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
-    category VARCHAR(50) -- 'water', 'electricity', 'garbage', 'other'
+    category VARCHAR(50) -- 'water', 'electricity'
 );
 
 -- Transactions Table

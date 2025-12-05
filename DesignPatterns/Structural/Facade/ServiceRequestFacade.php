@@ -54,7 +54,7 @@ class ServiceRequestFacade
         }
 
         // Validate category
-        $validCategories = ['water', 'electricity', 'roads', 'other'];
+        $validCategories = ['water', 'electricity'];
         if (!in_array($data['category'], $validCategories)) {
             return ['success' => false, 'error' => 'Invalid category'];
         }

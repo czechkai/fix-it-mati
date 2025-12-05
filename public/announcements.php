@@ -6,7 +6,12 @@
     <title>Announcements - FixItMati</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="../assets/announcements.css">
+    <style>
+      /* Inline announcement styles */
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+    </style>
 </head>
 <body>
     <div class="page-container animate-fade-in">
@@ -123,8 +128,8 @@
 
     </div>
 
-    <script src="../assets/api-client.js"></script>
-    <script src="../assets/announcements.js"></script>
+    <script src="assets/api-client.js"></script>
+    <script src="assets/announcements.js"></script>
     <script>lucide.createIcons();</script>
 </body>
 </html>

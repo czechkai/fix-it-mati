@@ -87,9 +87,7 @@ class NewRequestProcessor extends RequestProcessorTemplate
         
         $baseCosts = [
             'Water Supply' => 1500.0,
-            'Electricity' => 2000.0,
-            'Roads & Infra' => 5000.0,
-            'Other' => 1000.0
+            'Electricity' => 2000.0
         ];
         
         return $baseCosts[$category] ?? 1000.0;

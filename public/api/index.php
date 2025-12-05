@@ -119,6 +119,30 @@ try {
     $router->post('/api/notifications/test', 'NotificationController@sendTest');
     
     // ============================================
+    // ANNOUNCEMENTS ROUTES (Protected)
+    // ============================================
+    
+    // Temporary announcements endpoint - returns mock data
+    $router->get('/api/announcements', function(Request $req) {
+        return Response::success([
+            [
+                'id' => '1',
+                'title' => 'Scheduled Maintenance',
+                'content' => 'Water supply will be temporarily interrupted on December 10, 2025 from 8:00 AM to 12:00 PM for maintenance work in Barangay Central.',
+                'priority' => 'urgent',
+                'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))
+            ],
+            [
+                'id' => '2',
+                'title' => 'New Service Available',
+                'content' => 'We are now offering online payment options for your convenience. You can now pay your bills using GCash, PayPal, or Credit Card.',
+                'priority' => 'normal',
+                'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))
+            ]
+        ]);
+    });
+    
+    // ============================================
     // COMMAND PATTERN ROUTES (Protected)
     // ============================================
     
@@ -166,6 +190,7 @@ try {
     $router->post('/api/payments/refund', 'PaymentController@refundPayment');
     $router->get('/api/payments/status', 'PaymentController@getTransactionStatus');
     $router->get('/api/payments/gateways', 'PaymentController@getSupportedGateways');
+    $router->get('/api/payments/history', 'PaymentController@getHistory');
     
     // ============================================
     // TEMPLATE METHOD PATTERN ROUTES (Protected)

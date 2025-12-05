@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Active Requests - FixItMati</title>
-    <link rel="stylesheet" href="../assets/active-requests.css">
+    <link rel="stylesheet" href="assets/active-requests.css">
 </head>
 <body>
     <div class="page-container">
@@ -200,8 +200,8 @@
         </div>
     </div>
 
-    <script src="../assets/api-client.js"></script>
-    <script src="../assets/active-requests.js"></script>
+    <script src="assets/api-client.js"></script>
+    <script src="assets/active-requests.js"></script>
     <script>
         // Initialize the page after DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {

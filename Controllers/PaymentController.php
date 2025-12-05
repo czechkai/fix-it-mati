@@ -194,4 +194,41 @@ class PaymentController
             ]
         ]);
     }
+    
+    /**
+     * Get payment history for current user
+     */
+    public function getHistory(Request $request): Response
+    {
+        $userId = $request->user()['id'] ?? null;
+        
+        if (!$userId) {
+            return Response::json([
+                'success' => false,
+                'message' => 'User not authenticated'
+            ], 401);
+        }
+        
+        try {
+            // Get limit parameter
+            $limit = $request->query('limit', 10);
+            
+            // For now, return empty array since we don't have payments table yet
+            // In production, this would query the payments table
+            return Response::json([
+                'success' => true,
+                'data' => [
+                    'payments' => [],
+                    'count' => 0
+                ],
+                'message' => 'Payment history retrieved successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            return Response::json([
+                'success' => false,
+                'message' => 'Failed to retrieve payment history: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

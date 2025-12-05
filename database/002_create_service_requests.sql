@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS service_requests (
     id SERIAL PRIMARY KEY,
     tracking_number VARCHAR(50) UNIQUE NOT NULL,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    category VARCHAR(50) NOT NULL CHECK (category IN ('water', 'electricity', 'roads', 'other')),
+    category VARCHAR(50) NOT NULL CHECK (category IN ('water', 'electricity')),
     issue_type VARCHAR(100) NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
