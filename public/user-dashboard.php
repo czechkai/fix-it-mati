@@ -457,6 +457,6 @@
   <!-- API Client -->
   <script src="assets/api-client.js?v=6"></script>
   <!-- Dashboard JS -->
-  <script src="assets/dashboard.js?v=2"></script>
+  <script src="assets/dashboard.js?v=7"></script>
 </body>
 </html>

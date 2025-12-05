@@ -1,6 +1,6 @@
-# FixItMati - Municipal Services Management Platform
+# FixItMati - Municipal Water & Electricity Services Platform
 
-A web-based platform for managing municipal service requests, announcements, and payments with Supabase integration.
+A web-based platform for managing municipal water and electricity service requests, announcements, and payments with Supabase integration.
 
 ## 📋 Table of Contents
 - [Quick Start](#quick-start)
@@ -45,6 +45,25 @@ A web-based platform for managing municipal service requests, announcements, and
 4. **Open your browser**
    - Navigate to `http://localhost:8000` (redirects to login)
    - Or go directly to `http://localhost:8000/login.php`
+
+## ✨ Features
+
+### Service Categories
+- **Water Supply** - Report water interruptions, leaks, low pressure, pipe bursts
+- **Electricity** - Report power outages, faulty meters, streetlight issues
+
+### User Features
+- Submit and track service requests
+- View announcements from utility providers
+- Manage payment history
+- Real-time request status updates
+- Role-based dashboards (Customer, Technician, Admin)
+
+### Technical Features
+- JWT authentication with role-based access control
+- PostgreSQL database via Supabase
+- RESTful API architecture
+- Design patterns implementation (Facade, Adapter, State, Template Method)
 
 ## 📁 Project Structure
 

@@ -144,30 +144,6 @@
                     </div>
                 </div>
 
-                <!-- Contact Information -->
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="contact_name" class="block text-sm font-semibold text-slate-700 mb-2">Your Name</label>
-                        <input 
-                            type="text" 
-                            id="contact_name" 
-                            name="contact_name" 
-                            placeholder="Juan Dela Cruz"
-                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        >
-                    </div>
-                    <div>
-                        <label for="contact_phone" class="block text-sm font-semibold text-slate-700 mb-2">Contact Number</label>
-                        <input 
-                            type="tel" 
-                            id="contact_phone" 
-                            name="contact_phone" 
-                            placeholder="09XX XXX XXXX"
-                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        >
-                    </div>
-                </div>
-
                 <!-- Submit Buttons -->
                 <div class="flex gap-3 pt-4 border-t border-slate-200">
                     <button 
@@ -220,7 +196,7 @@
 
     </main>
 
-    <script src="assets/api-client.js"></script>
+    <script src="assets/api-client.js?v=6"></script>
     <script>
         let createdRequestId = null;
 
@@ -229,6 +205,12 @@
             
             const form = document.getElementById('createRequestForm');
             form.addEventListener('submit', handleSubmit);
+            
+            // Check if user is logged in
+            const token = sessionStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = 'login.php';
+            }
         });
 
         async function handleSubmit(e) {
@@ -249,11 +231,9 @@
                 title: formData.get('title'),
                 description: description,
                 category: formData.get('category'),
-                priority: formData.get('priority') || 'medium',
-                location: formData.get('location'),
-                contact_name: formData.get('contact_name'),
-                contact_phone: formData.get('contact_phone'),
-                user_id: 1 // Mock user ID - would come from session in production
+                priority: formData.get('priority') || 'normal',
+                location: formData.get('location')
+                // user_id will be set from authenticated session on server
             };
             
             UIHelpers.showLoading(submitBtn, 'Submitting...');

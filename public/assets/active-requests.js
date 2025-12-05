@@ -7,71 +7,70 @@ let activeRequests = [];
 // Initialize the page
 async function init() {
     try {
-        // Load requests from API
-        const response = await RequestsAPI.getAll({ status: 'active,in-progress,pending' });
-        activeRequests = (response.data && response.data.requests) || [];
-        
-        // Select first request if available
-        if (activeRequests.length > 0) {
-            selectedRequestId = activeRequests[0].id;
+        // Check authentication
+        const token = sessionStorage.getItem('auth_token');
+        if (!token) {
+            window.location.replace('login.php');
+            return;
         }
+
+        // Load requests from API
+        const response = await ApiClient.requests.getAll();
         
-        renderRequestsList();
-        renderDetailView();
+        console.log('API Response:', response);
+        
+        if (response.success && response.data && response.data.requests) {
+            // Filter for active requests (pending, in_progress)
+            activeRequests = response.data.requests.filter(r => 
+                r.status === 'pending' || r.status === 'in_progress'
+            );
+            
+            console.log('Active requests filtered:', activeRequests.length);
+            
+            // Select first request if available
+            if (activeRequests.length > 0) {
+                selectedRequestId = activeRequests[0].id;
+                renderRequestsList();
+                renderDetailView();
+            } else {
+                showEmptyState();
+            }
+        } else {
+            console.error('Invalid response structure:', response);
+            showEmptyState();
+        }
     } catch (error) {
         console.error('Failed to load requests:', error);
-        UIHelpers.showError('Failed to load requests. Using demo data.');
-        
-        // Fallback to mock data
-        loadMockData();
-        renderRequestsList();
-        renderDetailView();
+        showEmptyState();
     }
     
     attachEventListeners();
 }
 
-// Fallback mock data
-function loadMockData() {
-    activeRequests = [
-        {
-            id: 101,
-            title: "Leaking Pipe - Main Street Extension",
-            category: "water",
-            status: "in-progress",
-            created_at: "2023-10-20T10:00:00Z",
-            location: "123 Main St. Ext, Brgy. Central, Mati City",
-            description: "Severe water leak observed near the sidewalk. Water is pooling on the road. Suspected main line burst.",
-            assigned_to: "Juan Dela Cruz (Team A)",
-            estimated_completion: "2023-10-24T17:00:00Z",
-            timeline: [
-                { status: "Request Submitted", date: "Oct 20, 10:00 AM", completed: true },
-                { status: "Received by Water Dept", date: "Oct 20, 10:15 AM", completed: true },
-                { status: "Technician Assigned", date: "Oct 21, 08:30 AM", completed: true },
-                { status: "Inspection in Progress", date: "Oct 21, 09:45 AM", completed: true, current: true },
-                { status: "Repair Scheduled", date: "Pending", completed: false },
-                { status: "Issue Resolved", date: "Pending", completed: false }
-            ]
-        },
-        {
-            id: 102,
-            title: "No Electricity - Purok 4",
-            category: "electricity",
-            status: "pending",
-            created_at: "2023-10-22T08:00:00Z",
-            location: "Purok 4, Brgy. Dahican",
-            description: "Whole street has no power since last night's storm.",
-            assigned_to: null,
-            estimated_completion: null,
-            timeline: [
-                { status: "Request Submitted", date: "Oct 22, 08:00 AM", completed: true },
-                { status: "Pending Review", date: "Oct 22, 08:05 AM", completed: true, current: true },
-                { status: "Technician Assigned", date: "Pending", completed: false },
-                { status: "Issue Resolved", date: "Pending", completed: false }
-            ]
-        }
-    ];
-    selectedRequestId = 101;
+// Show empty state when no requests
+function showEmptyState() {
+    const requestsList = document.getElementById('requestsList');
+    if (requestsList) {
+        requestsList.innerHTML = `
+            <div style="padding: 40px 20px; text-align: center; color: #64748b;">
+                <svg style="width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.3;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                </svg>
+                <p style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No Active Requests</p>
+                <p style="font-size: 14px; margin-bottom: 20px;">You don't have any pending or in-progress requests.</p>
+                <a href="create-request.php" style="display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">Create New Request</a>
+            </div>
+        `;
+    }
+    
+    const detailPanel = document.querySelector('.detail-panel');
+    if (detailPanel) {
+        detailPanel.innerHTML = `
+            <div style="padding: 60px 20px; text-align: center; color: #94a3b8;">
+                <p style="font-size: 16px;">Select a request to view details</p>
+            </div>
+        `;
+    }
 }
 
 // SVG Icons as strings
@@ -95,49 +94,71 @@ const icons = {
     zap: '<svg class="icon icon-xs" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>'
 };
 
-// Initialize the page
-function init() {
-    renderRequestsList();
-    renderDetailView();
-    attachEventListeners();
-}
-
 // Render the requests list
 function renderRequestsList() {
     const listContainer = document.getElementById('requestsList');
     if (!listContainer) return;
     
+    if (activeRequests.length === 0) {
+        return; // Empty state already handled
+    }
+    
+    // Update panel header counts
+    const panelHeader = document.querySelector('.panel-header-text p');
+    if (panelHeader) {
+        const activeCount = activeRequests.filter(r => r.status === 'in_progress' || r.status === 'pending').length;
+        panelHeader.textContent = `${activeCount} Active`;
+    }
+    
     listContainer.innerHTML = activeRequests.map(req => {
         const isActive = selectedRequestId === req.id;
-        const categoryIcon = req.category === 'water' ? '<svg class="icon icon-xs" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>' : 
-                             '<svg class="icon icon-xs" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>';
+        const categoryIcon = req.category === 'water' ? 
+            '<svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>' : 
+            '<svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>';
         
         const statusMap = {
             'pending': 'status-pending',
-            'in-progress': 'status-in-progress',
-            'completed': 'status-completed'
+            'in_progress': 'status-in-progress',
+            'completed': 'status-completed',
+            'cancelled': 'status-cancelled'
         };
         const statusClass = statusMap[req.status] || 'status-pending';
         
-        const statusDisplay = req.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const statusDisplay = req.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
         const categoryDisplay = req.category.charAt(0).toUpperCase() + req.category.slice(1);
+        
+        const formattedDate = formatDate(req.created_at);
         
         return `
             <div class="request-card ${isActive ? 'active' : ''}" data-request-id="${req.id}">
                 <div class="request-card-header">
-                    <span class="ticket-number">SR-2023-${req.id}</span>
+                    <span class="ticket-number">#${req.id.substring(0, 8)}</span>
                     <span class="status-badge ${statusClass}">${statusDisplay}</span>
                 </div>
-                <h3 class="request-title">${req.title}</h3>
+                <h3 class="request-title">${escapeHtml(req.title)}</h3>
                 <div class="request-meta">
                     ${categoryIcon}
                     <span>${categoryDisplay}</span>
                     <span>•</span>
-                    <span>${new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <span>${formattedDate}</span>
                 </div>
             </div>
         `;
     }).join('');
+}
+
+// Helper function to format dates
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Render the detail view
@@ -145,8 +166,8 @@ function renderDetailView() {
     const currentRequest = activeRequests.find(r => r.id === selectedRequestId);
     if (!currentRequest) return;
     
-    const mapIcon = '<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
-    const calendarIcon = '<svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+    const mapIcon = '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+    const calendarIcon = '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
     
     // Update header
     const titleEl = document.getElementById('detailTitle');
@@ -155,46 +176,32 @@ function renderDetailView() {
     const dateEl = document.getElementById('detailDate');
     
     if (titleEl) titleEl.textContent = currentRequest.title;
-    if (statusEl) statusEl.textContent = currentRequest.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-    if (locationEl) locationEl.innerHTML = `${mapIcon} ${currentRequest.location}`;
-    if (dateEl) dateEl.innerHTML = `${calendarIcon} Filed: ${new Date(currentRequest.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    if (statusEl) {
+        statusEl.textContent = currentRequest.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        statusEl.className = 'detail-status-badge';
+    }
+    if (locationEl) locationEl.innerHTML = `${mapIcon} ${escapeHtml(currentRequest.location || 'Not specified')}`;
+    if (dateEl) dateEl.innerHTML = `${calendarIcon} Filed: ${formatDate(currentRequest.created_at)}`;
     
-    // Update timeline
+    // Update timeline - Generate timeline based on status
     const timelineContainer = document.getElementById('timeline');
-    if (timelineContainer && currentRequest.timeline) {
-        const checkCircle = '<svg class="icon icon-xs icon-fill" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
-        const circle = '<svg class="icon icon-xs icon-fill" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle></svg>';
+    if (timelineContainer) {
+        const checkCircle = '<svg class="icon icon-xs icon-fill" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+        const circle = '<svg class="icon icon-xs icon-fill" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>';
         
-        timelineContainer.innerHTML = currentRequest.timeline.map((step, index) => {
-            let dotClass = 'pending';
-            let dotIcon = circle;
-            let contentClass = '';
-            
-            if (step.completed) {
-                dotClass = 'completed';
-                dotIcon = checkCircle;
-            } else if (step.current) {
-                dotClass = 'current';
-                dotIcon = circle;
-            } else {
-                contentClass = 'faded';
-            }
-            
-            const noteHtml = step.current ? `
-                <div class="timeline-note">
-                    Technician is currently assessing the damage at the site. Please keep lines open.
-                </div>
-            ` : '';
+        // Generate timeline based on request status
+        const timeline = generateTimeline(currentRequest);
+        
+        timelineContainer.innerHTML = timeline.map((item, index) => {
+            const icon = item.completed ? checkCircle : circle;
+            const itemClass = item.current ? 'timeline-item current' : 'timeline-item' + (item.completed ? ' completed' : '');
             
             return `
-                <div class="timeline-item ${contentClass}">
-                    <div class="timeline-dot ${dotClass}">
-                        ${dotIcon}
-                    </div>
+                <div class="${itemClass}">
+                    <div class="timeline-marker">${icon}</div>
                     <div class="timeline-content">
-                        <span class="timeline-status">${step.status}</span>
-                        <span class="timeline-date">${step.date}</span>
-                        ${noteHtml}
+                        <p class="timeline-text">${item.status}</p>
+                        <p class="timeline-date">${item.date}</p>
                     </div>
                 </div>
             `;
@@ -203,11 +210,106 @@ function renderDetailView() {
     
     // Update assigned technician
     const techName = document.getElementById('technicianName');
-    if (techName) techName.textContent = currentRequest.assigned_to || 'Unassigned';
+    if (techName) {
+        if (currentRequest.assigned_technician_name) {
+            techName.textContent = currentRequest.assigned_technician_name;
+        } else {
+            techName.textContent = 'Awaiting Assignment';
+        }
+    }
     
     // Update description
     const descEl = document.getElementById('issueDescription');
-    if (descEl) descEl.textContent = currentRequest.description;
+    if (descEl) descEl.textContent = currentRequest.description || 'No description provided.';
+}
+
+// Generate timeline based on request status
+function generateTimeline(request) {
+    const timeline = [];
+    const createdDate = formatDate(request.created_at);
+    const updatedDate = request.updated_at ? formatDate(request.updated_at) : createdDate;
+    
+    // Request submitted - always completed
+    timeline.push({
+        status: 'Request Submitted',
+        date: createdDate,
+        completed: true,
+        current: false
+    });
+    
+    if (request.status === 'pending') {
+        timeline.push({
+            status: 'Pending Review',
+            date: createdDate,
+            completed: true,
+            current: true
+        });
+        timeline.push({
+            status: 'Technician Assignment',
+            date: 'Pending',
+            completed: false,
+            current: false
+        });
+        timeline.push({
+            status: 'In Progress',
+            date: 'Pending',
+            completed: false,
+            current: false
+        });
+        timeline.push({
+            status: 'Issue Resolved',
+            date: 'Pending',
+            completed: false,
+            current: false
+        });
+    } else if (request.status === 'in_progress') {
+        timeline.push({
+            status: 'Technician Assigned',
+            date: updatedDate,
+            completed: true,
+            current: false
+        });
+        timeline.push({
+            status: 'Work in Progress',
+            date: updatedDate,
+            completed: true,
+            current: true
+        });
+        timeline.push({
+            status: 'Issue Resolved',
+            date: 'Pending',
+            completed: false,
+            current: false
+        });
+    } else if (request.status === 'completed') {
+        timeline.push({
+            status: 'Technician Assigned',
+            date: updatedDate,
+            completed: true,
+            current: false
+        });
+        timeline.push({
+            status: 'Work Completed',
+            date: updatedDate,
+            completed: true,
+            current: false
+        });
+        timeline.push({
+            status: 'Issue Resolved',
+            date: request.completed_at ? formatDate(request.completed_at) : updatedDate,
+            completed: true,
+            current: true
+        });
+    } else if (request.status === 'cancelled') {
+        timeline.push({
+            status: 'Request Cancelled',
+            date: updatedDate,
+            completed: true,
+            current: true
+        });
+    }
+    
+    return timeline;
 }
 
 // Attach event listeners
@@ -218,7 +320,7 @@ function attachEventListeners() {
         requestsList.addEventListener('click', function(e) {
             const card = e.target.closest('.request-card');
             if (card) {
-                const requestId = parseInt(card.getAttribute('data-request-id'));
+                const requestId = card.getAttribute('data-request-id');
                 if (requestId !== selectedRequestId) {
                     selectedRequestId = requestId;
                     renderRequestsList();

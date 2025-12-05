@@ -1,9 +1,23 @@
+<?php
+// Authentication check
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Active Requests - FixItMati</title>
+    <!-- Check authentication client-side -->
+    <script>
+        (function() {
+            const token = sessionStorage.getItem('auth_token');
+            if (!token) {
+                window.location.replace('login.php');
+                throw new Error('Not authenticated');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="assets/active-requests.css">
 </head>
 <body>
@@ -200,13 +214,7 @@
         </div>
     </div>
 
-    <script src="assets/api-client.js"></script>
-    <script src="assets/active-requests.js"></script>
-    <script>
-        // Initialize the page after DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            init();
-        });
-    </script>
+    <script src="assets/api-client.js?v=6"></script>
+    <script src="assets/active-requests.js?v=3"></script>
 </body>
 </html>

@@ -506,8 +506,17 @@
     });
   }
 
-  // Initialize lucide icons
-  lucide.createIcons();
+  // Initialize lucide icons when available
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  } else {
+    // Wait for lucide to load
+    window.addEventListener('load', () => {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
+  }
   
   // Load data on page load
   if (window.location.pathname.includes('user-dashboard.php')) {

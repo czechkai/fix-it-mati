@@ -134,11 +134,11 @@ class ServiceRequest
     public function getAll(array $filters = []): array
     {
         $sql = "SELECT sr.*, 
-                       u.name as customer_name, u.email as customer_email,
-                       t.name as technician_name
+                       u.full_name as customer_name, u.email as customer_email,
+                       t.full_name as technician_name
                 FROM service_requests sr
                 LEFT JOIN users u ON sr.user_id = u.id
-                LEFT JOIN users t ON sr.assigned_to = t.id
+                LEFT JOIN users t ON sr.assigned_technician_id = t.id
                 WHERE 1=1";
 
         $params = [];
@@ -197,9 +197,13 @@ class ServiceRequest
             $stmt->execute();
             $requests = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-            // Parse photos for each request
+            // Parse photos for each request if column exists
             foreach ($requests as &$request) {
-                $request['photos'] = $this->parsePhotosArray($request['photos']);
+                if (isset($request['photos'])) {
+                    $request['photos'] = $this->parsePhotosArray($request['photos']);
+                } else {
+                    $request['photos'] = [];
+                }
             }
 
             return $requests;
