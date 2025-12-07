@@ -1,13 +1,19 @@
 @echo off
-REM Sync assets from public\assets to assets
-REM This ensures PHP's built-in server serves the latest files
-
-echo Syncing assets from public\assets\ to assets\...
-echo.
-
-xcopy /Y /Q "public\assets\*.*" "assets\"
+REM This script is no longer needed - assets are now in root folder only
+REM Edit files directly in: assets\
+REM The server uses: php -S localhost:8000
 
 echo.
-echo Done! All assets synchronized.
+echo ========================================
+echo   ASSETS FOLDER STRUCTURE
+echo ========================================
+echo.
+echo All assets are now in the ROOT assets\ folder
+echo Edit files in: assets\
+echo.
+echo No syncing needed!
+echo.
+echo Files in assets\:
+dir /B assets\
 echo.
 pause

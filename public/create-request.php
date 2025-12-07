@@ -196,7 +196,7 @@
 
     </main>
 
-    <script src="assets/api-client.js?v=6"></script>
+    <script src="assets/api-client.js?v=7"></script>
     <script>
         let createdRequestId = null;
 
@@ -233,37 +233,41 @@
                 category: formData.get('category'),
                 priority: formData.get('priority') || 'normal',
                 location: formData.get('location')
-                // user_id will be set from authenticated session on server
             };
             
-            UIHelpers.showLoading(submitBtn, 'Submitting...');
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<svg class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="ml-2">Submitting...</span>';
             
             try {
-                const result = await RequestsAPI.create(requestData);
-                UIHelpers.hideLoading(submitBtn);
+                const result = await ApiClient.post('/requests', requestData);
                 
-                createdRequestId = result.id || result.data?.id;
-                
-                // Show success modal
-                const modal = document.getElementById('successModal');
-                const refSpan = document.getElementById('requestRef');
-                refSpan.textContent = `SR-${new Date().getFullYear()}-${createdRequestId || Math.floor(Math.random() * 10000)}`;
-                modal.classList.remove('hidden');
-                
-                lucide.createIcons();
+                if (result.success) {
+                    createdRequestId = result.data?.id || result.data?.request?.id;
+                    
+                    // Show success modal
+                    const modal = document.getElementById('successModal');
+                    const refSpan = document.getElementById('requestRef');
+                    refSpan.textContent = `#${createdRequestId ? createdRequestId.substring(0, 8) : Math.floor(Math.random() * 10000)}`;
+                    modal.classList.remove('hidden');
+                    
+                    lucide.createIcons();
+                } else {
+                    throw new Error(result.error || 'Failed to submit request');
+                }
                 
             } catch (error) {
-                UIHelpers.hideLoading(submitBtn);
-                UIHelpers.showError(`Failed to submit request: ${error.message}`);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i><span>Submit Request</span>';
+                lucide.createIcons();
+                
+                console.error('Submission error:', error);
+                alert(`Failed to submit request: ${error.message || 'Unknown error'}`);
             }
         }
 
         function viewRequest() {
-            if (createdRequestId) {
-                window.location.href = `active-requests.php?id=${createdRequestId}`;
-            } else {
-                window.location.href = 'active-requests.php';
-            }
+            window.location.href = 'active-requests.php';
         }
     </script>
 </body>

@@ -71,29 +71,38 @@ A web-based platform for managing municipal water and electricity service reques
 fix-it-mati/
 ├── index.php               # Root router (handles all requests)
 ├── start.bat               # Quick server start script
+├── assets/                 # CSS and JavaScript files (root level)
+│   ├── style.css           # Dashboard styles
+│   ├── api-client.js       # API client library
+│   ├── dashboard.js        # Dashboard interactions
+│   ├── active-requests.js  # Active requests page
+│   ├── active-requests.css
+│   ├── announcements.js
+│   ├── announcements.css
+│   ├── payments.js
+│   └── payments.css
 ├── public/                 # Web-accessible files
 │   ├── login.php           # Login page
 │   ├── register.php        # Registration page
 │   ├── user-dashboard.php  # Main dashboard
 │   ├── active-requests.php # Service requests page
 │   ├── announcements.php   # Announcements feed
-│   └── payments.php        # Billing and payments
-├── assets/                 # CSS and JavaScript files
-│   ├── style.css           # Dashboard styles
-│   ├── app.js              # Dashboard interactions
-│   ├── active-requests.css
-│   ├── active-requests.js
-│   ├── announcements.css
-│   ├── announcements.js
-│   ├── payments.css
-│   └── payments.js
+│   ├── payments.php        # Billing and payments
+│   └── create-request.php  # Create new request form
 ├── config/                 # Configuration files
 │   └── database.php        # Database connection class
+├── Controllers/            # MVC Controllers
+├── Models/                 # Database models
+├── Services/               # Business logic services
+├── Middleware/             # Authentication middleware
+├── DesignPatterns/         # Design pattern implementations
 ├── .env                    # Environment variables (NOT in git)
 ├── .env.example            # Environment template (committed)
 ├── .gitignore              # Git ignore rules
 └── setup.bat               # Automated setup script
 ```
+
+**Note:** Assets are served from the root `assets/` folder when using `php -S localhost:8000`
 
 ## 🗄️ Database Setup
 

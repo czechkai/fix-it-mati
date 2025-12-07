@@ -77,7 +77,7 @@ session_start();
                     <div class="panel-header">
                         <div class="panel-header-text">
                             <h2>Your Tickets</h2>
-                            <p>2 Active, 12 Resolved</p>
+                            <p id="panelStats">Loading...</p>
                         </div>
                         <button class="filter-btn" id="filterBtn">
                             <svg class="icon" viewBox="0 0 24 24">
@@ -87,38 +87,30 @@ session_start();
                     </div>
                     
                     <div class="requests-list" id="requestsList">
-                        <!-- Request cards will be dynamically inserted here by JavaScript -->
+                        <div style="padding: 40px 20px; text-align: center; color: #94a3b8;">
+                            <div style="width: 40px; height: 40px; margin: 0 auto 16px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                            <p style="font-size: 14px;">Loading requests...</p>
+                        </div>
                     </div>
+                    <style>
+                        @keyframes spin { to { transform: rotate(360deg); } }
+                    </style>
                 </div>
 
                 <!-- RIGHT PANEL: DETAILED TRACKING VIEW -->
-                <div class="detail-panel">
+                <div class="detail-panel" id="detailPanel" style="display: none;">
                     
                     <!-- Detail Header -->
                     <div class="detail-header">
                         <div class="detail-header-top">
                             <div class="detail-title-section">
                                 <div class="detail-title-group">
-                                    <h1 id="detailTitle">Leaking Pipe - Main Street Extension</h1>
-                                    <span class="detail-status-badge" id="detailStatus">In Progress</span>
+                                    <h1 id="detailTitle"></h1>
+                                    <span class="detail-status-badge" id="detailStatus"></span>
                                 </div>
                                 <div class="detail-meta">
-                                    <div class="detail-meta-item" id="detailLocation">
-                                        <svg class="icon icon-sm" viewBox="0 0 24 24">
-                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                            <circle cx="12" cy="10" r="3"></circle>
-                                        </svg>
-                                        123 Main St. Ext, Brgy. Central, Mati City
-                                    </div>
-                                    <div class="detail-meta-item" id="detailDate">
-                                        <svg class="icon icon-sm" viewBox="0 0 24 24">
-                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                                        </svg>
-                                        Filed: Oct 20, 2023
-                                    </div>
+                                    <div class="detail-meta-item" id="detailLocation"></div>
+                                    <div class="detail-meta-item" id="detailDate"></div>
                                 </div>
                             </div>
                             <button class="more-btn" id="moreBtn">
@@ -138,9 +130,7 @@ session_start();
                             <!-- Timeline Section -->
                             <div class="timeline-section">
                                 <h3 class="section-title">Progress Tracker</h3>
-                                <div class="timeline" id="timeline">
-                                    <!-- Timeline items will be dynamically inserted here by JavaScript -->
-                                </div>
+                                <div class="timeline" id="timeline"></div>
                             </div>
 
                             <!-- Details Sidebar -->
@@ -157,7 +147,7 @@ session_start();
                                             </svg>
                                         </div>
                                         <div class="technician-details">
-                                            <p id="technicianName">Juan Dela Cruz (Team A)</p>
+                                            <p id="technicianName"></p>
                                             <p>Mati Water District</p>
                                         </div>
                                     </div>
@@ -166,9 +156,7 @@ session_start();
                                 <!-- Description Block -->
                                 <div>
                                     <h4 class="info-card-title">Issue Description</h4>
-                                    <p class="description-box" id="issueDescription">
-                                        Severe water leak observed near the sidewalk. Water is pooling on the road. Suspected main line burst.
-                                    </p>
+                                    <p class="description-box" id="issueDescription"></p>
                                 </div>
                                 
                                 <!-- Attachments -->
@@ -215,6 +203,6 @@ session_start();
     </div>
 
     <script src="assets/api-client.js?v=6"></script>
-    <script src="assets/active-requests.js?v=3"></script>
+    <script src="assets/active-requests.js?v=5"></script>
 </body>
 </html>

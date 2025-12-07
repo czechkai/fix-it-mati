@@ -45,8 +45,8 @@ class ServiceRequestFacade
             return ['success' => false, 'error' => 'User not found'];
         }
 
-        // Validate required fields
-        $required = ['category', 'issue_type', 'title', 'description', 'location'];
+        // Validate required fields (matching database schema)
+        $required = ['category', 'title', 'description', 'location'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
                 return ['success' => false, 'error' => "Field '$field' is required"];
@@ -59,8 +59,14 @@ class ServiceRequestFacade
             return ['success' => false, 'error' => 'Invalid category'];
         }
 
-        // Add user_id to data
+        // Add user_id and ensure status is set
         $data['user_id'] = $userId;
+        $data['status'] = 'pending';
+        
+        // Set priority if not provided
+        if (empty($data['priority'])) {
+            $data['priority'] = 'normal';
+        }
 
         // Create request
         $request = $this->requestModel->create($data);

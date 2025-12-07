@@ -25,42 +25,36 @@ class ServiceRequest
      */
     public function create(array $data): ?array
     {
-        // Generate tracking number
-        $trackingNumber = $this->generateTrackingNumber();
-
         $sql = "INSERT INTO service_requests (
-            tracking_number, user_id, category, issue_type, title, description,
-            location, contact_phone, preferred_contact, priority, status, photos
+            user_id, category, title, description,
+            location, priority, status
         ) VALUES (
-            :tracking_number, :user_id, :category, :issue_type, :title, :description,
-            :location, :contact_phone, :preferred_contact, :priority, :status, :photos
+            :user_id, :category, :title, :description,
+            :location, :priority, :status
         ) RETURNING *";
 
         try {
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
-                'tracking_number' => $trackingNumber,
                 'user_id' => $data['user_id'],
                 'category' => $data['category'],
-                'issue_type' => $data['issue_type'],
                 'title' => $data['title'],
                 'description' => $data['description'],
                 'location' => $data['location'],
-                'contact_phone' => $data['contact_phone'] ?? null,
-                'preferred_contact' => $data['preferred_contact'] ?? 'sms',
                 'priority' => $data['priority'] ?? 'normal',
-                'status' => 'pending',
-                'photos' => isset($data['photos']) ? '{' . implode(',', $data['photos']) . '}' : null
+                'status' => 'pending'
             ]);
 
             $request = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-            // Log initial state in request_updates
-            $this->addUpdate($request['id'], $data['user_id'], null, 'pending', 'Request submitted');
+            if ($request) {
+                // Log initial state in request_updates
+                $this->addUpdate($request['id'], $data['user_id'], null, 'pending', 'Request submitted');
 
-            // Trigger state onEnter
-            $state = StateFactory::getState('pending');
-            $state->onEnter($request);
+                // Trigger state onEnter
+                $state = StateFactory::getState('pending');
+                $state->onEnter($request);
+            }
 
             return $request;
         } catch (\PDOException $e) {
@@ -329,19 +323,18 @@ class ServiceRequest
     /**
      * Add an update/timeline entry
      */
-    private function addUpdate(int $requestId, int $userId, ?string $oldStatus, string $newStatus, ?string $notes): bool
+    private function addUpdate(string $requestId, string $userId, ?string $oldStatus, string $newStatus, ?string $notes): bool
     {
-        $sql = "INSERT INTO request_updates (request_id, user_id, old_status, new_status, notes)
-                VALUES (:request_id, :user_id, :old_status, :new_status, :notes)";
+        $sql = "INSERT INTO request_updates (request_id, created_by, status, message)
+                VALUES (:request_id, :created_by, :status, :message)";
 
         try {
             $stmt = $this->db->prepare($sql);
             return $stmt->execute([
                 'request_id' => $requestId,
-                'user_id' => $userId,
-                'old_status' => $oldStatus,
-                'new_status' => $newStatus,
-                'notes' => $notes
+                'created_by' => $userId,
+                'status' => $newStatus,
+                'message' => $notes
             ]);
         } catch (\PDOException $e) {
             error_log("Error adding request update: " . $e->getMessage());

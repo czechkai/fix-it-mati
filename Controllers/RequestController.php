@@ -313,7 +313,7 @@ class RequestController
     {
         $errors = [];
 
-        $required = ['category', 'issue_type', 'title', 'description', 'location'];
+        $required = ['category', 'title', 'description', 'location'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
                 $errors[] = "Field '$field' is required";
@@ -326,11 +326,11 @@ class RequestController
                 $errors[] = "Invalid category. Must be one of: " . implode(', ', $validCategories);
             }
         }
-
-        if (!empty($data['preferred_contact'])) {
-            $validContacts = ['sms', 'call', 'email'];
-            if (!in_array($data['preferred_contact'], $validContacts)) {
-                $errors[] = "Invalid preferred_contact. Must be one of: " . implode(', ', $validContacts);
+        
+        if (!empty($data['priority'])) {
+            $validPriorities = ['low', 'normal', 'medium', 'high', 'urgent'];
+            if (!in_array($data['priority'], $validPriorities)) {
+                $errors[] = "Invalid priority. Must be one of: " . implode(', ', $validPriorities);
             }
         }
 

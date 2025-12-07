@@ -21,6 +21,7 @@ class PendingState extends AbstractRequestState
     {
         // Log that request is pending
         // Could trigger notification to admins here
-        error_log("Request {$requestData['tracking_number']} is now pending review");
+        $id = $requestData['id'] ?? 'unknown';
+        error_log("Request {$id} is now pending review");
     }
 }

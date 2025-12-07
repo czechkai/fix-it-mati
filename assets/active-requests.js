@@ -49,6 +49,12 @@ async function init() {
 
 // Show empty state when no requests
 function showEmptyState() {
+    // Update header
+    const panelHeader = document.getElementById('panelStats');
+    if (panelHeader) {
+        panelHeader.textContent = '0 Active';
+    }
+    
     const requestsList = document.getElementById('requestsList');
     if (requestsList) {
         requestsList.innerHTML = `
@@ -63,13 +69,10 @@ function showEmptyState() {
         `;
     }
     
-    const detailPanel = document.querySelector('.detail-panel');
+    // Hide detail panel when no requests
+    const detailPanel = document.getElementById('detailPanel');
     if (detailPanel) {
-        detailPanel.innerHTML = `
-            <div style="padding: 60px 20px; text-align: center; color: #94a3b8;">
-                <p style="font-size: 16px;">Select a request to view details</p>
-            </div>
-        `;
+        detailPanel.style.display = 'none';
     }
 }
 
@@ -99,15 +102,15 @@ function renderRequestsList() {
     const listContainer = document.getElementById('requestsList');
     if (!listContainer) return;
     
-    if (activeRequests.length === 0) {
-        return; // Empty state already handled
+    // Update panel header counts
+    const panelHeader = document.getElementById('panelStats');
+    if (panelHeader) {
+        const activeCount = activeRequests.length;
+        panelHeader.textContent = `${activeCount} Active`;
     }
     
-    // Update panel header counts
-    const panelHeader = document.querySelector('.panel-header-text p');
-    if (panelHeader) {
-        const activeCount = activeRequests.filter(r => r.status === 'in_progress' || r.status === 'pending').length;
-        panelHeader.textContent = `${activeCount} Active`;
+    if (activeRequests.length === 0) {
+        return; // Empty state already handled
     }
     
     listContainer.innerHTML = activeRequests.map(req => {
@@ -165,6 +168,12 @@ function escapeHtml(text) {
 function renderDetailView() {
     const currentRequest = activeRequests.find(r => r.id === selectedRequestId);
     if (!currentRequest) return;
+    
+    // Show the detail panel
+    const detailPanel = document.getElementById('detailPanel');
+    if (detailPanel) {
+        detailPanel.style.display = 'flex';
+    }
     
     const mapIcon = '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
     const calendarIcon = '<svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';

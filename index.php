@@ -44,7 +44,7 @@ if (in_array($uri, $publicPages)) {
 
 // Check if requesting an asset file
 if (strpos($uri, 'assets/') === 0) {
-    $file = __DIR__ . '/public/' . $uri;
+    $file = __DIR__ . '/' . $uri;  // Serve from root assets/
     if (file_exists($file)) {
         // Determine content type
         $ext = pathinfo($file, PATHINFO_EXTENSION);
