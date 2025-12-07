@@ -69,6 +69,12 @@ try {
         ]);
     });
     
+    // Public announcements (no auth required)
+    $router->get('/api/announcements', 'AnnouncementController@getPublished');
+    $router->get('/api/announcements/active', 'AnnouncementController@getActive');
+    $router->get('/api/announcements/:id', 'AnnouncementController@show');
+    $router->get('/api/announcements/category/:category', 'AnnouncementController@getByCategory');
+    
     // ============================================
     // PROTECTED ROUTES (Authentication Required)
     // ============================================
@@ -119,28 +125,16 @@ try {
     $router->post('/api/notifications/test', 'NotificationController@sendTest');
     
     // ============================================
-    // ANNOUNCEMENTS ROUTES (Protected)
+    // ANNOUNCEMENTS ROUTES (Protected Admin only)
     // ============================================
     
-    // Temporary announcements endpoint - returns mock data
-    $router->get('/api/announcements', function(Request $req) {
-        return Response::success([
-            [
-                'id' => '1',
-                'title' => 'Scheduled Maintenance',
-                'content' => 'Water supply will be temporarily interrupted on December 10, 2025 from 8:00 AM to 12:00 PM for maintenance work in Barangay Central.',
-                'priority' => 'urgent',
-                'created_at' => date('Y-m-d H:i:s', strtotime('-2 hours'))
-            ],
-            [
-                'id' => '2',
-                'title' => 'New Service Available',
-                'content' => 'We are now offering online payment options for your convenience. You can now pay your bills using GCash, PayPal, or Credit Card.',
-                'priority' => 'normal',
-                'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))
-            ]
-        ]);
-    });
+    // Admin routes (protected)
+    $router->post('/api/announcements', 'AnnouncementController@create');
+    $router->put('/api/announcements/:id', 'AnnouncementController@update');
+    $router->delete('/api/announcements/:id', 'AnnouncementController@delete');
+    
+    // Comments (requires auth)
+    $router->post('/api/announcements/comments', 'AnnouncementController@addComment');
     
     // ============================================
     // COMMAND PATTERN ROUTES (Protected)
@@ -186,6 +180,7 @@ try {
     // ============================================
     
     // Payment gateway operations
+    $router->get('/api/payments/current', 'PaymentController@getCurrentBills');
     $router->post('/api/payments/process', 'PaymentController@processPayment');
     $router->post('/api/payments/refund', 'PaymentController@refundPayment');
     $router->get('/api/payments/status', 'PaymentController@getTransactionStatus');

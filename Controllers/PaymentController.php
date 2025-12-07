@@ -9,80 +9,133 @@ namespace FixItMati\Controllers;
 
 use FixItMati\Core\Request;
 use FixItMati\Core\Response;
+use FixItMati\Models\Payment;
 use FixItMati\DesignPatterns\Structural\Adapter\PaymentAdapterFactory;
 
 class PaymentController
 {
-    private PaymentAdapterFactory $factory;
+    private Payment $paymentModel;
     
     public function __construct()
     {
-        // Configure payment gateways
-        $configs = [
-            'stripe' => [
-                'api_key' => $_ENV['STRIPE_API_KEY'] ?? 'sk_test_...',
-                'webhook_secret' => $_ENV['STRIPE_WEBHOOK_SECRET'] ?? ''
-            ],
-            'paypal' => [
-                'client_id' => $_ENV['PAYPAL_CLIENT_ID'] ?? '',
-                'client_secret' => $_ENV['PAYPAL_CLIENT_SECRET'] ?? '',
-                'mode' => $_ENV['PAYPAL_MODE'] ?? 'sandbox'
-            ],
-            'gcash' => [
-                'api_key' => $_ENV['GCASH_API_KEY'] ?? '',
-                'merchant_id' => $_ENV['GCASH_MERCHANT_ID'] ?? ''
-            ]
-        ];
-        
-        $this->factory = new PaymentAdapterFactory($configs);
+        $this->paymentModel = new Payment();
     }
     
+    /**
+     * Get current bills for authenticated user
+     */
+    public function getCurrentBills(Request $request): Response
+    {
+        $userId = $request->user()['id'] ?? null;
+        
+        if (!$userId) {
+            return Response::json([
+                'success' => false,
+                'message' => 'User not authenticated'
+            ], 401);
+        }
+        
+        try {
+            $bills = $this->paymentModel->getCurrentBills($userId);
+            $totalDue = $this->paymentModel->getTotalDue($userId);
+            
+            // Process bills data for frontend
+            $processedBills = [];
+            foreach ($bills as $bill) {
+                $items = json_decode($bill['items'], true);
+                
+                $processedBills[] = [
+                    'id' => $bill['id'],
+                    'bill_month' => $bill['bill_month'],
+                    'amount' => (float) $bill['amount'],
+                    'status' => $bill['status'],
+                    'due_date' => $bill['due_date'],
+                    'items' => $items
+                ];
+            }
+            
+            return Response::json([
+                'success' => true,
+                'data' => [
+                    'bills' => $processedBills,
+                    'total_due' => $totalDue,
+                    'count' => count($processedBills)
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log("Error fetching current bills: " . $e->getMessage());
+            return Response::json([
+                'success' => false,
+                'message' => 'Failed to retrieve bills'
+            ], 500);
+        }
+    }
+
     /**
      * Process payment through specified gateway
      */
     public function processPayment(Request $request): Response
     {
-        $gateway = $request->param('gateway');
-        $amount = (float) $request->param('amount');
-        $paymentDetails = $request->param('payment_details', []);
+        $userId = $request->user()['id'] ?? null;
         
-        if (!$gateway || !$amount) {
+        if (!$userId) {
             return Response::json([
                 'success' => false,
-                'message' => 'Gateway and amount are required'
+                'message' => 'User not authenticated'
+            ], 401);
+        }
+
+        $gateway = $request->param('gateway');
+        $paymentId = $request->param('payment_id');
+        $amount = (float) $request->param('amount');
+        
+        if (!$gateway || !$paymentId || !$amount) {
+            return Response::json([
+                'success' => false,
+                'message' => 'Gateway, payment ID, and amount are required'
             ], 400);
         }
         
+        // Validate payment belongs to user
+        $payment = $this->paymentModel->find($paymentId);
+        if (!$payment || $payment['user_id'] !== $userId) {
+            return Response::json([
+                'success' => false,
+                'message' => 'Payment not found or unauthorized'
+            ], 404);
+        }
+
         try {
-            // Check if gateway is supported
-            if (!$this->factory->isGatewaySupported($gateway)) {
-                return Response::json([
-                    'success' => false,
-                    'message' => 'Unsupported payment gateway',
-                    'supported_gateways' => $this->factory->getSupportedGateways()
-                ], 400);
-            }
+            // Generate reference number
+            $referenceNumber = 'TRX-' . strtoupper(substr(uniqid(), -8));
             
-            // Get payment adapter
-            $paymentGateway = $this->factory->createGateway($gateway);
+            // Process payment in database
+            $result = $this->paymentModel->processPayment($paymentId, $userId, [
+                'payment_method' => $gateway,
+                'reference_number' => $referenceNumber,
+                'notes' => "Payment via {$gateway}"
+            ]);
             
-            // Process payment
-            $result = $paymentGateway->processPayment($amount, $paymentDetails);
-            
-            if ($result['success']) {
+            if ($result) {
                 return Response::json([
                     'success' => true,
                     'message' => 'Payment processed successfully',
-                    'data' => $result
+                    'data' => [
+                        'payment' => $result['payment'],
+                        'transaction' => $result['transaction'],
+                        'reference_number' => $referenceNumber
+                    ]
                 ]);
             } else {
                 return Response::json([
                     'success' => false,
-                    'message' => $result['message']
+                    'message' => 'Payment processing failed'
                 ], 400);
             }
             
         } catch (\Exception $e) {
+            error_log("Payment processing error: " . $e->getMessage());
             return Response::json([
                 'success' => false,
                 'message' => 'Payment processing failed: ' . $e->getMessage()
@@ -107,7 +160,9 @@ class PaymentController
         }
         
         try {
-            $paymentGateway = $this->factory->createGateway($gateway);
+            // Get gateway config
+            $config = $this->getGatewayConfig($gateway);
+            $paymentGateway = PaymentAdapterFactory::createGateway($gateway, $config);
             $result = $paymentGateway->refundPayment($transactionId, $amount);
             
             if ($result['success']) {
@@ -147,7 +202,9 @@ class PaymentController
         }
         
         try {
-            $paymentGateway = $this->factory->createGateway($gateway);
+            // Get gateway config
+            $config = $this->getGatewayConfig($gateway);
+            $paymentGateway = PaymentAdapterFactory::createGateway($gateway, $config);
             $status = $paymentGateway->getTransactionStatus($transactionId);
             
             return Response::json([
@@ -161,38 +218,6 @@ class PaymentController
                 'message' => 'Failed to get transaction status: ' . $e->getMessage()
             ], 500);
         }
-    }
-    
-    /**
-     * Get supported payment gateways
-     */
-    public function getSupportedGateways(Request $request): Response
-    {
-        return Response::json([
-            'success' => true,
-            'data' => [
-                'gateways' => [
-                    [
-                        'id' => 'stripe',
-                        'name' => 'Stripe',
-                        'description' => 'Credit/Debit card payments',
-                        'supported' => true
-                    ],
-                    [
-                        'id' => 'paypal',
-                        'name' => 'PayPal',
-                        'description' => 'PayPal account payments',
-                        'supported' => true
-                    ],
-                    [
-                        'id' => 'gcash',
-                        'name' => 'GCash',
-                        'description' => 'GCash mobile wallet',
-                        'supported' => true
-                    ]
-                ]
-            ]
-        ]);
     }
     
     /**
@@ -211,24 +236,100 @@ class PaymentController
         
         try {
             // Get limit parameter
-            $limit = $request->query('limit', 10);
+            $limit = (int) $request->query('limit', 10);
             
-            // For now, return empty array since we don't have payments table yet
-            // In production, this would query the payments table
+            $history = $this->paymentModel->getHistory($userId, $limit);
+            
+            // Process history data
+            $processedHistory = [];
+            foreach ($history as $transaction) {
+                $processedHistory[] = [
+                    'id' => $transaction['id'],
+                    'amount' => (float) $transaction['amount'],
+                    'type' => $transaction['type'],
+                    'status' => $transaction['status'],
+                    'payment_method' => $transaction['payment_method'] ?? null,
+                    'reference_number' => $transaction['reference_number'],
+                    'bill_month' => $transaction['bill_month'] ?? null,
+                    'created_at' => $transaction['created_at'],
+                    'notes' => $transaction['notes'] ?? null
+                ];
+            }
+            
             return Response::json([
                 'success' => true,
                 'data' => [
-                    'payments' => [],
-                    'count' => 0
-                ],
-                'message' => 'Payment history retrieved successfully'
+                    'payments' => $processedHistory,
+                    'count' => count($processedHistory)
+                ]
             ]);
             
         } catch (\Exception $e) {
+            error_log("Error fetching payment history: " . $e->getMessage());
             return Response::json([
                 'success' => false,
-                'message' => 'Failed to retrieve payment history: ' . $e->getMessage()
+                'message' => 'Failed to retrieve payment history'
             ], 500);
         }
+    }
+
+    /**
+     * Get supported payment gateways
+     */
+    public function getSupportedGateways(Request $request): Response
+    {
+        return Response::json([
+            'success' => true,
+            'data' => [
+                'gateways' => [
+                    [
+                        'id' => 'gcash',
+                        'name' => 'GCash',
+                        'description' => 'GCash mobile wallet',
+                        'supported' => true
+                    ],
+                    [
+                        'id' => 'maya',
+                        'name' => 'Maya',
+                        'description' => 'Maya (PayMaya) mobile wallet',
+                        'supported' => true
+                    ],
+                    [
+                        'id' => 'card',
+                        'name' => 'Card',
+                        'description' => 'Credit/Debit card payments',
+                        'supported' => true
+                    ]
+                ]
+            ]
+        ]);
+    }
+    
+    /**
+     * Get gateway configuration by gateway type
+     */
+    private function getGatewayConfig(string $gateway): array
+    {
+        $configs = [
+            'stripe' => [
+                'api_key' => $_ENV['STRIPE_API_KEY'] ?? 'sk_test_...',
+                'webhook_secret' => $_ENV['STRIPE_WEBHOOK_SECRET'] ?? ''
+            ],
+            'paypal' => [
+                'client_id' => $_ENV['PAYPAL_CLIENT_ID'] ?? '',
+                'client_secret' => $_ENV['PAYPAL_CLIENT_SECRET'] ?? '',
+                'mode' => $_ENV['PAYPAL_MODE'] ?? 'sandbox'
+            ],
+            'gcash' => [
+                'api_key' => $_ENV['GCASH_API_KEY'] ?? '',
+                'merchant_id' => $_ENV['GCASH_MERCHANT_ID'] ?? ''
+            ],
+            'paymongo' => [
+                'api_key' => $_ENV['PAYMONGO_API_KEY'] ?? '',
+                'public_key' => $_ENV['PAYMONGO_PUBLIC_KEY'] ?? ''
+            ]
+        ];
+        
+        return $configs[$gateway] ?? [];
     }
 }

@@ -145,7 +145,78 @@
     </main>
 
     <script src="assets/api-client.js?v=6"></script>
-    <script src="assets/payments.js?v=2"></script>
+    <script src="assets/payments.js?v=3"></script>
     <script>lucide.createIcons();</script>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-white">Select Payment Method</h3>
+                    <button id="closeModal" class="text-white hover:bg-white/20 rounded-full p-2 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <div class="mb-6">
+                    <div class="flex justify-between items-baseline mb-2">
+                        <span class="text-slate-600 text-sm">Total Amount:</span>
+                        <span class="text-2xl font-bold text-slate-800" id="modalTotalAmount">₱0.00</span>
+                    </div>
+                    <p class="text-slate-500 text-xs">Choose your preferred payment method below</p>
+                </div>
+
+                <!-- Payment Options -->
+                <div class="space-y-3">
+                    <!-- GCash -->
+                    <button class="payment-option-btn w-full flex items-center gap-4 p-4 border-2 border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all" data-gateway="gcash">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-blue-600 font-bold text-sm">G</span>
+                        </div>
+                        <div class="text-left flex-1">
+                            <div class="font-bold text-slate-800">GCash</div>
+                            <div class="text-xs text-slate-500">Pay via GCash mobile wallet</div>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400"></i>
+                    </button>
+
+                    <!-- Maya -->
+                    <button class="payment-option-btn w-full flex items-center gap-4 p-4 border-2 border-slate-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all" data-gateway="maya">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-green-600 font-bold text-sm">M</span>
+                        </div>
+                        <div class="text-left flex-1">
+                            <div class="font-bold text-slate-800">Maya</div>
+                            <div class="text-xs text-slate-500">Pay via Maya (PayMaya)</div>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400"></i>
+                    </button>
+
+                    <!-- Card -->
+                    <button class="payment-option-btn w-full flex items-center gap-4 p-4 border-2 border-slate-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all" data-gateway="card">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="credit-card" class="w-6 h-6 text-purple-600"></i>
+                        </div>
+                        <div class="text-left flex-1">
+                            <div class="font-bold text-slate-800">Card</div>
+                            <div class="text-xs text-slate-500">Credit or Debit Card</div>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400"></i>
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div id="paymentProcessing" class="hidden mt-6 text-center">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p class="text-sm text-slate-600 mt-2">Processing payment...</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

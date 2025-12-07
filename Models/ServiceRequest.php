@@ -51,9 +51,11 @@ class ServiceRequest
                 // Log initial state in request_updates
                 $this->addUpdate($request['id'], $data['user_id'], null, 'pending', 'Request submitted');
 
-                // Trigger state onEnter
-                $state = StateFactory::getState('pending');
-                $state->onEnter($request);
+                // Trigger state onEnter (if StateFactory is available)
+                if (class_exists('FixItMati\DesignPatterns\Behavioral\State\StateFactory')) {
+                    $state = StateFactory::getState('pending');
+                    $state->onEnter($request);
+                }
             }
 
             return $request;

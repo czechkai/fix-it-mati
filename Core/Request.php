@@ -179,6 +179,13 @@ class Request {
     }
     
     /**
+     * Get raw request body (for webhooks)
+     */
+    public function getBody(): string {
+        return file_get_contents('php://input');
+    }
+    
+    /**
      * Get bearer token from Authorization header
      */
     public function bearerToken(): ?string {

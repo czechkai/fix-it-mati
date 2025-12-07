@@ -3,35 +3,52 @@
 // State management
 let bills = [];
 let history = [];
-let availableGateways = [];
+let currentPaymentId = null;
 
 // Initialize the page
 async function init() {
     try {
-        // Load available payment gateways
-        const gatewaysResponse = await PaymentsAPI.getGateways();
-        availableGateways = (gatewaysResponse.data && gatewaysResponse.data.gateways) || [];
+        // Show loading state
+        showLoading();
+
+        // Load current bills from database
+        const billsResponse = await fetch('/api/payments/current', {
+            headers: {
+                'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
+            }
+        });
         
-        // Load payment history
-        const historyResponse = await PaymentsAPI.getHistory({ limit: 5 });
-        history = (historyResponse.data && historyResponse.data.payments) || [];
+        if (billsResponse.ok) {
+            const billsData = await billsResponse.json();
+            if (billsData.success && billsData.data) {
+                bills = billsData.data.bills || [];
+                const totalDue = billsData.data.total_due || 0;
+                updateTotalDisplay(totalDue);
+            }
+        }
         
-        // For now, use mock bills data (would come from billing API in production)
-        loadMockBills();
+        // Load payment history from database
+        const historyResponse = await fetch('/api/payments/history?limit=5', {
+            headers: {
+                'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
+            }
+        });
         
-        renderTotalCard();
+        if (historyResponse.ok) {
+            const historyData = await historyResponse.json();
+            if (historyData.success && historyData.data) {
+                history = historyData.data.payments || [];
+            }
+        }
+
+        // Render UI
         renderBillsList();
         renderTransactionHistory();
+        hideLoading();
     } catch (error) {
         console.error('Failed to load payment data:', error);
-        UIHelpers.showError('Failed to load payment data. Using demo data.');
-        
-        // Fallback to mock data
-        loadMockBills();
-        loadMockHistory();
-        renderTotalCard();
-        renderBillsList();
-        renderTransactionHistory();
+        hideLoading();
+        showError('Failed to load payment data. Please refresh the page.');
     }
     
     attachEventListeners();
@@ -42,69 +59,53 @@ async function init() {
     }
 }
 
-// Load mock bills data (placeholder until billing API is implemented)
-function loadMockBills() {
-    bills = [
-        {
-            id: 1,
-            type: "Water",
-            label: "Mati Water District",
-            amount: 450.00,
-            period: "Sept 15 - Oct 15",
-            consumption: "24 m³",
-            due: "Oct 25, 2023",
-            iconName: "droplets",
-            iconColor: "text-blue-500",
-            status: "Unpaid"
-        },
-        {
-            id: 3,
-            type: "Electricity",
-            label: "Davao Light (Linked)",
-            amount: 650.00,
-            period: "Sept 01 - Oct 01",
-            consumption: "128 kWh",
-            due: "Oct 20, 2023",
-            iconName: "zap",
-            iconColor: "text-amber-500",
-            status: "Overdue"
+// Show loading state
+function showLoading() {
+    const billsList = document.getElementById('billsList');
+    const transactionList = document.getElementById('transactionList');
+    
+    if (billsList) {
+        billsList.innerHTML = `
+            <div class="p-8 text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="text-sm text-slate-600 mt-2">Loading bills...</p>
+            </div>
+        `;
+    }
+    
+    if (transactionList) {
+        transactionList.innerHTML = `
+            <div class="p-4 text-center text-slate-500 text-sm">Loading transactions...</div>
+        `;
+    }
+}
+
+// Hide loading state
+function hideLoading() {
+    // Loading will be replaced by actual content
+}
+
+// Show error message
+function showError(message) {
+    const billsList = document.getElementById('billsList');
+    if (billsList) {
+        billsList.innerHTML = `
+            <div class="p-8 text-center">
+                <i data-lucide="alert-circle" class="w-12 h-12 text-red-500 mx-auto mb-2"></i>
+                <p class="text-sm text-red-600">${message}</p>
+            </div>
+        `;
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
         }
-    ];
+    }
 }
 
-// Load mock history (fallback)
-function loadMockHistory() {
-    history = [
-        { 
-            id: 101, 
-            created_at: "2023-09-25T10:00:00Z", 
-            amount: 1100.00, 
-            gateway: "gcash", 
-            status: "completed", 
-            transaction_id: "TRX-998822" 
-        },
-        { 
-            id: 102, 
-            created_at: "2023-08-25T10:00:00Z", 
-            amount: 1050.00, 
-            gateway: "stripe", 
-            status: "completed", 
-            transaction_id: "TRX-776611" 
-        }
-    ];
-}
-
-// Calculate total due
-function calculateTotal() {
-    return bills.reduce((acc, bill) => acc + bill.amount, 0);
-}
-
-// Render total card
-function renderTotalCard() {
-    const totalDue = calculateTotal();
+// Update total amount display
+function updateTotalDisplay(totalDue) {
     const amountElement = document.getElementById('totalAmount');
     if (amountElement) {
-        amountElement.textContent = UIHelpers.formatCurrency(totalDue);
+        amountElement.textContent = `₱${totalDue.toFixed(2)}`;
     }
 }
 
@@ -151,32 +152,60 @@ function renderTransactionHistory() {
 function renderBillsList() {
     const listContainer = document.getElementById('billsList');
     
+    if (!listContainer) return;
+    
+    if (bills.length === 0) {
+        listContainer.innerHTML = `
+            <div class="p-8 text-center">
+                <i data-lucide="check-circle" class="w-12 h-12 text-green-500 mx-auto mb-2"></i>
+                <p class="text-sm text-slate-600">No pending bills</p>
+            </div>
+        `;
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        return;
+    }
+    
     listContainer.innerHTML = bills.map(bill => {
-        const overdueClass = bill.status === 'Overdue' ? 'text-red-500' : 'text-slate-500';
-        const overdueBadge = bill.status === 'Overdue' ? 
+        const items = bill.items || [];
+        const statusClass = bill.status === 'overdue' ? 'text-red-500' : 'text-slate-500';
+        const statusBadge = bill.status === 'overdue' ? 
             '<span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold mt-1 inline-block">OVERDUE</span>' : '';
         
+        // Build items display
+        const itemsHtml = items.map(item => {
+            const icon = item.category === 'water' ? 'droplets' : 'zap';
+            const iconColor = item.category === 'water' ? 'text-blue-500' : 'text-amber-500';
+            
+            return `
+                <div class="flex items-start gap-3 mt-2">
+                    <div class="p-1.5 bg-slate-50 rounded">
+                        <i data-lucide="${icon}" class="w-4 h-4 ${iconColor}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-slate-800 text-sm">${item.description}</h4>
+                        <p class="text-xs text-slate-500 capitalize">${item.category}</p>
+                    </div>
+                    <div class="font-bold text-slate-900">₱${parseFloat(item.amount).toFixed(2)}</div>
+                </div>
+            `;
+        }).join('');
+        
         return `
-            <div class="p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="flex items-start gap-3">
-                    <div class="p-2 bg-slate-100 rounded-lg">
-                        <i data-lucide="${bill.iconName}" class="w-5 h-5 ${bill.iconColor}"></i>
-                    </div>
+            <div class="p-4 hover:bg-slate-50 transition-colors">
+                <div class="flex items-start justify-between gap-4 mb-3">
                     <div>
-                        <h4 class="font-semibold text-slate-800">${bill.type} Bill</h4>
-                        <p class="text-xs text-slate-500">${bill.label}</p>
-                        <div class="flex items-center gap-2 mt-1 text-xs text-slate-600">
-                            <span class="bg-slate-100 px-1.5 py-0.5 rounded">Used: ${bill.consumption}</span>
-                            <span>•</span>
-                            <span>Period: ${bill.period}</span>
-                        </div>
+                        <h4 class="font-semibold text-slate-800">${bill.bill_month}</h4>
+                        <p class="text-xs ${statusClass} capitalize mt-1">Status: ${bill.status}</p>
+                        ${statusBadge}
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-slate-900 text-lg">₱${parseFloat(bill.amount).toFixed(2)}</div>
+                        <div class="text-xs text-slate-500">Due: ${formatDate(bill.due_date)}</div>
                     </div>
                 </div>
-                <div class="text-right">
-                    <div class="font-bold text-slate-900 text-lg">₱${bill.amount.toFixed(2)}</div>
-                    <div class="text-xs font-medium ${overdueClass}">Due: ${bill.due}</div>
-                    ${overdueBadge}
-                </div>
+                ${items.length > 0 ? `<div class="border-t border-slate-100 pt-3 space-y-2">${itemsHtml}</div>` : ''}
             </div>
         `;
     }).join('');
@@ -191,7 +220,23 @@ function renderBillsList() {
 function renderTransactionHistory() {
     const listContainer = document.getElementById('transactionList');
     
+    if (!listContainer) return;
+    
+    if (history.length === 0) {
+        listContainer.innerHTML = `
+            <div class="p-4 text-center text-slate-500 text-sm">No transaction history</div>
+        `;
+        return;
+    }
+    
     listContainer.innerHTML = history.map(tx => {
+        const methodNames = {
+            'gcash': 'GCash',
+            'maya': 'Maya',
+            'card': 'Card'
+        };
+        const methodDisplay = methodNames[tx.payment_method] || tx.payment_method || 'Payment';
+        
         return `
             <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
                 <div class="flex items-center gap-3">
@@ -199,15 +244,13 @@ function renderTransactionHistory() {
                         <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-slate-800">Payment via ${tx.method}</p>
-                        <p class="text-xs text-slate-400">${tx.date}</p>
+                        <p class="text-sm font-medium text-slate-800">${methodDisplay}</p>
+                        <p class="text-xs text-slate-500">${formatDate(tx.created_at)} • ${tx.reference_number || 'N/A'}</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="text-sm font-bold text-slate-800">- ₱${tx.amount.toFixed(2)}</p>
-                    <button class="text-[10px] flex items-center gap-1 text-slate-400 hover:text-blue-600 ml-auto mt-1 transition-colors" onclick="downloadReceipt('${tx.ref}')">
-                        <i data-lucide="download" class="w-2.5 h-2.5"></i> Receipt
-                    </button>
+                    <div class="font-bold text-slate-900">₱${parseFloat(tx.amount).toFixed(2)}</div>
+                    <div class="text-xs text-green-600 font-medium capitalize">${tx.status}</div>
                 </div>
             </div>
         `;
@@ -219,60 +262,42 @@ function renderTransactionHistory() {
     }
 }
 
+// Format date helper
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 // Attach event listeners
 function attachEventListeners() {
-    // Notification button
-    const notificationBtn = document.getElementById('notificationBtn');
-    if (notificationBtn) {
-        notificationBtn.addEventListener('click', function() {
-            alert('Open notifications');
-        });
-    }
-    
-    // Pay All button - Process payment via API
+    // Pay All button - Open modal
     const payAllBtn = document.getElementById('payAllBtn');
     if (payAllBtn) {
-        payAllBtn.addEventListener('click', async function() {
-            const total = calculateTotal();
-            
-            // Show payment gateway selection
-            const gateway = prompt('Select payment gateway:\n1. GCash\n2. PayMongo\n3. Stripe\n\nEnter 1, 2, or 3:');
-            const gatewayMap = { '1': 'gcash', '2': 'paymongo', '3': 'stripe' };
-            const selectedGateway = gatewayMap[gateway];
-            
-            if (!selectedGateway) {
-                alert('Invalid selection');
-                return;
-            }
-            
-            UIHelpers.showLoading(payAllBtn, 'Processing...');
-            
-            try {
-                const result = await PaymentsAPI.process({
-                    gateway: selectedGateway,
-                    amount: total,
-                    currency: 'PHP',
-                    description: 'Utility bills payment',
-                    metadata: {
-                        bills: bills.map(b => b.id).join(',')
-                    }
-                });
-                
-                UIHelpers.hideLoading(payAllBtn);
-                
-                if (result.status === 'success' || result.status === 'completed') {
-                    UIHelpers.showSuccess(`Payment successful! Transaction ID: ${result.transaction_id}`);
-                    
-                    // Reload payment history
-                    const historyResponse = await PaymentsAPI.getHistory({ limit: 5 });
-                    history = historyResponse.data || [];
-                    renderTransactionHistory();
-                } else {
-                    UIHelpers.showError('Payment failed. Please try again.');
-                }
-            } catch (error) {
-                UIHelpers.hideLoading(payAllBtn);
-                UIHelpers.showError(`Payment error: ${error.message}`);
+        payAllBtn.addEventListener('click', openPaymentModal);
+    }
+    
+    // Close modal button
+    const closeModal = document.getElementById('closeModal');
+    if (closeModal) {
+        closeModal.addEventListener('click', closePaymentModal);
+    }
+    
+    // Payment option buttons
+    const paymentOptions = document.querySelectorAll('.payment-option-btn');
+    paymentOptions.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const gateway = this.getAttribute('data-gateway');
+            processPayment(gateway);
+        });
+    });
+    
+    // Close modal when clicking outside
+    const modal = document.getElementById('paymentModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closePaymentModal();
             }
         });
     }
@@ -319,48 +344,112 @@ function attachEventListeners() {
     const reportBtn = document.getElementById('reportBtn');
     if (reportBtn) {
         reportBtn.addEventListener('click', function() {
-            window.location.href = 'user-dashboard.php'; // Redirect to create request
+            window.location.href = 'create-request.php'; // Redirect to create request
         });
     }
 }
 
-// Helper function to process payment
-async function processPayment(gateway) {
-    const total = calculateTotal();
+// Open payment modal
+function openPaymentModal() {
+    if (bills.length === 0) {
+        alert('No bills to pay');
+        return;
+    }
     
-    const confirmed = confirm(`Proceed with payment of ${UIHelpers.formatCurrency(total)} via ${gateway.toUpperCase()}?`);
-    if (!confirmed) return;
+    const modal = document.getElementById('paymentModal');
+    const modalAmount = document.getElementById('modalTotalAmount');
+    
+    if (modal && modalAmount) {
+        const totalDue = bills.reduce((sum, bill) => sum + parseFloat(bill.amount), 0);
+        modalAmount.textContent = `₱${totalDue.toFixed(2)}`;
+        modal.style.display = 'flex';
+        
+        // Store current payment ID (use first bill for now)
+        currentPaymentId = bills[0].id;
+        
+        // Reinitialize icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+}
+
+// Close payment modal
+function closePaymentModal() {
+    const modal = document.getElementById('paymentModal');
+    const processing = document.getElementById('paymentProcessing');
+    
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
+    if (processing) {
+        processing.classList.add('hidden');
+    }
+    
+    currentPaymentId = null;
+}
+
+// Process payment through selected gateway
+async function processPayment(gateway) {
+    if (!currentPaymentId) {
+        alert('No payment selected');
+        return;
+    }
+    
+    const processing = document.getElementById('paymentProcessing');
+    const paymentOptions = document.querySelectorAll('.payment-option-btn');
+    
+    // Show processing state
+    if (processing) {
+        processing.classList.remove('hidden');
+    }
+    
+    // Disable all payment options
+    paymentOptions.forEach(btn => btn.disabled = true);
     
     try {
-        const result = await PaymentsAPI.process({
-            gateway: gateway,
-            amount: total,
-            currency: 'PHP',
-            description: 'Utility bills payment',
-            metadata: {
-                bills: bills.map(b => b.id).join(',')
-            }
+        const totalDue = bills.reduce((sum, bill) => sum + parseFloat(bill.amount), 0);
+        
+        const response = await fetch('/api/payments/process', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({
+                payment_id: currentPaymentId,
+                gateway: gateway,
+                amount: totalDue
+            })
         });
         
-        if (result.status === 'success' || result.status === 'completed') {
-            UIHelpers.showSuccess(`Payment successful! Transaction ID: ${result.transaction_id}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            // Hide modal
+            closePaymentModal();
             
-            // Reload payment history
-            const historyResponse = await PaymentsAPI.getHistory({ limit: 5 });
-            history = historyResponse.data || [];
-            renderTransactionHistory();
+            // Show success message
+            alert(`Payment successful! Reference: ${result.data.reference_number}`);
+            
+            // Reload page data
+            init();
         } else {
-            UIHelpers.showError('Payment failed. Please try again.');
+            throw new Error(result.message || 'Payment failed');
         }
     } catch (error) {
-        UIHelpers.showError(`Payment error: ${error.message}`);
+        console.error('Payment error:', error);
+        alert(`Payment failed: ${error.message}`);
+    } finally {
+        // Hide processing state
+        if (processing) {
+            processing.classList.add('hidden');
+        }
+        
+        // Re-enable payment options
+        paymentOptions.forEach(btn => btn.disabled = false);
     }
-}
-
-// Download receipt function
-function downloadReceipt(transactionId) {
-    alert(`Download receipt for transaction: ${transactionId}`);
-    // In production, this would trigger a PDF download
 }
 
 // Initialize when DOM is ready
