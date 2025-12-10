@@ -25,7 +25,7 @@
   <!-- Lucide Icons CDN to replace lucide-react -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- App styles -->
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="/assets/style.css" />
 </head>
 <body class="min-h-screen bg-slate-50 font-sans text-slate-800">
   <!-- HEADER -->
@@ -77,21 +77,21 @@
               </div>
               
               <div class="p-2">
-                <a href="user-dashboard.php" class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
-                  <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-                  <span>Dashboard</span>
-                </a>
-                <a href="active-requests.php" class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
-                  <i data-lucide="clipboard-list" class="w-4 h-4"></i>
-                  <span>My Requests</span>
-                </a>
-                <a href="payments.php" class="flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
-                  <i data-lucide="credit-card" class="w-4 h-4"></i>
-                  <span>Payments</span>
-                </a>
-                <button id="profileSettingsBtn" class="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
-                  <i data-lucide="settings" class="w-4 h-4"></i>
-                  <span>Settings</span>
+                <button id="profileEditBtn" class="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
+                  <i data-lucide="user-pen" class="w-4 h-4"></i>
+                  <span>Edit Profile</span>
+                </button>
+                <button id="serviceAddressesBtn" class="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
+                  <i data-lucide="map-pin" class="w-4 h-4"></i>
+                  <span>Service Addresses</span>
+                </button>
+                <button id="linkedMetersBtn" class="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
+                  <i data-lucide="gauge" class="w-4 h-4"></i>
+                  <span>Linked Meters</span>
+                </button>
+                <button id="helpSupportBtn" class="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-md transition-colors">
+                  <i data-lucide="help-circle" class="w-4 h-4"></i>
+                  <span>Help & Support</span>
                 </button>
               </div>
               
@@ -149,8 +149,8 @@
             <i data-lucide="clock" class="w-5 h-5"></i>
             <span class="text-sm font-medium">Active Requests</span>
           </div>
-          <div class="text-2xl font-bold mb-1">2</div>
-          <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">In Progress</div>
+          <div class="text-2xl font-bold mb-1 loading-skeleton" data-loading="true">...</div>
+          <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">Loading...</div>
         </div>
       </a>
 
@@ -163,8 +163,8 @@
             <i data-lucide="credit-card" class="w-5 h-5"></i>
             <span class="text-sm font-medium">Total Amount Due</span>
           </div>
-          <div class="text-2xl font-bold mb-1">₱1,250.00</div>
-          <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">Due: Oct 25, 2023</div>
+          <div class="text-2xl font-bold mb-1 loading-skeleton" data-loading="true">...</div>
+          <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">Loading...</div>
         </div>
       </a>
 
@@ -177,8 +177,8 @@
             <i data-lucide="megaphone" class="w-5 h-5"></i>
             <span class="text-sm font-medium">Announcements</span>
           </div>
-          <div class="text-2xl font-bold mb-1">1 New</div>
-          <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">Water interruption</div>
+          <div class="text-2xl font-bold mb-1 loading-skeleton" data-loading="true">...</div>
+          <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">Loading...</div>
         </div>
       </a>
 
@@ -191,8 +191,8 @@
             <i data-lucide="check-circle-2" class="w-5 h-5"></i>
             <span class="text-sm font-medium">Resolved Issues</span>
           </div>
-          <div class="text-2xl font-bold mb-1">12</div>
-          <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">This Year</div>
+          <div class="text-2xl font-bold mb-1 loading-skeleton" data-loading="true">...</div>
+          <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">Loading...</div>
         </div>
       </div>
     </div>
@@ -455,8 +455,8 @@
   </div>
 
   <!-- API Client -->
-  <script src="assets/api-client.js?v=6"></script>
+  <script src="/assets/api-client.js?v=6"></script>
   <!-- Dashboard JS -->
-  <script src="assets/dashboard.js?v=7"></script>
+  <script src="/assets/dashboard.js?v=7"></script>
 </body>
 </html>

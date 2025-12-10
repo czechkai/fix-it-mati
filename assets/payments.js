@@ -14,7 +14,7 @@ async function init() {
         // Load current bills from database
         const billsResponse = await fetch('/api/payments/current', {
             headers: {
-                'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
+                'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
             }
         });
         
@@ -23,14 +23,14 @@ async function init() {
             if (billsData.success && billsData.data) {
                 bills = billsData.data.bills || [];
                 const totalDue = billsData.data.total_due || 0;
-                updateTotalDisplay(totalDue);
+                updatePaymentInfo(bills, totalDue);
             }
         }
         
         // Load payment history from database
         const historyResponse = await fetch('/api/payments/history?limit=5', {
             headers: {
-                'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
+                'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
             }
         });
         
@@ -67,16 +67,34 @@ function showLoading() {
     if (billsList) {
         billsList.innerHTML = `
             <div class="p-8 text-center">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p class="text-sm text-slate-600 mt-2">Loading bills...</p>
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+                <p class="text-sm text-slate-600">Loading bills...</p>
             </div>
         `;
     }
     
     if (transactionList) {
         transactionList.innerHTML = `
-            <div class="p-4 text-center text-slate-500 text-sm">Loading transactions...</div>
+            <div class="p-4 text-center text-slate-500 text-sm">
+                <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-1"></div>
+                <p>Loading transactions...</p>
+            </div>
         `;
+    }
+    
+    // Add loading animation to payment info card
+    const amountElement = document.getElementById('totalAmount');
+    const dueDateElement = document.getElementById('dueDate');
+    const statusElement = document.getElementById('accountStatus');
+    
+    if (amountElement && !amountElement.classList.contains('loading-skeleton')) {
+        amountElement.classList.add('loading-skeleton');
+    }
+    if (dueDateElement && !dueDateElement.classList.contains('loading-skeleton')) {
+        dueDateElement.classList.add('loading-skeleton');
+    }
+    if (statusElement && !statusElement.classList.contains('loading-skeleton')) {
+        statusElement.classList.add('loading-skeleton');
     }
 }
 
@@ -105,7 +123,57 @@ function showError(message) {
 function updateTotalDisplay(totalDue) {
     const amountElement = document.getElementById('totalAmount');
     if (amountElement) {
-        amountElement.textContent = `₱${totalDue.toFixed(2)}`;
+        amountElement.textContent = `₱${totalDue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+    }
+}
+
+// Update payment information card with bill data
+function updatePaymentInfo(bills, totalDue) {
+    const amountElement = document.getElementById('totalAmount');
+    const dueDateElement = document.getElementById('dueDate');
+    const statusElement = document.getElementById('accountStatus');
+    
+    if (amountElement) {
+        amountElement.classList.remove('loading-skeleton');
+        amountElement.textContent = `₱${totalDue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+    }
+    
+    // Find earliest due date
+    if (dueDateElement) {
+        dueDateElement.classList.remove('loading-skeleton');
+        
+        if (bills.length > 0) {
+            const earliestBill = bills.reduce((earliest, bill) => {
+                return new Date(bill.due_date) < new Date(earliest.due_date) ? bill : earliest;
+            });
+            const formattedDate = new Date(earliestBill.due_date).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            dueDateElement.textContent = formattedDate;
+        } else {
+            dueDateElement.textContent = 'No pending bills';
+        }
+    }
+    
+    // Update account status
+    if (statusElement) {
+        statusElement.classList.remove('loading-skeleton');
+        
+        if (totalDue === 0) {
+            statusElement.textContent = 'Paid';
+            statusElement.className = 'bg-green-400 text-green-900 px-3 py-1 rounded-md text-xs font-bold';
+        } else {
+            const hasOverdue = bills.some(bill => bill.status === 'overdue');
+            if (hasOverdue) {
+                statusElement.textContent = 'Overdue';
+                statusElement.className = 'bg-red-400 text-red-900 px-3 py-1 rounded-md text-xs font-bold';
+            } else {
+                statusElement.textContent = 'Payment Required';
+                statusElement.className = 'bg-amber-400 text-amber-900 px-3 py-1 rounded-md text-xs font-bold';
+            }
+        }
     }
 }
 
@@ -415,7 +483,7 @@ async function processPayment(gateway) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
+                'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
             },
             body: JSON.stringify({
                 payment_id: currentPaymentId,

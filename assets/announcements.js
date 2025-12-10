@@ -2,16 +2,35 @@
 
 // State management
 let selectedCategory = 'All';
-let expandedId = 1;
+let expandedId = null;
 let discussionModal = { isOpen: false, announcementTitle: '' };
 let announcements = [];
 
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Initialize the page
 async function init() {
+    // Show loading state
+    const container = document.getElementById('announcementsList');
+    if (container) {
+        container.innerHTML = `
+            <div class="p-12 text-center">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                <p class="text-slate-600 font-medium">Loading announcements...</p>
+            </div>
+        `;
+    }
+    
     try {
-        // Load notifications from API
-        const response = await NotificationsAPI.getAll({ type: 'announcement', limit: 20 });
-        announcements = (response.data && Array.isArray(response.data)) ? response.data : (response.data && response.data.announcements) || [];
+        // Load announcements from API
+        const response = await ApiClient.get('/announcements');
+        announcements = (response.data && Array.isArray(response.data.announcements)) ? response.data.announcements : 
+                       (response.data && Array.isArray(response.data)) ? response.data : [];
         
         // If no announcements from API, use mock data
         if (announcements.length === 0) {
@@ -98,39 +117,69 @@ Reason: Replacement of 600mm main valve. Residents are advised to store enough w
 function getFilteredAnnouncements() {
     return announcements.filter(item => {
         if (selectedCategory === 'All') return true;
-        if (selectedCategory === 'Water Supply' && item.category === 'Water Supply') return true;
-        if (selectedCategory === 'Electricity' && item.category === 'Electricity') return true;
-        if (['Urgent', 'News'].includes(selectedCategory) && item.type === selectedCategory) return true;
+        
+        const category = (item.category || '').toLowerCase();
+        const type = (item.type || '').toLowerCase();
+        const priority = (item.priority || '').toLowerCase();
+        
+        // Match category filters
+        if (selectedCategory === 'Water Supply' && (category === 'water' || category === 'water supply')) return true;
+        if (selectedCategory === 'Electricity' && (category === 'electricity' || category === 'electric')) return true;
+        
+        // Match type/priority filters
+        if (selectedCategory === 'Urgent' && (type === 'urgent' || priority === 'urgent' || priority === 'high')) return true;
+        if (selectedCategory === 'News' && type === 'news') return true;
+        
         return false;
     });
 }
 
 // Get badge styles based on type
 function getTypeStyles(type) {
+    if (!type) return 'news';
+    type = type.toLowerCase();
     switch (type) {
-        case 'Urgent': return 'urgent';
-        case 'Maintenance': return 'maintenance';
-        case 'News': return 'news';
-        case 'Warning': return 'warning';
-        default: return '';
+        case 'urgent': return 'urgent';
+        case 'maintenance': return 'maintenance';
+        case 'news': return 'news';
+        case 'warning': return 'warning';
+        default: return 'news';
     }
 }
 
 // Get icon name based on category
 function getIconName(category) {
+    if (!category) return 'info';
+    category = category.toLowerCase();
     switch (category) {
-        case 'Water Supply': return 'droplets';
-        case 'Electricity': return 'zap';
-        default: return 'info';
+        case 'water':
+        case 'water supply': 
+            return 'droplets';
+        case 'electricity':
+        case 'electric':
+            return 'zap';
+        case 'urgent':
+            return 'alert-circle';
+        default: 
+            return 'info';
     }
 }
 
 // Get icon color based on category
 function getIconColor(category) {
+    if (!category) return 'text-slate-500';
+    category = category.toLowerCase();
     switch (category) {
-        case 'Water Supply': return 'text-blue-500';
-        case 'Electricity': return 'text-amber-500';
-        default: return 'text-slate-500';
+        case 'water':
+        case 'water supply': 
+            return 'text-blue-500';
+        case 'electricity':
+        case 'electric':
+            return 'text-amber-500';
+        case 'urgent':
+            return 'text-red-500';
+        default: 
+            return 'text-slate-500';
     }
 }
 
@@ -195,15 +244,17 @@ function renderAnnouncements() {
             // Calculate relative time
             const timeAgo = getTimeAgo(item.created_at);
             const formattedDate = UIHelpers.formatDate(item.created_at);
-            const isPinned = item.metadata?.priority === 'high';
+            const isPinned = (item.priority || '').toLowerCase() === 'urgent' || (item.priority || '').toLowerCase() === 'high' || (item.type || '').toLowerCase() === 'urgent';
+            const displayType = (item.type || 'news').charAt(0).toUpperCase() + (item.type || 'news').slice(1);
+            const author = item.author_name || item.metadata?.author || 'System';
             
             return `
                 <div class="announcement-card ${isPinned ? 'pinned' : ''}" data-id="${item.id}">
-                    <div class="announcement-header" onclick="toggleExpand(${item.id})">
+                    <div class="announcement-header" onclick="toggleExpand('${item.id}')">
                         <div class="announcement-header-content">
                             <div class="announcement-info">
                                 <div class="announcement-badges">
-                                    <span class="type-badge ${typeClass}">${item.type}</span>
+                                    <span class="type-badge ${typeClass}">${displayType}</span>
                                     ${isPinned ? '<span class="pinned-badge"><i data-lucide="alert-triangle" style="width: 10px; height: 10px;"></i> Pinned</span>' : ''}
                                     <span class="time-badge"><i data-lucide="clock" style="width: 12px; height: 12px;"></i> ${timeAgo}</span>
                                 </div>
@@ -211,12 +262,12 @@ function renderAnnouncements() {
                                 <div class="announcement-meta">
                                     <div class="announcement-meta-item">
                                         <i data-lucide="${iconName}" class="${iconColor}" style="width: 14px; height: 14px;"></i>
-                                        <span>${item.category}</span>
+                                        <span>${(item.category || 'General').charAt(0).toUpperCase() + (item.category || 'General').slice(1)}</span>
                                     </div>
                                     <span>•</span>
                                     <span>${formattedDate}</span>
                                     <span>•</span>
-                                    <span class="meta-author">${item.metadata?.author || 'System'}</span>
+                                    <span class="meta-author">${author}</span>
                                 </div>
                             </div>
                             <button class="expand-btn ${isExpanded ? 'expanded' : ''}">
@@ -225,13 +276,13 @@ function renderAnnouncements() {
                         </div>
                     </div>
                     <div class="announcement-body ${isExpanded ? 'expanded' : ''}">
-                        <p class="announcement-text">${item.message || item.content || 'No details available.'}</p>
+                        <p class="announcement-text">${item.content || item.message || 'No details available.'}</p>
                         <div class="announcement-actions">
-                            <button class="action-btn primary" onclick="markAsRead(${item.id})">
+                            <button class="action-btn primary" onclick="markAsRead('${item.id}')">
                                 <i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i>
                                 Mark as Read
                             </button>
-                            <button class="action-btn secondary" onclick="openDiscussion('${item.title}')">
+                            <button class="action-btn secondary" onclick="openDiscussion('${escapeHtml(item.title)}')">
                                 <i data-lucide="message-square" style="width: 14px; height: 14px;"></i>
                                 Discuss
                             </button>

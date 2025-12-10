@@ -487,7 +487,7 @@ if (isset($_SESSION['user_id'])) {
     </div>
   </div>
 
-  <script src="assets/api-client.js"></script>
+  <script src="/assets/api-client.js"></script>
   <script>
     // Initialize Lucide icons
     lucide.createIcons();

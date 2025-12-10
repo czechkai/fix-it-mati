@@ -300,7 +300,7 @@
     </div>
   </div>
 
-  <script src="assets/api-client.js?v=6"></script>
+  <script src="/assets/api-client.js?v=6"></script>
   <script>
     console.log('=== Login Page Script Execution Started ===');
     console.log('typeof ApiClient:', typeof ApiClient);

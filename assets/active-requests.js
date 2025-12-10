@@ -14,6 +14,17 @@ async function init() {
             return;
         }
 
+        // Show loading state immediately
+        const requestsList = document.getElementById('requestsList');
+        if (requestsList) {
+            requestsList.innerHTML = `
+                <div style="padding: 40px 20px; text-align: center; color: #64748b;">
+                    <div style="width: 48px; height: 48px; margin: 0 auto 16px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <p style="font-size: 16px; font-weight: 500;">Loading requests...</p>
+                </div>
+            `;
+        }
+
         // Load requests from API
         const response = await ApiClient.requests.getAll();
         

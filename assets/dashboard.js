@@ -44,19 +44,19 @@
         
         switch(tab) {
           case 'dashboard':
-            window.location.href = 'user-dashboard.php';
+            window.location.href = window.location.pathname.includes('/public/') ? 'user-dashboard.php' : 'public/user-dashboard.php';
             break;
           case 'my requests':
-            window.location.href = 'active-requests.php';
+            window.location.href = window.location.pathname.includes('/public/') ? 'active-requests.php' : 'public/active-requests.php';
             break;
           case 'announcements':
-            window.location.href = 'announcements.php';
+            window.location.href = window.location.pathname.includes('/public/') ? 'announcements.php' : 'public/announcements.php';
             break;
           case 'discussions':
             alert('Discussions feature coming soon!');
             break;
           case 'payments':
-            window.location.href = 'payments.php';
+            window.location.href = window.location.pathname.includes('/public/') ? 'payments.php' : 'public/payments.php';
             break;
         }
       });
@@ -166,8 +166,25 @@
       const announcementsData = await ApiClient.get('/announcements');
       allAnnouncements = (announcementsData.data && announcementsData.data.announcements) || announcementsData.data || [];
       
+      // Load payment data for Total Amount Due card
+      try {
+        const paymentsData = await ApiClient.get('/payments/current');
+        if (paymentsData.success && paymentsData.data) {
+          const totalDue = paymentsData.data.total_due || 0;
+          const dueDate = paymentsData.data.bills && paymentsData.data.bills.length > 0 
+            ? paymentsData.data.bills[0].due_date 
+            : null;
+          updatePaymentCard(totalDue, dueDate);
+        }
+      } catch (error) {
+        console.error('Error loading payment data:', error);
+      }
+      
       // Update stats cards
       updateStatsCards();
+      
+      // Update announcements card
+      updateAnnouncementsCard();
       
       // Display requests
       filterAndSortRequests();
@@ -181,7 +198,7 @@
       // Check if it's an authentication error
       if (error.message && (error.message.includes('Unauthorized') || error.message.includes('Not authenticated') || error.message.includes('401'))) {
         // Redirect to login
-        window.location.href = 'login.php';
+        window.location.href = window.location.pathname.includes('/public/') ? 'login.php' : 'public/login.php';
         return;
       }
       
@@ -207,11 +224,99 @@
     
     // Update Active Requests card
     const activeCard = document.querySelector('[href="active-requests.php"] .text-2xl');
-    if (activeCard) activeCard.textContent = activeRequests.length;
+    if (activeCard) {
+      activeCard.textContent = activeRequests.length;
+      activeCard.setAttribute('data-loading', 'false');
+      activeCard.classList.remove('loading-skeleton');
+      
+      // Update subtitle
+      const activeSubtitle = activeCard.parentElement.querySelector('.text-xs');
+      if (activeSubtitle) {
+        activeSubtitle.textContent = activeRequests.length === 1 ? 'In Progress' : `${activeRequests.length} In Progress`;
+      }
+    }
     
     // Update Resolved Issues card
     const resolvedCards = document.querySelectorAll('.text-2xl');
-    if (resolvedCards[3]) resolvedCards[3].textContent = resolvedRequests.length;
+    if (resolvedCards[3]) {
+      resolvedCards[3].textContent = resolvedRequests.length;
+      resolvedCards[3].setAttribute('data-loading', 'false');
+      resolvedCards[3].classList.remove('loading-skeleton');
+      
+      // Update subtitle
+      const resolvedSubtitle = resolvedCards[3].parentElement.querySelector('.text-xs');
+      if (resolvedSubtitle) {
+        resolvedSubtitle.textContent = 'This Year';
+      }
+    }
+  }
+
+  function updateAnnouncementsCard() {
+    // Update Announcements card with real count
+    const announcementCards = document.querySelectorAll('[href="announcements.php"]');
+    announcementCards.forEach(card => {
+      const countElement = card.querySelector('.text-2xl');
+      const subtitleElement = card.querySelector('.text-xs.opacity-80');
+      
+      if (countElement) {
+        countElement.setAttribute('data-loading', 'false');
+        countElement.classList.remove('loading-skeleton');
+        
+        if (allAnnouncements.length > 0) {
+          // Count urgent/new announcements (within last 7 days)
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          
+          const newAnnouncements = allAnnouncements.filter(a => {
+            const createdDate = new Date(a.created_at);
+            return createdDate > sevenDaysAgo || a.priority === 'urgent';
+          });
+          
+          const count = newAnnouncements.length;
+          countElement.textContent = count > 0 ? `${count} New` : 'No New';
+          
+          // Update subtitle with latest announcement info
+          if (subtitleElement && newAnnouncements.length > 0) {
+            const latest = newAnnouncements[0];
+            const shortTitle = latest.title.length > 20 ? latest.title.substring(0, 20) + '...' : latest.title;
+            subtitleElement.textContent = shortTitle;
+          } else if (subtitleElement) {
+            subtitleElement.textContent = 'Check announcements';
+          }
+        } else {
+          countElement.textContent = 'No New';
+          if (subtitleElement) {
+            subtitleElement.textContent = 'Check announcements';
+          }
+        }
+      }
+    });
+  }
+
+  function updatePaymentCard(totalDue, dueDate) {
+    // Update amount in Total Amount Due card on dashboard
+    const paymentCards = document.querySelectorAll('[href="payments.php"]');
+    paymentCards.forEach(card => {
+      const amountElement = card.querySelector('.text-2xl');
+      const dueDateElement = card.querySelector('.text-xs.opacity-80');
+      
+      if (amountElement) {
+        amountElement.setAttribute('data-loading', 'false');
+        amountElement.classList.remove('loading-skeleton');
+        amountElement.textContent = `₱${totalDue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+      }
+      
+      if (dueDateElement && dueDate) {
+        const formattedDate = new Date(dueDate).toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric' 
+        });
+        dueDateElement.textContent = `Due: ${formattedDate}`;
+      } else if (dueDateElement) {
+        dueDateElement.textContent = 'No pending bills';
+      }
+    });
   }
 
   function filterAndSortRequests(searchTerm = '') {
@@ -308,9 +413,10 @@
     });
     
     // Add view all button
+    const requestsLink = window.location.pathname.includes('/public/') ? 'active-requests.php' : 'public/active-requests.php';
     container.insertAdjacentHTML('beforeend', `
       <div class="p-3 text-center border-t border-slate-100">
-        <a href="active-requests.php" class="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline">View all requests</a>
+        <a href="${requestsLink}" class="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline">View all requests</a>
       </div>
     `);
     
@@ -320,7 +426,8 @@
     document.querySelectorAll('.request-item').forEach(item => {
       item.addEventListener('click', () => {
         const requestId = item.dataset.id;
-        window.location.href = `active-requests.php?id=${requestId}`;
+        const basePath = window.location.pathname.includes('/public/') ? '' : 'public/';
+        window.location.href = `${basePath}active-requests.php?id=${requestId}`;
       });
     });
   }
@@ -376,7 +483,7 @@
     // View all announcements link
     const viewAllLink = document.querySelector('[href="#"]');
     if (viewAllLink && viewAllLink.textContent.includes('View all announcements')) {
-      viewAllLink.href = 'announcements.php';
+      viewAllLink.href = window.location.pathname.includes('/public/') ? 'announcements.php' : 'public/announcements.php';
     }
   }
 
@@ -445,7 +552,10 @@
   const profileBtn = document.getElementById('profileBtn');
   const profileDropdown = document.getElementById('profileDropdown');
   const logoutBtn = document.getElementById('logoutBtn');
-  const profileSettingsBtn = document.getElementById('profileSettingsBtn');
+  const profileEditBtn = document.getElementById('profileEditBtn');
+  const serviceAddressesBtn = document.getElementById('serviceAddressesBtn');
+  const linkedMetersBtn = document.getElementById('linkedMetersBtn');
+  const helpSupportBtn = document.getElementById('helpSupportBtn');
 
   if (profileBtn && profileDropdown) {
     // Toggle dropdown
@@ -494,12 +604,274 @@
       if (confirm('Are you sure you want to logout?')) {
         sessionStorage.clear();
         localStorage.clear();
-        window.location.href = 'login.php';
+        window.location.href = window.location.pathname.includes('/public/') ? 'login.php' : 'public/login.php';
       }
     });
   }
 
-  // Settings button (placeholder)
+  // Profile edit button
+  if (profileEditBtn) {
+    profileEditBtn.addEventListener('click', () => {
+      // Close dropdown
+      profileDropdown.classList.add('hidden');
+      
+      // Show profile edit modal or navigate to profile page
+      const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+      
+      // Create modal for profile editing
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4';
+      modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-slate-900">Edit Profile</h3>
+            <button class="text-slate-400 hover:text-slate-600" onclick="this.closest('.fixed').remove()">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+          <form id="editProfileForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+              <input type="text" name="full_name" value="${user.full_name || ''}" 
+                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+              <input type="tel" name="phone" value="${user.phone || ''}" 
+                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Address</label>
+              <textarea name="address" rows="2" 
+                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">${user.address || ''}</textarea>
+            </div>
+            <div class="flex gap-3 pt-4">
+              <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                Save Changes
+              </button>
+              <button type="button" onclick="this.closest('.fixed').remove()" 
+                class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      lucide.createIcons();
+      
+      // Handle form submission
+      document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        
+        // TODO: Implement API call to update profile
+        alert('Profile update API not yet implemented. Data: ' + JSON.stringify(data));
+        modal.remove();
+      });
+    });
+  }
+
+  // Service Addresses button
+  if (serviceAddressesBtn) {
+    serviceAddressesBtn.addEventListener('click', () => {
+      profileDropdown.classList.add('hidden');
+      
+      const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4';
+      modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-slate-900">Service Addresses</h3>
+            <button class="text-slate-400 hover:text-slate-600" onclick="this.closest('.fixed').remove()">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+          
+          <div class="mb-4">
+            <button class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              Add New Address
+            </button>
+          </div>
+
+          <div class="space-y-3">
+            <div class="border border-slate-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="home" class="w-4 h-4 text-blue-600"></i>
+                    <span class="font-medium text-slate-900">Primary Residence</span>
+                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Primary</span>
+                  </div>
+                  <p class="text-sm text-slate-600">${user.address || 'No address on file'}</p>
+                  <div class="flex gap-4 mt-3 text-xs text-slate-500">
+                    <span><i data-lucide="droplets" class="w-3 h-3 inline"></i> Water Service</span>
+                    <span><i data-lucide="zap" class="w-3 h-3 inline"></i> Electricity Service</span>
+                  </div>
+                </div>
+                <button class="text-slate-400 hover:text-slate-600">
+                  <i data-lucide="more-vertical" class="w-5 h-5"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
+              <div class="text-center py-6 text-slate-500">
+                <i data-lucide="map-pin" class="w-8 h-8 mx-auto mb-2 text-slate-400"></i>
+                <p class="text-sm">No additional service addresses</p>
+                <p class="text-xs mt-1">Add addresses where you receive utility services</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-slate-100">
+            <p class="text-xs text-slate-500">
+              <i data-lucide="info" class="w-3 h-3 inline"></i>
+              Service addresses must match official records. Contact support for assistance.
+            </p>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      lucide.createIcons();
+    });
+  }
+
+  // Linked Meters button
+  if (linkedMetersBtn) {
+    linkedMetersBtn.addEventListener('click', () => {
+      profileDropdown.classList.add('hidden');
+      window.location.href = window.location.pathname.includes('/public/') ? 'linked-meters.php' : 'public/linked-meters.php';
+    });
+  }
+
+  // Help & Support button
+  if (helpSupportBtn) {
+    helpSupportBtn.addEventListener('click', () => {
+      profileDropdown.classList.add('hidden');
+      
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4';
+      modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-slate-900">Help & Support</h3>
+            <button class="text-slate-400 hover:text-slate-600" onclick="this.closest('.fixed').remove()">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <a href="#" class="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i data-lucide="phone" class="w-5 h-5 text-blue-600"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900">Call Support</p>
+                    <p class="text-sm text-slate-500">(082) 123-4567</p>
+                  </div>
+                </div>
+              </a>
+
+              <a href="#" class="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i data-lucide="mail" class="w-5 h-5 text-green-600"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900">Email Support</p>
+                    <p class="text-sm text-slate-500">support@mati.gov.ph</p>
+                  </div>
+                </div>
+              </a>
+
+              <a href="#" class="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i data-lucide="message-circle" class="w-5 h-5 text-purple-600"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900">Live Chat</p>
+                    <p class="text-sm text-slate-500">Available 8AM-5PM</p>
+                  </div>
+                </div>
+              </a>
+
+              <a href="#" class="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <i data-lucide="map-pin" class="w-5 h-5 text-orange-600"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-900">Visit Office</p>
+                    <p class="text-sm text-slate-500">Mati City Hall</p>
+                  </div>
+                </div>
+              </a>
+            </div>
+
+            <div class="border-t border-slate-100 pt-4">
+              <h4 class="font-medium text-slate-900 mb-3">Frequently Asked Questions</h4>
+              <div class="space-y-2">
+                <details class="border border-slate-200 rounded-lg">
+                  <summary class="px-4 py-3 cursor-pointer hover:bg-slate-50 font-medium text-sm text-slate-700">
+                    How do I report a water/electricity issue?
+                  </summary>
+                  <div class="px-4 pb-3 text-sm text-slate-600">
+                    Click the "New Request" button on the dashboard to submit a service request. Include details about the issue and location.
+                  </div>
+                </details>
+                
+                <details class="border border-slate-200 rounded-lg">
+                  <summary class="px-4 py-3 cursor-pointer hover:bg-slate-50 font-medium text-sm text-slate-700">
+                    How do I pay my utility bills?
+                  </summary>
+                  <div class="px-4 pb-3 text-sm text-slate-600">
+                    Go to the Payments section to view current bills and pay online using GCash, Maya, or credit/debit card.
+                  </div>
+                </details>
+                
+                <details class="border border-slate-200 rounded-lg">
+                  <summary class="px-4 py-3 cursor-pointer hover:bg-slate-50 font-medium text-sm text-slate-700">
+                    How do I track my service request?
+                  </summary>
+                  <div class="px-4 pb-3 text-sm text-slate-600">
+                    Visit "My Requests" to see all your service requests and their current status. You'll receive notifications when status changes.
+                  </div>
+                </details>
+
+                <details class="border border-slate-200 rounded-lg">
+                  <summary class="px-4 py-3 cursor-pointer hover:bg-slate-50 font-medium text-sm text-slate-700">
+                    What are the office hours?
+                  </summary>
+                  <div class="px-4 pb-3 text-sm text-slate-600">
+                    Monday to Friday: 8:00 AM - 5:00 PM. Emergency services available 24/7 for critical issues.
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p class="text-sm text-blue-900">
+                <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                For emergencies (water main breaks, power outages), call our 24/7 hotline: <strong>(082) 911-HELP</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      lucide.createIcons();
+    });
+  }
+
+  // Settings button (deprecated - remove if exists)
+  const profileSettingsBtn = document.getElementById('profileSettingsBtn');
   if (profileSettingsBtn) {
     profileSettingsBtn.addEventListener('click', () => {
       alert('Settings page coming soon!');
@@ -526,7 +898,7 @@
       loadDashboardData();
     } else {
       console.warn('No auth token found, skipping data load');
-      window.location.replace('login.php');
+      window.location.replace(window.location.pathname.includes('/public/') ? 'login.php' : 'public/login.php');
     }
   }
 })();
