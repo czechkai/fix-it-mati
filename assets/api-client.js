@@ -341,9 +341,22 @@ const AuthAPI = {
   /**
    * Logout current user
    */
-  logout() {
+  async logout() {
+    try {
+      // Call backend logout API to destroy session
+      await ApiClient.post('/auth/logout', {});
+    } catch (error) {
+      console.error('[Auth] Logout API error:', error);
+      // Continue with client-side cleanup even if API fails
+    }
+    
+    // Clear client-side storage
     sessionStorage.removeItem('auth_token');
     sessionStorage.removeItem('user');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    
+    // Redirect to login
     window.location.href = '/login.php';
   },
 

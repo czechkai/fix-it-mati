@@ -600,11 +600,18 @@
 
   // Logout functionality
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
+    logoutBtn.addEventListener('click', async () => {
       if (confirm('Are you sure you want to logout?')) {
-        sessionStorage.clear();
-        localStorage.clear();
-        window.location.href = window.location.pathname.includes('/public/') ? 'login.php' : 'public/login.php';
+        try {
+          // Call API logout to destroy backend session
+          await ApiClient.auth.logout();
+        } catch (error) {
+          console.error('Logout error:', error);
+          // Fallback: clear storage and redirect manually
+          sessionStorage.clear();
+          localStorage.clear();
+          window.location.href = window.location.pathname.includes('/public/') ? 'login.php' : 'public/login.php';
+        }
       }
     });
   }

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register Redirect Test</title>
+</head>
+<body>
+  <h1>Register Redirect Test</h1>
+  <div id="output"></div>
+  
+  <script>
+    const output = document.getElementById('output');
+    
+    // Check sessionStorage
+    const token = sessionStorage.getItem('auth_token');
+    output.innerHTML += `<p>auth_token: ${token ? 'EXISTS' : 'NOT FOUND'}</p>`;
+    
+    // Check if we would redirect
+    if (token) {
+      output.innerHTML += `<p style="color: red;">Would redirect to user-dashboard.php because token exists</p>`;
+      output.innerHTML += `<button onclick="sessionStorage.clear(); location.reload();">Clear sessionStorage and Reload</button>`;
+    } else {
+      output.innerHTML += `<p style="color: green;">No redirect - register page should load normally</p>`;
+      output.innerHTML += `<a href="register.php">Go to Register Page</a>`;
+    }
+  </script>
+</body>
+</html>

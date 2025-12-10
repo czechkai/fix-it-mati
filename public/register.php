@@ -722,24 +722,10 @@ if (isset($_SESSION['user_id'])) {
     });
 
     // Check if already logged in
-    const token = localStorage.getItem('auth_token');
+    const token = sessionStorage.getItem('auth_token');
     if (token) {
-      // Verify token is valid
-      ApiClient.auth.verify(token).then(result => {
-        if (result.success) {
-          const role = result.data.user.role;
-          if (role === 'admin') {
-            window.location.href = 'admin-dashboard.php';
-          } else if (role === 'technician') {
-            window.location.href = 'technician-dashboard.php';
-          } else {
-            window.location.href = 'user-dashboard.php';
-          }
-        }
-      }).catch(() => {
-        // Token invalid, clear it
-        localStorage.removeItem('auth_token');
-      });
+      // User is already logged in, redirect to dashboard
+      window.location.href = 'user-dashboard.php';
     }
 
     // Phone number formatting
