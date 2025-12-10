@@ -61,21 +61,27 @@ brew install php-pgsql
 
 ### Step 3: Configure Database
 
-1. Copy the example config:
+1. **Get Supabase credentials from your team lead** or from Supabase dashboard
+
+   Don't have them? See: **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)** for detailed instructions
+
+2. Copy the template:
    ```bash
-   copy config\database_examples.php config\database.php
+   copy config\database.template.php config\database.php
    ```
 
-2. Edit `config/database.php` with your team's database credentials:
+3. Edit `config/database.php` - credentials are already configured:
    ```php
-   define('DB_HOST', 'aws-0-ap-southeast-1.pooler.supabase.com');
+   define('DB_HOST', 'db.qyuwbrougimcexrjvrcm.supabase.co');
    define('DB_NAME', 'postgres');
-   define('DB_USER', 'your-username');
-   define('DB_PASSWORD', 'your-password');
-   define('DB_PORT', '6543');
+   define('DB_USER', 'postgres');
+   define('DB_PASSWORD', 'fIxITmAtI123');
+   define('DB_PORT', '5432');
    ```
 
-   **Get credentials from your team lead!**
+   **✅ Note:** These credentials are pre-configured in `database.template.php`
+   - Just copy the template and it will work
+   - No changes needed unless using a different database
 
 ### Step 4: Run Automated Setup
 ```bash

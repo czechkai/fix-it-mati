@@ -23,13 +23,9 @@ if %ERRORLEVEL% NEQ 0 (
 echo.
 echo [2/5] Checking database configuration...
 if not exist "config\database.php" (
-    echo Database config not found. Creating from example...
-    copy "config\database_examples.php" "config\database.php"
-    echo.
-    echo IMPORTANT: Please edit config\database.php with your database credentials
-    echo Then run this script again.
-    pause
-    exit /b 1
+    echo Database config not found. Creating from template...
+    copy "config\database.template.php" "config\database.php"
+    echo Database config created with team credentials.
 )
 
 echo Database config found.

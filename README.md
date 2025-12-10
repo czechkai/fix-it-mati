@@ -2,6 +2,8 @@
 
 A web-based platform for managing municipal water and electricity service requests, announcements, and payments with PostgreSQL database.
 
+> **⚡ NEW TEAM MEMBERS:** Start here → [ONE_COMMAND_SETUP.md](ONE_COMMAND_SETUP.md) - Get running in 5 minutes!
+
 ## 📋 Table of Contents
 - [Quick Start](#quick-start)
 - [Requirements](#requirements)

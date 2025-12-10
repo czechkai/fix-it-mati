@@ -22,12 +22,9 @@ fi
 echo ""
 echo "[2/5] Checking database configuration..."
 if [ ! -f "config/database.php" ]; then
-    echo "Database config not found. Creating from example..."
-    cp "config/database_examples.php" "config/database.php"
-    echo ""
-    echo "IMPORTANT: Please edit config/database.php with your database credentials"
-    echo "Then run this script again."
-    exit 1
+    echo "Database config not found. Creating from template..."
+    cp "config/database.template.php" "config/database.php"
+    echo "Database config created with team credentials."
 fi
 
 echo "Database config found."
