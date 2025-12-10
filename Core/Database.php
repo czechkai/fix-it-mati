@@ -36,11 +36,11 @@ class Database {
         // Load environment variables
         $this->loadEnv();
         
-        $this->host = getenv('DB_HOST');
-        $this->port = getenv('DB_PORT');
-        $this->dbname = getenv('DB_NAME');
-        $this->username = getenv('DB_USER');
-        $this->password = getenv('DB_PASSWORD');
+        $this->host = getenv('db.qyuwbrougimcexrjvrcm.supabase.co');
+        $this->port = getenv('5432');
+        $this->dbname = getenv('postgres');
+        $this->username = getenv('postgres');
+        $this->password = getenv('fIxITmAtI123');
     }
 
     /**
@@ -110,12 +110,35 @@ class Database {
     public function getConnection(): PDO {
         if ($this->conn === null) {
             try {
+                // Check if PDO PostgreSQL driver is available
+                if (!extension_loaded('pdo_pgsql')) {
+                    throw new Exception("PostgreSQL PDO driver not installed. Please install php-pgsql extension. Run 'php check-requirements.php' for detailed instructions.");
+                }
+                
+                // Validate configuration
+                if (empty($this->host) || empty($this->dbname) || empty($this->username)) {
+                    throw new Exception("Database configuration incomplete. Please check config/database.php or .env file.");
+                }
+                
                 $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->dbname};sslmode=require";
                 $this->conn = new PDO($dsn, $this->username, $this->password);
                 $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
             } catch(PDOException $e) {
-                throw new Exception("Database connection failed: " . $e->getMessage());
+                $errorMsg = $e->getMessage();
+                
+                // Provide helpful error messages
+                if (strpos($errorMsg, 'could not find driver') !== false) {
+                    throw new Exception("Database connection failed: PostgreSQL PDO driver not found. Please run 'php check-requirements.php' for setup instructions.");
+                } elseif (strpos($errorMsg, 'could not connect to server') !== false) {
+                    throw new Exception("Database connection failed: Cannot reach PostgreSQL server at {$this->host}:{$this->port}. Please ensure PostgreSQL is running.");
+                } elseif (strpos($errorMsg, 'password authentication failed') !== false) {
+                    throw new Exception("Database connection failed: Invalid credentials. Please check DB_USER and DB_PASSWORD in your configuration.");
+                } elseif (strpos($errorMsg, 'database') !== false && strpos($errorMsg, 'does not exist') !== false) {
+                    throw new Exception("Database connection failed: Database '{$this->dbname}' does not exist. Please create it first.");
+                } else {
+                    throw new Exception("Database connection failed: " . $errorMsg);
+                }
             }
         }
         return $this->conn;

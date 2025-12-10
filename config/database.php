@@ -17,11 +17,11 @@ class Database {
         // Load environment variables
         $this->loadEnv();
         
-        $this->host = getenv('DB_HOST');
-        $this->port = getenv('DB_PORT');
-        $this->dbname = getenv('DB_NAME');
-        $this->username = getenv('DB_USER');
-        $this->password = getenv('DB_PASSWORD');
+        $this->host = getenv('db.qyuwbrougimcexrjvrcm.supabase.co');
+        $this->port = getenv('5432');
+        $this->dbname = getenv('postgres');
+        $this->username = getenv('postgres');
+        $this->password = getenv('fIxITmAtI123');
     }
 
     /**

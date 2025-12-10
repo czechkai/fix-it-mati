@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup Verification - FixItMati</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .status-loading { color: #FFA500; }
+    .status-success { color: #4CAF50; }
+    .status-error { color: #F44336; }
+    .check-item { transition: all 0.3s ease; }
+    .check-item:hover { background-color: #f9fafb; }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-2xl w-full bg-white rounded-lg shadow-lg p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">FixItMati Setup Verification</h1>
+        <p class="text-gray-600">Checking system requirements and configuration</p>
+      </div>
+
+      <div id="checks" class="space-y-3">
+        <!-- Checks will be inserted here -->
+      </div>
+
+      <div id="result" class="mt-8 p-4 rounded-lg text-center hidden">
+        <p id="resultMessage" class="text-lg font-semibold mb-4"></p>
+        <div id="resultActions"></div>
+      </div>
+
+      <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+        <h3 class="font-semibold text-blue-800 mb-2">Need Help?</h3>
+        <ul class="text-sm text-blue-700 space-y-1">
+          <li>• Run <code class="bg-blue-100 px-2 py-1 rounded">php check-requirements.php</code> in terminal for detailed diagnostics</li>
+          <li>• Check <code class="bg-blue-100 px-2 py-1 rounded">README.md</code> for setup instructions</li>
+          <li>• Run <code class="bg-blue-100 px-2 py-1 rounded">quick-setup.bat</code> for automated setup</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const checks = [
+      { name: 'Server Connection', test: () => fetch('/').then(r => r.ok) },
+      { name: 'API Availability', test: () => fetch('/api/').then(r => r.status !== 404) },
+      { name: 'Database Connection', test: async () => {
+        try {
+          const response = await fetch('/api/auth/me', {
+            headers: { 'Authorization': 'Bearer test' }
+          });
+          // If we get 401 (unauthorized), database is working (it authenticated the request)
+          // If we get 500, there's likely a database connection issue
+          return response.status !== 500;
+        } catch (e) {
+          return false;
+        }
+      }},
+      { name: 'Assets Loading', test: () => fetch('/assets/api-client.js').then(r => r.ok) },
+      { name: 'Login Page', test: () => fetch('/login.php').then(r => r.ok) }
+    ];
+
+    async function runChecks() {
+      const container = document.getElementById('checks');
+      let allPassed = true;
+
+      for (const check of checks) {
+        const checkEl = createCheckElement(check.name);
+        container.appendChild(checkEl);
+
+        try {
+          const passed = await check.test();
+          updateCheckStatus(checkEl, passed);
+          if (!passed) allPassed = false;
+        } catch (error) {
+          console.error(`Check failed: ${check.name}`, error);
+          updateCheckStatus(checkEl, false);
+          allPassed = false;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
+      showResult(allPassed);
+    }
+
+    function createCheckElement(name) {
+      const div = document.createElement('div');
+      div.className = 'check-item flex items-center justify-between p-4 border border-gray-200 rounded-lg';
+      div.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="status-icon">
+            <i data-lucide="loader" class="animate-spin status-loading"></i>
+          </div>
+          <span class="font-medium text-gray-700">${name}</span>
+        </div>
+        <span class="status-text text-sm text-gray-500">Checking...</span>
+      `;
+      return div;
+    }
+
+    function updateCheckStatus(element, passed) {
+      const icon = element.querySelector('.status-icon');
+      const text = element.querySelector('.status-text');
+
+      if (passed) {
+        icon.innerHTML = '<i data-lucide="check-circle" class="status-success"></i>';
+        text.textContent = 'OK';
+        text.className = 'status-text text-sm font-semibold status-success';
+        element.classList.add('border-green-300', 'bg-green-50');
+      } else {
+        icon.innerHTML = '<i data-lucide="x-circle" class="status-error"></i>';
+        text.textContent = 'Failed';
+        text.className = 'status-text text-sm font-semibold status-error';
+        element.classList.add('border-red-300', 'bg-red-50');
+      }
+
+      lucide.createIcons();
+    }
+
+    function showResult(success) {
+      const result = document.getElementById('result');
+      const message = document.getElementById('resultMessage');
+      const actions = document.getElementById('resultActions');
+
+      result.classList.remove('hidden');
+
+      if (success) {
+        result.className = 'mt-8 p-6 rounded-lg text-center bg-green-50 border-2 border-green-300';
+        message.innerHTML = '<i data-lucide="check-circle-2" class="inline-block mr-2 status-success"></i> All checks passed! System is ready.';
+        message.className = 'text-lg font-semibold text-green-800 mb-4';
+        actions.innerHTML = `
+          <a href="/login.php" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold transition">
+            Go to Login Page →
+          </a>
+        `;
+      } else {
+        result.className = 'mt-8 p-6 rounded-lg text-center bg-red-50 border-2 border-red-300';
+        message.innerHTML = '<i data-lucide="alert-circle" class="inline-block mr-2 status-error"></i> Some checks failed. Please fix the issues.';
+        message.className = 'text-lg font-semibold text-red-800 mb-4';
+        actions.innerHTML = `
+          <div class="space-y-3">
+            <p class="text-sm text-red-700">Run these commands to fix common issues:</p>
+            <div class="bg-red-100 p-3 rounded text-left">
+              <code class="text-sm">php check-requirements.php</code><br>
+              <code class="text-sm">quick-setup.bat</code>
+            </div>
+            <button onclick="location.reload()" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 font-semibold transition">
+              Re-run Checks
+            </button>
+          </div>
+        `;
+      }
+
+      lucide.createIcons();
+    }
+
+    // Run checks on page load
+    lucide.createIcons();
+    runChecks();
+  </script>
+</body>
+</html>

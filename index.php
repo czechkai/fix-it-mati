@@ -30,7 +30,8 @@ $publicPages = [
     'create-request.php',
     'test-db.php',
     'test-frontend.html',
-    'test-sprint3.php'
+    'test-sprint3.php',
+    'setup-check.html'
 ];
 
 // Check if requesting a public page

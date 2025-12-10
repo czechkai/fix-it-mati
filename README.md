@@ -1,18 +1,18 @@
 # FixItMati - Municipal Water & Electricity Services Platform
 
-A web-based platform for managing municipal water and electricity service requests, announcements, and payments with Supabase integration.
+A web-based platform for managing municipal water and electricity service requests, announcements, and payments with PostgreSQL database.
 
 ## 📋 Table of Contents
 - [Quick Start](#quick-start)
-- [Project Structure](#project-structure)
-- [Database Setup](#database-setup)
-- [Team Collaboration](#team-collaboration)
 - [Requirements](#requirements)
+- [Team Setup Guide](#team-setup-guide)
+- [Troubleshooting](#troubleshooting)
+- [Project Structure](#project-structure)
 - [Running Locally](#running-locally)
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Automated)
 
-### For New Team Members
+### For New Team Members - One Command Setup
 
 1. **Clone the repository**
    ```bash
@@ -20,31 +20,140 @@ A web-based platform for managing municipal water and electricity service reques
    cd fix-it-mati
    ```
 
-2. **Run the setup script**
+2. **Run automated setup** (Windows)
    ```bash
-   setup.bat
+   quick-setup.bat
    ```
-   This will:
-   - Create your `.env` file
-   - Prompt for database password
-   - Verify PHP installation
-   - Test database connection
-
-3. **Start the development server**
    
-   **Option 1: Using the start script (Recommended)**
+   **Or for Linux/Mac**
+   ```bash
+   chmod +x quick-setup.sh
+   ./quick-setup.sh
+   ```
+   
+   This automatically:
+   - ✅ Checks all PHP requirements
+   - ✅ Verifies PostgreSQL PDO driver
+   - ✅ Creates database configuration
+   - ✅ Sets up database schema
+   - ✅ Seeds initial data
+   - ✅ Verifies everything works
+
+3. **Start the server**
    ```bash
    start.bat
    ```
+
+4. **Open your browser**
+   - Navigate to `http://localhost:8000`
+   - Default login: `test.customer@example.com` / `customer123`
+
+## 📦 Requirements
+
+### Required Software
+- **PHP 7.4+** with the following extensions:
+  - ✅ `pdo` - Database abstraction
+  - ✅ `pdo_pgsql` - PostgreSQL driver ⚠️ **REQUIRED**
+  - ✅ `json` - JSON support
+  - ✅ `mbstring` - Multibyte strings
+  - ✅ `openssl` - Encryption
+- **PostgreSQL 12+** database server
+- **Git** for version control
+
+### Quick Check
+Run this to verify your setup:
+```bash
+php check-requirements.php
+```
+
+This will show you exactly what's missing and how to fix it.
+
+## 👥 Team Setup Guide
+
+### First Time Setup
+
+1. **Check Requirements**
+   ```bash
+   php check-requirements.php
+   ```
    
-   **Option 2: Manual start**
+   **If you see "PostgreSQL PDO driver not installed":**
+   
+   **Windows:**
+   - Find your `php.ini` file: `php --ini`
+   - Open `php.ini` in a text editor
+   - Find these lines and remove the semicolon:
+     ```ini
+     ;extension=pdo_pgsql
+     ;extension=pgsql
+     ```
+   - Change to:
+     ```ini
+     extension=pdo_pgsql
+     extension=pgsql
+     ```
+   - Save and restart your terminal
+   
+   **Linux/Ubuntu:**
+   ```bash
+   sudo apt-get install php-pgsql
+   ```
+   
+   **Mac (with Homebrew):**
+   ```bash
+   brew install php-pgsql
+   ```
+
+2. **Configure Database**
+   ```bash
+   copy config\database_examples.php config\database.php
+   ```
+   
+   Edit `config/database.php` with your PostgreSQL credentials:
+   ```php
+   define('DB_HOST', 'your-database-host');
+   define('DB_NAME', 'your-database-name');
+   define('DB_USER', 'your-username');
+   define('DB_PASSWORD', 'your-password');
+   ```
+
+3. **Setup Database**
+   ```bash
+   php run-migration.php
+   php seed-all-data.php
+   ```
+
+4. **Start Server**
    ```bash
    php -S localhost:8000
    ```
 
-4. **Open your browser**
-   - Navigate to `http://localhost:8000` (redirects to login)
-   - Or go directly to `http://localhost:8000/login.php`
+## 🔧 Troubleshooting
+
+### Error: "could not find driver"
+**Problem:** PostgreSQL PDO extension not enabled
+**Solution:** Follow the "Check Requirements" section above to enable `pdo_pgsql`
+
+### Error: "Database connection failed"
+**Problem:** Wrong database credentials or PostgreSQL not running
+**Solution:** 
+1. Verify PostgreSQL is running
+2. Check credentials in `config/database.php`
+3. Test connection: `php check-requirements.php`
+
+### Error: "An error occurred. Please try again later"
+**Problem:** Backend API error (usually database-related)
+**Solution:**
+1. Open browser console (F12)
+2. Check the error message
+3. Run `php check-requirements.php`
+4. Verify database connection
+
+### Port 8000 Already in Use
+**Solution:**
+```bash
+php -S localhost:8080  # Use different port
+```
 
 ## ✨ Features
 
