@@ -1,112 +1,118 @@
 @echo off
 REM ===================================================================
-REM FixItMati Project Setup Script
-REM This script helps team members quickly set up the project
+REM FixItMati - ONE-CLICK Setup
+REM No PostgreSQL installation needed! Database is cloud-hosted.
 REM ===================================================================
 
+cls
 echo.
-echo ========================================
-echo   FixItMati Project Setup
-echo ========================================
+echo ============================================
+echo   FixItMati - ONE-CLICK Setup
+echo ============================================
+echo.
+echo  No PostgreSQL installation needed!
+echo  Database is cloud-hosted on Supabase.
+echo.
+echo ============================================
 echo.
 
-REM Check if .env file exists
-if exist .env (
-    echo [INFO] .env file already exists.
-    choice /C YN /M "Do you want to overwrite it"
-    if errorlevel 2 goto :skip_env_creation
-    if errorlevel 1 goto :create_env
+REM Step 1: Create .env
+echo [1/4] Setting up configuration...
+
+if not exist .env (
+    if not exist .env.example (
+        echo ERROR: .env.example not found!
+        pause
+        exit /b 1
+    )
+    copy .env.example .env >nul
+    echo Created .env with database credentials!
 ) else (
-    goto :create_env
+    echo .env already exists - ready!
 )
 
-:create_env
+if not exist logs mkdir logs >nul 2>&1
 echo.
-echo [STEP 1] Creating .env file from template...
-if not exist .env.example (
-    echo [ERROR] .env.example not found!
-    echo Please ensure .env.example exists in the project root.
+
+REM Step 2: Check PHP
+echo [2/4] Checking PHP...
+
+where php >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: PHP not installed!
+    echo Install PHP or XAMPP first.
     pause
     exit /b 1
 )
 
-copy .env.example .env >nul
-echo [SUCCESS] .env file created!
-echo.
-
-:skip_env_creation
-
-REM Prompt for database password
-echo [STEP 2] Database Configuration
-echo.
-echo Please enter your Supabase database password.
-echo (This will be stored in .env file - which is NOT committed to git)
-echo.
-set /p DB_PASSWORD="Enter Database Password: "
-
-if "%DB_PASSWORD%"=="" (
-    echo [WARNING] No password entered. You'll need to add it manually to .env
-    pause
-) else (
-    REM Update .env file with password
-    powershell -Command "(Get-Content .env) -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=%DB_PASSWORD%' | Set-Content .env"
-    echo [SUCCESS] Database password saved to .env
+for /f "tokens=2" %%i in ('php --version ^| findstr /C:"PHP"') do (
+    echo Found PHP %%i
+    goto :phpfound
 )
-
-echo.
-echo [STEP 3] Verifying setup...
+:phpfound
 echo.
 
-REM Check if PHP is installed
-where php >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo [WARNING] PHP is not installed or not in PATH.
-    echo Please install PHP to run this project.
-    echo Download from: https://windows.php.net/download/
-    echo.
-) else (
-    echo [SUCCESS] PHP is installed.
-    php --version | findstr /C:"PHP"
-)
+REM Step 3: Check extension
+echo [3/4] Checking pdo_pgsql extension...
 
-REM Check PHP extensions
-echo.
-echo [INFO] Checking PHP extensions...
 php -m | findstr /C:"pdo_pgsql" >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo [WARNING] PHP pdo_pgsql extension not found.
-    echo This extension is required for PostgreSQL connection.
-    echo Please enable it in your php.ini file:
-    echo   1. Find php.ini file
-    echo   2. Uncomment: extension=pdo_pgsql
-    echo   3. Restart PHP
+if errorlevel 1 (
     echo.
-) else (
-    echo [SUCCESS] pdo_pgsql extension is enabled.
+    echo ERROR: pdo_pgsql extension not enabled!
+    echo.
+    echo Quick fix:
+    echo   1. Run: php --ini
+    echo   2. Open php.ini file
+    echo   3. Find: ;extension=pdo_pgsql
+    echo   4. Remove semicolon
+    echo   5. Save and rerun setup.bat
+    echo.
+    pause
+    exit /b 1
 )
 
-echo.
-echo [STEP 4] Testing database connection...
+echo pdo_pgsql ready!
 echo.
 
-REM Test database connection
-php -r "try { require 'config/database.php'; $db = Database::getInstance(); $result = $db->testConnection(); if($result['success']) { echo '[SUCCESS] ' . $result['message'] . PHP_EOL; } else { echo '[ERROR] ' . $result['message'] . PHP_EOL; } } catch(Exception $e) { echo '[ERROR] ' . $e->getMessage() . PHP_EOL; }"
+REM Step 4: Test database
+echo [4/4] Testing database...
+echo.
+
+php -r "require 'Core/Database.php'; try { $db = FixItMati\Core\Database::getInstance(); $conn = $db->getConnection(); $stmt = $conn->query('SELECT COUNT(*) FROM users'); $count = $stmt->fetchColumn(); echo 'SUCCESS: Connected!' . PHP_EOL; echo 'Found ' . $count . ' users' . PHP_EOL; exit(0); } catch(Exception $e) { echo 'ERROR: ' . $e->getMessage() . PHP_EOL; exit(1); }"
+
+if not errorlevel 1 goto :success
 
 echo.
-echo ========================================
-echo   Setup Complete!
-echo ========================================
+echo Connection failed! This means:
+echo   - Internet down
+echo   - Supabase project paused
 echo.
-echo Next steps:
-echo   1. Review your .env file and ensure all values are correct
-echo   2. Start the PHP development server:
-echo      cd public
-echo      php -S localhost:8000
-echo   3. Open your browser to: http://localhost:8000
+echo To resume paused project:
+echo   Visit: https://supabase.com/dashboard
+echo   Find: qyuwbrougimcexrjvrcm
+echo   Click: Resume Project
 echo.
-echo For team members:
-echo   - Always run 'git pull' before starting work
-echo   - Never commit the .env file (it's in .gitignore)
-echo   - Run setup.bat if you encounter database connection issues
+pause
+exit /b 1
+
+:success
+echo.
+echo ============================================
+echo   SETUP COMPLETE!
+echo ============================================
+echo.
+echo Your project is ready!
+echo.
+echo TO START THE SERVER:
+echo   Double-click: start.bat
+echo.
+echo THEN LOGIN AT:
+echo   http://localhost:8000/login.php
+echo.
+echo TEST ACCOUNT:
+echo   Email: test.customer@example.com
+echo   Password: customer123
+echo.
+echo ============================================
 echo.
 pause

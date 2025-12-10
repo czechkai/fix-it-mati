@@ -1,36 +1,26 @@
 # ✅ TEAM CONNECTION - READY TO USE!
 
-## 🚀 Quick Start (3 Steps)
+## 🚀 ONE-CLICK Setup (Seriously!)
 
-Your database is **already configured and tested**. Just follow these steps:
+**No PostgreSQL installation needed!** Database is cloud-hosted on Supabase.
 
-### Step 1: Get Latest Code
-```powershell
-git pull origin main
-```
+### For Windows:
+1. `git pull` (get latest code)
+2. Double-click **`setup.bat`**
+3. Double-click **`start.bat`**
+4. Done! 🎉
 
-### Step 2: Copy Environment File
-```powershell
-# Windows
-copy .env.example .env
-
-# Linux/Mac
+### For Linux/Mac:
+```bash
+git pull
 cp .env.example .env
-```
-
-### Step 3: Start Server
-```powershell
-# Windows
-.\start.bat
-
-# Linux/Mac
 php -S localhost:8000
 ```
 
-### Step 4: Open Browser
+### Then Login:
 Go to: **http://localhost:8000/login.php**
 
-**Test Login:**
+**Test Account:**
 - Email: `test.customer@example.com`
 - Password: `customer123`
 
@@ -65,66 +55,57 @@ DB_PASSWORD=fIxITmAtI123
 
 ---
 
-## 🧪 Test Your Setup
+## 🧪 Verify Everything Works
 
-After copying `.env`, test the connection:
+After setup.bat completes, you'll see:
 
-```powershell
-php test-pooler.php
+```
+SUCCESS: Connected!
+Found 5 users
+SETUP COMPLETE!
 ```
 
-You should see:
-```
-✓ Connected successfully!
-✓ Found 5 users in database
-✅ Transaction Pooler is working!
-```
+That's it! If you see this, everything is working.
 
-Or test the full application:
-```powershell
-php test-app-connection.php
-```
+**No need for manual testing** - setup.bat already did it for you!
 
 ---
 
 ## ⚠️ Troubleshooting
 
-### "Extension pdo_pgsql not found"
-1. Find your `php.ini`: `php --ini`
-2. Open `php.ini` and find: `;extension=pdo_pgsql`
-3. Remove the semicolon: `extension=pdo_pgsql`
-4. Save and restart terminal
+### "pdo_pgsql extension not enabled"
+The setup.bat will tell you exactly what to do:
+1. Run: `php --ini` to find your php.ini
+2. Open php.ini file
+3. Find line: `;extension=pdo_pgsql`
+4. Remove semicolon to make it: `extension=pdo_pgsql`
+5. Save file
+6. Rerun setup.bat
+
+### "Connection failed"
+- Check your internet connection
+- Supabase project might be paused (free tier)
+- Visit https://supabase.com/dashboard
+- Find project `qyuwbrougimcexrjvrcm` and click "Resume Project"
+- Wait 2 minutes and rerun setup.bat
 
 ### "Server already running on port 8000"
 ```powershell
-# Kill existing PHP processes
 Get-Process -Name php | Stop-Process -Force
-
-# Try starting again
 .\start.bat
 ```
 
-### ".env file not found" Error
-Make sure you copied the file:
-```powershell
-copy .env.example .env
-```
-
 ### Still Having Issues?
-1. Run: `php check-requirements.php`
-2. Make sure you have PHP 7.4+
-3. Check that `pdo_pgsql` extension is enabled
-4. Contact team lead
+Just rerun: `setup.bat` - it will tell you exactly what's wrong!
 
 ---
 
 ## 📁 Important Files
 
-- **`.env`** - Your local configuration (DON'T COMMIT!)
-- **`.env.example`** - Template with team credentials (already configured)
-- **`start.bat`** - Starts the development server
-- **`test-pooler.php`** - Tests database connection
-- **`test-app-connection.php`** - Tests full application
+- **`setup.bat`** - ONE-CLICK setup (run this first!)
+- **`start.bat`** - Starts the server (run this every time)
+- **`.env`** - Your local config (DON'T COMMIT!)
+- **`.env.example`** - Template with working credentials
 
 ---
 

@@ -1,53 +1,54 @@
 # FixItMati - Municipal Water & Electricity Services Platform
 
-A web-based platform for managing municipal water and electricity service requests, announcements, and payments with PostgreSQL database.
+A web-based platform for managing municipal water and electricity service requests, announcements, and payments with cloud-hosted PostgreSQL database.
 
-> **⚡ NEW TEAM MEMBERS:** Start here → [ONE_COMMAND_SETUP.md](ONE_COMMAND_SETUP.md) - Get running in 5 minutes!
+## 🚀 ONE-CLICK Setup (No PostgreSQL Install Needed!)
 
-## 📋 Table of Contents
-- [Quick Start](#quick-start)
-- [Requirements](#requirements)
-- [Team Setup Guide](#team-setup-guide)
-- [Troubleshooting](#troubleshooting)
-- [Project Structure](#project-structure)
-- [Running Locally](#running-locally)
+**Database is cloud-hosted on Supabase** - no local installation required!
 
-## 🚀 Quick Start (Automated)
+### Windows Team Members:
+```bash
+git clone https://github.com/czechkai/fix-it-mati.git
+cd fix-it-mati
+setup.bat          # ONE-CLICK setup
+start.bat          # Start server
+```
 
-### For New Team Members - One Command Setup
+Then open: http://localhost:8000/login.php
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/czechkai/fix-it-mati.git
-   cd fix-it-mati
-   ```
+### Linux/Mac Team Members:
+```bash
+git clone https://github.com/czechkai/fix-it-mati.git
+cd fix-it-mati
+cp .env.example .env
+php -S localhost:8000
+```
 
-2. **Run automated setup** (Windows)
-   ```bash
-   quick-setup.bat
-   ```
-   
-   **Or for Linux/Mac**
-   ```bash
-   chmod +x quick-setup.sh
-   ./quick-setup.sh
-   ```
-   
-   This automatically:
-   - ✅ Checks all PHP requirements
-   - ✅ Verifies PostgreSQL PDO driver
-   - ✅ Creates database configuration
-   - ✅ Sets up database schema
-   - ✅ Seeds initial data
-   - ✅ Verifies everything works
+Then open: http://localhost:8000/login.php
 
-3. **Start the server**
-   ```bash
-   start.bat
-   ```
+## 🔑 Test Login
 
-4. **Open your browser**
-   - Navigate to `http://localhost:8000`
+- **Email:** `test.customer@example.com`
+- **Password:** `customer123`
+
+## 📚 Documentation
+
+- **[TEAM_CONNECTION_READY.md](TEAM_CONNECTION_READY.md)** - Complete team setup guide
+- **[API_WORKING.md](API_WORKING.md)** - API endpoints reference
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and fixes
+
+## ✅ What's Included
+
+- ✅ Cloud database (no local PostgreSQL needed!)
+- ✅ Pre-configured credentials in `.env.example`
+- ✅ Automated setup script (`setup.bat`)
+- ✅ 5 test users already in database
+- ✅ Real-time data loading
+- ✅ Complete API documentation
+
+---
+
+## 📋 Original Documentation Below
    - Default login: `test.customer@example.com` / `customer123`
 
 ## 📦 Requirements
