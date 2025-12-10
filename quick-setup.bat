@@ -37,19 +37,26 @@ if not exist ".env" (
 echo Configuration ready.
 echo.
 
-REM Step 3: Check if database exists
-echo [3/5] Verifying database connection...
-php -r "require 'config/database.php'; try { $pdo = new PDO('pgsql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME, DB_USER, DB_PASSWORD); echo 'Database connection successful!'; } catch (Exception $e) { echo 'Database connection failed: ' . $e->getMessage(); exit(1); }"
+REM Step 3: Create logs directory
+echo [3/5] Creating directories...
+if not exist "logs" mkdir logs
+echo Directories ready.
+
+REM Step 4: Check database connection
+echo [4/5] Verifying database connection...
+php -r "require 'config/database.php'; try { $pdo = new PDO('pgsql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';sslmode=require', DB_USER, DB_PASSWORD); echo 'Database connection successful!'; } catch (Exception $e) { echo 'Database connection failed: ' . $e->getMessage(); exit(1); }"
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo ERROR: Cannot connect to database!
-    echo Please check your config\database.php settings.
-    pause
-    exit /b 1
+    echo The database might be paused or unreachable.
+    echo You can continue setup and test connection later.
+    echo.
+    choice /C YN /M "Continue anyway"
+    if errorlevel 2 exit /b 1
 )
 
 echo.
-echo [4/5] Setting up database schema...
+echo [5/5] Setting up database schema...
 if exist "run-migration.php" (
     php run-migration.php
     echo Database schema created.
@@ -58,7 +65,7 @@ if exist "run-migration.php" (
 )
 
 echo.
-echo [5/5] Seeding initial data...
+echo [6/6] Seeding initial data...
 if exist "seed-all-data.php" (
     php seed-all-data.php
     echo Initial data seeded.

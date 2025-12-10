@@ -36,18 +36,29 @@ fi
 echo "Configuration ready."
 echo ""
 
-# Step 3: Check if database exists
-echo "[3/5] Verifying database connection..."
-php -r "require 'config/database.php'; try { \$pdo = new PDO('pgsql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME, DB_USER, DB_PASSWORD); echo 'Database connection successful!'; } catch (Exception \$e) { echo 'Database connection failed: ' . \$e->getMessage(); exit(1); }"
+# Step 3: Create logs directory
+echo "[3/5] Creating directories..."
+mkdir -p logs
+echo "Directories ready."
+
+# Step 4: Check database connection
+echo "[4/5] Verifying database connection..."
+php -r "require 'config/database.php'; try { \$pdo = new PDO('pgsql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';sslmode=require', DB_USER, DB_PASSWORD); echo 'Database connection successful!'; } catch (Exception \$e) { echo 'Database connection failed: ' . \$e->getMessage(); exit(1); }"
 if [ $? -ne 0 ]; then
     echo ""
     echo "ERROR: Cannot connect to database!"
-    echo "Please check your config/database.php settings."
-    exit 1
+    echo "The database might be paused or unreachable."
+    echo "You can continue setup and test connection later."
+    echo ""
+    read -p "Continue anyway? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
 fi
 
 echo ""
-echo "[4/5] Setting up database schema..."
+echo "[5/5] Setting up database schema..."
 if [ -f "run-migration.php" ]; then
     php run-migration.php
     echo "Database schema created."
@@ -56,7 +67,7 @@ else
 fi
 
 echo ""
-echo "[5/5] Seeding initial data..."
+echo "[6/6] Seeding initial data..."
 if [ -f "seed-all-data.php" ]; then
     php seed-all-data.php
     echo "Initial data seeded."
