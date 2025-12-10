@@ -9,8 +9,9 @@
  */
 
 // FixItMati Supabase Database - Team Credentials
-define('DB_HOST', 'db.qyuwbrougimcexrjvrcm.supabase.co');
-define('DB_PORT', '5432');
+// Transaction Pooler Mode (Tested and working for all team members!)
+define('DB_HOST', 'aws-1-ap-southeast-2.pooler.supabase.com');
+define('DB_PORT', '6543');
 define('DB_NAME', 'postgres');
-define('DB_USER', 'postgres');
+define('DB_USER', 'postgres.qyuwbrougimcexrjvrcm');
 define('DB_PASSWORD', 'fIxITmAtI123');
