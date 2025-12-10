@@ -20,14 +20,20 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-echo "[2/5] Checking database configuration..."
+echo "[2/5] Setting up configuration..."
 if [ ! -f "config/database.php" ]; then
-    echo "Database config not found. Creating from template..."
+    echo "Creating database config from template..."
     cp "config/database.template.php" "config/database.php"
     echo "Database config created with team credentials."
 fi
 
-echo "Database config found."
+if [ ! -f ".env" ]; then
+    echo "Creating .env file from example..."
+    cp ".env.example" ".env"
+    echo ".env file created."
+fi
+
+echo "Configuration ready."
 echo ""
 
 # Step 3: Check if database exists

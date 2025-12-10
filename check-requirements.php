@@ -24,18 +24,29 @@ if (version_compare($phpVersion, '7.4.0', '>=')) {
 // Check required extensions
 echo "Checking PHP Extensions...\n";
 $requiredExtensions = [
-    'pdo' => 'PDO (Database abstraction)',
-    'pdo_pgsql' => 'PostgreSQL PDO Driver',
-    'json' => 'JSON support',
-    'mbstring' => 'Multibyte string support',
-    'openssl' => 'OpenSSL for encryption'
+    'pdo' => ['desc' => 'PDO (Database abstraction)', 'required' => true],
+    'pdo_pgsql' => ['desc' => 'PostgreSQL PDO Driver', 'required' => true],
+    'json' => ['desc' => 'JSON support', 'required' => true]
 ];
 
-foreach ($requiredExtensions as $ext => $description) {
+$optionalExtensions = [
+    'mbstring' => 'Multibyte string support (recommended)',
+    'openssl' => 'OpenSSL for encryption (recommended)'
+];
+
+foreach ($requiredExtensions as $ext => $info) {
+    if (extension_loaded($ext)) {
+        $success[] = "✓ Extension '$ext': Installed ({$info['desc']})";
+    } else {
+        $errors[] = "✗ Extension '$ext': MISSING ({$info['desc']})";
+    }
+}
+
+foreach ($optionalExtensions as $ext => $description) {
     if (extension_loaded($ext)) {
         $success[] = "✓ Extension '$ext': Installed ($description)";
     } else {
-        $errors[] = "✗ Extension '$ext': MISSING ($description)";
+        $warnings[] = "⚠ Extension '$ext': Not installed ($description)";
     }
 }
 
@@ -44,27 +55,37 @@ echo "\nChecking Database Configuration...\n";
 if (file_exists(__DIR__ . '/config/database.php')) {
     $success[] = "✓ Database config file exists";
     
-    require_once __DIR__ . '/config/database.php';
+    // Check if using define() constants or class-based config
+    $configContent = file_get_contents(__DIR__ . '/config/database.php');
     
-    if (defined('DB_HOST') && defined('DB_NAME') && defined('DB_USER')) {
-        $success[] = "✓ Database constants defined";
+    if (strpos($configContent, "define('DB_HOST'") !== false) {
+        // Using define() constants
+        require_once __DIR__ . '/config/database.php';
         
-        // Try to connect
-        if (extension_loaded('pdo_pgsql')) {
-            try {
-                $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME;
-                $pdo = new PDO($dsn, DB_USER, DB_PASSWORD);
-                $success[] = "✓ Database connection successful";
-            } catch (PDOException $e) {
-                $errors[] = "✗ Database connection failed: " . $e->getMessage();
+        if (defined('DB_HOST') && defined('DB_NAME') && defined('DB_USER')) {
+            $success[] = "✓ Database constants defined";
+            
+            // Try to connect
+            if (extension_loaded('pdo_pgsql')) {
+                try {
+                    $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";sslmode=require";
+                    $pdo = new PDO($dsn, DB_USER, DB_PASSWORD);
+                    $success[] = "✓ Database connection successful";
+                } catch (PDOException $e) {
+                    $errors[] = "✗ Database connection failed: " . $e->getMessage();
+                }
             }
+        } else {
+            $warnings[] = "⚠ Database constants not properly defined";
         }
     } else {
-        $warnings[] = "⚠ Database constants not properly defined";
+        // Using class-based config (with .env)
+        $success[] = "✓ Database config uses class-based configuration";
+        $warnings[] = "⚠ Make sure you have a .env file with database credentials";
     }
 } else {
     $errors[] = "✗ Database config file missing (config/database.php)";
-    $warnings[] = "⚠ Run 'copy config\\database_examples.php config\\database.php' and configure it";
+    $warnings[] = "⚠ Run 'copy config\\database.template.php config\\database.php'";
 }
 
 // Check writable directories

@@ -144,6 +144,10 @@ After setup, you can login with these test accounts:
 **Cause:** PostgreSQL PDO extension not enabled
 **Fix:** Follow "Windows Fix" or "Linux/Mac Fix" above in Step 2
 
+### Issue: Warning about mbstring extension
+**Cause:** Optional extension not installed (not critical)
+**Fix:** This is just a warning - the project will work without it. To remove the warning, enable `extension=mbstring` in php.ini
+
 ### Issue: Port 8000 already in use
 **Fix:** Use a different port:
 ```bash

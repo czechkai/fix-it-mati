@@ -21,14 +21,20 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
-echo [2/5] Checking database configuration...
+echo [2/5] Setting up configuration...
 if not exist "config\database.php" (
-    echo Database config not found. Creating from template...
+    echo Creating database config from template...
     copy "config\database.template.php" "config\database.php"
     echo Database config created with team credentials.
 )
 
-echo Database config found.
+if not exist ".env" (
+    echo Creating .env file from example...
+    copy ".env.example" ".env"
+    echo .env file created.
+)
+
+echo Configuration ready.
 echo.
 
 REM Step 3: Check if database exists
