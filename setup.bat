@@ -16,19 +16,28 @@ echo.
 echo ============================================
 echo.
 
-REM Step 1: Create .env
+REM Step 1: Create/Update .env
 echo [1/4] Setting up configuration...
 
+if not exist .env.example (
+    echo ERROR: .env.example not found!
+    pause
+    exit /b 1
+)
+
 if not exist .env (
-    if not exist .env.example (
-        echo ERROR: .env.example not found!
-        pause
-        exit /b 1
-    )
     copy .env.example .env >nul
     echo Created .env with database credentials!
 ) else (
-    echo .env already exists - ready!
+    REM Check if .env has old host and update it
+    findstr /C:"db.qyuwbrougimcexrjvrcm.supabase.co" .env >nul 2>&1
+    if not errorlevel 1 (
+        echo Updating .env with correct database host...
+        powershell -Command "(Get-Content .env) -replace 'DB_HOST=db\.qyuwbrougimcexrjvrcm\.supabase\.co', 'DB_HOST=aws-1-ap-southeast-2.pooler.supabase.com' -replace 'DB_PORT=5432', 'DB_PORT=6543' -replace 'DB_USER=postgres$', 'DB_USER=postgres.qyuwbrougimcexrjvrcm' | Set-Content .env"
+        echo Updated to use Transaction Pooler!
+    ) else (
+        echo .env already configured correctly!
+    )
 )
 
 if not exist logs mkdir logs >nul 2>&1

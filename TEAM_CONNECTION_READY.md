@@ -73,6 +73,20 @@ That's it! If you see this, everything is working.
 
 ## ⚠️ Troubleshooting
 
+### "could not translate host name" Error
+
+This means your `.env` has the old database host. **Easy fix:**
+
+```bash
+# Just run this:
+fix-connection.bat
+
+# Then run setup again:
+setup.bat
+```
+
+That's it! The `fix-connection.bat` updates your `.env` to use the working Transaction Pooler.
+
 ### "pdo_pgsql extension not enabled"
 The setup.bat will tell you exactly what to do:
 1. Run: `php --ini` to find your php.ini
@@ -82,7 +96,7 @@ The setup.bat will tell you exactly what to do:
 5. Save file
 6. Rerun setup.bat
 
-### "Connection failed"
+### "Connection failed" (other errors)
 - Check your internet connection
 - Supabase project might be paused (free tier)
 - Visit https://supabase.com/dashboard
