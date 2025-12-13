@@ -80,7 +80,13 @@ class Notification
         $limit = $filters['limit'] ?? 50;
         $offset = $filters['offset'] ?? 0;
 
-        $sql = "SELECT * FROM notifications 
+        $sql = "SELECT 
+                    id, user_id, type, title, message, channel, status, is_read, read_at, sent_at, created_at, updated_at,
+                    COALESCE((data->>'category')::text, 'system') as category,
+                    COALESCE((data->>'action_label')::text, NULL) as action_label,
+                    COALESCE((data->>'action_url')::text, NULL) as action_url,
+                    COALESCE((data->>'icon_type')::text, type) as icon_type
+                FROM notifications 
                 WHERE $whereClause 
                 ORDER BY created_at DESC 
                 LIMIT $limit OFFSET $offset";

@@ -36,6 +36,14 @@
     });
   }
 
+  // Notification button navigation
+  const notificationBtn = document.getElementById('notificationBtn');
+  if (notificationBtn) {
+    notificationBtn.addEventListener('click', () => {
+      window.location.href = window.location.pathname.includes('/public/') ? 'notifications.php' : 'public/notifications.php';
+    });
+  }
+
   // Tabs navigation
   if (tabsNav){
     tabsNav.querySelectorAll('button[data-tab]').forEach(btn => {

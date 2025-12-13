@@ -26,6 +26,7 @@ $publicPages = [
     'user-dashboard.php',
     'active-requests.php',
     'announcements.php',
+    'notifications.php',
     'payments.php',
     'payment-history.php',
     'create-request.php',

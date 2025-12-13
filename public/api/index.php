@@ -143,6 +143,7 @@ try {
     
     // Mark as read
     $router->patch('/api/notifications/{id}/read', 'NotificationController@markAsRead');
+    $router->put('/api/notifications/{id}/read', 'NotificationController@markAsRead'); // Also support PUT
     $router->post('/api/notifications/mark-all-read', 'NotificationController@markAllAsRead');
     
     // Delete notification
