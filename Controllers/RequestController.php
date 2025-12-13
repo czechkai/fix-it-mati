@@ -307,6 +307,82 @@ class RequestController
     }
 
     /**
+     * Get resolved/completed requests
+     * GET /api/requests/resolved
+     */
+    public function resolved(Request $request): Response
+    {
+        $user = $request->user();
+
+        try {
+            $result = $this->facade->getResolvedRequests($user['id'], $user['role']);
+            return Response::success($result);
+        } catch (\Exception $e) {
+            return Response::error('Failed to fetch resolved requests: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Submit rating and feedback for a resolved request
+     * POST /api/requests/:id/rating
+     */
+    public function submitRating(Request $request): Response
+    {
+        $user = $request->user();
+        $requestId = $request->param('id');
+        $data = $request->all();
+
+        // Validate rating
+        if (empty($data['rating']) || $data['rating'] < 1 || $data['rating'] > 5) {
+            return Response::error('Invalid rating. Must be between 1 and 5.', 400);
+        }
+
+        try {
+            $result = $this->facade->submitRating(
+                $requestId, 
+                $user['id'], 
+                (int)$data['rating'], 
+                $data['feedback'] ?? ''
+            );
+
+            if (!$result['success']) {
+                return Response::error($result['error'], 400);
+            }
+
+            return Response::success($result['data'], $result['message']);
+        } catch (\Exception $e) {
+            return Response::error('Failed to submit rating: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Report a recurring issue based on a resolved request
+     * POST /api/requests/:id/recurring
+     */
+    public function reportRecurring(Request $request): Response
+    {
+        $user = $request->user();
+        $originalRequestId = $request->param('id');
+        $data = $request->all();
+
+        try {
+            $result = $this->facade->reportRecurringIssue(
+                $originalRequestId,
+                $user['id'],
+                $data
+            );
+
+            if (!$result['success']) {
+                return Response::error($result['error'], 400);
+            }
+
+            return Response::created($result['request'], $result['message']);
+        } catch (\Exception $e) {
+            return Response::error('Failed to report recurring issue: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
      * Validate create request data
      */
     private function validateCreateRequest(array $data): array

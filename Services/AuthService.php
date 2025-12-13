@@ -299,8 +299,12 @@ class AuthService {
             $errors['email'] = 'Invalid email format';
         }
         
-        if (empty($data['full_name'])) {
-            $errors['full_name'] = 'Full name is required';
+        if (empty($data['first_name'])) {
+            $errors['first_name'] = 'First name is required';
+        }
+        
+        if (empty($data['last_name'])) {
+            $errors['last_name'] = 'Last name is required';
         }
         
         if (empty($data['password'])) {
@@ -354,5 +358,96 @@ class AuthService {
      */
     private function base64UrlDecode(string $data): string {
         return base64_decode(strtr($data, '-_', '+/'));
+    }
+    
+    /**
+     * Verify user password
+     */
+    public function verifyPassword(string $email, string $password): bool {
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+        
+        $stmt = $conn->prepare("SELECT password FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        if (!$user) {
+            return false;
+        }
+        
+        return password_verify($password, $user['password']);
+    }
+    
+    /**
+     * Update user profile
+     */
+    public function updateProfile(string $userId, array $data): array {
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+        
+        try {
+            // Build update query
+            $fields = [];
+            $params = [];
+            
+            if (isset($data['first_name'])) {
+                $fields[] = "first_name = ?";
+                $params[] = $data['first_name'];
+            }
+            
+            if (isset($data['last_name'])) {
+                $fields[] = "last_name = ?";
+                $params[] = $data['last_name'];
+            }
+            
+            if (isset($data['email'])) {
+                $fields[] = "email = ?";
+                $params[] = $data['email'];
+            }
+            
+            if (isset($data['phone'])) {
+                $fields[] = "phone = ?";
+                $params[] = $data['phone'];
+            }
+            
+            if (isset($data['address'])) {
+                $fields[] = "address = ?";
+                $params[] = $data['address'];
+            }
+            
+            if (isset($data['password'])) {
+                $fields[] = "password = ?";
+                $params[] = $data['password'];
+            }
+            
+            $fields[] = "updated_at = CURRENT_TIMESTAMP";
+            $params[] = $userId;
+            
+            $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
+            
+            // Fetch updated user
+            $userModel = new User();
+            $updatedUser = $userModel->findById($userId);
+            
+            if ($updatedUser) {
+                return [
+                    'success' => true,
+                    'user' => $updatedUser
+                ];
+            }
+            
+            return [
+                'success' => false,
+                'message' => 'User not found after update'
+            ];
+            
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to update profile: ' . $e->getMessage()
+            ];
+        }
     }
 }

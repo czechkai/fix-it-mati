@@ -182,7 +182,7 @@
         </div>
       </a>
 
-      <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group">
+      <a href="service-history.php" class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
           <i data-lucide="check-circle-2" class="w-16 h-16"></i>
         </div>
@@ -194,7 +194,7 @@
           <div class="text-2xl font-bold mb-1 loading-skeleton" data-loading="true">...</div>
           <div class="text-xs opacity-80 font-medium bg-white/20 inline-block px-2 py-0.5 rounded-full">Loading...</div>
         </div>
-      </div>
+      </a>
     </div>
 
     <!-- MAIN LAYOUT GRID -->
@@ -215,18 +215,10 @@
             <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="zap" class="w-4.5 h-4.5"></i></span>
             Electricity
           </button>
-          <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
-            <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="help-circle" class="w-4.5 h-4.5"></i></span>
-            Help Center
-          </a>
-          <a href="#" class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-r-md transition-colors">
-            <span class="text-slate-400 group-hover:text-slate-500 mr-3 flex-shrink-0"><i data-lucide="message-square" class="w-4.5 h-4.5"></i></span>
-            Discussions
-          </a>
 
           <div class="pt-8">
             <h3 class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">My Account</h3>
-            <a href="#" class="group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:bg-slate-50 hover:text-slate-900">
+            <a href="payment-history.php" class="group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:bg-slate-50 hover:text-slate-900">
               <span class="mr-3 text-slate-400 group-hover:text-slate-500"><i data-lucide="credit-card" class="w-4.5 h-4.5"></i></span>
               Payment History
             </a>
@@ -295,54 +287,44 @@
         </div>
 
         <!-- Requests List -->
-        <div class="bg-white border border-slate-200 rounded-lg shadow-sm divide-y divide-slate-100">
+        <div id="recentRequestsContainer" class="bg-white border border-slate-200 rounded-lg shadow-sm divide-y divide-slate-100">
           <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-200 flex justify-between items-center rounded-t-lg">
             <h3 class="text-sm font-semibold text-slate-700">Recent Requests &amp; Discussions</h3>
-            <span class="text-xs text-slate-500">Showing 3 of 12</span>
+            <span id="requestsCount" class="text-xs text-slate-500">Loading...</span>
           </div>
 
-          <!-- Item 1 -->
-          <div class="p-4 hover:bg-slate-50 transition-colors group cursor-pointer">
-            <div class="flex items-start gap-3">
-              <div class="mt-1 flex-shrink-0">
-                <i data-lucide="droplets" class="w-4 h-4 text-blue-500"></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <h4 class="text-base font-medium text-slate-900 group-hover:text-blue-600 transition-colors truncate">Leaking Pipe - Main Street Extension</h4>
-                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Pinned</span>
+          <!-- Loading Skeleton -->
+          <div id="requestsLoadingState">
+            <div class="p-4 animate-pulse">
+              <div class="flex items-start gap-3">
+                <div class="mt-1 flex-shrink-0 w-4 h-4 bg-slate-200 rounded"></div>
+                <div class="flex-1 min-w-0">
+                  <div class="h-5 bg-slate-200 rounded w-3/4 mb-2"></div>
+                  <div class="flex items-center gap-2">
+                    <div class="h-4 bg-slate-200 rounded w-12"></div>
+                    <div class="h-4 bg-slate-200 rounded w-20"></div>
+                    <div class="h-4 bg-slate-200 rounded w-24"></div>
+                  </div>
                 </div>
-                <div class="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500">
-                  <span class="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">#101</span>
-                  <span class="font-medium text-amber-600">In Progress</span>
-                  <span>Opened on Oct 20, 2023</span>
-                  <span class="hidden sm:inline">&bull;</span>
-                  <span class="flex items-center gap-1 text-slate-400 group-hover:text-blue-500"><i data-lucide="message-square" class="w-3 h-3"></i> 3</span>
+              </div>
+            </div>
+            <div class="p-4 animate-pulse">
+              <div class="flex items-start gap-3">
+                <div class="mt-1 flex-shrink-0 w-4 h-4 bg-slate-200 rounded"></div>
+                <div class="flex-1 min-w-0">
+                  <div class="h-5 bg-slate-200 rounded w-2/3 mb-2"></div>
+                  <div class="flex items-center gap-2">
+                    <div class="h-4 bg-slate-200 rounded w-12"></div>
+                    <div class="h-4 bg-slate-200 rounded w-20"></div>
+                    <div class="h-4 bg-slate-200 rounded w-24"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Item 2 -->
-          <div class="p-4 hover:bg-slate-50 transition-colors group cursor-pointer">
-            <div class="flex items-start gap-3">
-              <div class="mt-1 flex-shrink-0">
-                <i data-lucide="zap" class="w-4 h-4 text-yellow-500"></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <h4 class="text-base font-medium text-slate-900 group-hover:text-blue-600 transition-colors truncate">Street Light Malfunction - Brgy. Central</h4>
-                </div>
-                <div class="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500">
-                  <span class="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">#102</span>
-                  <span class="font-medium text-slate-500">Pending Review</span>
-                  <span>Opened on Oct 22, 2023</span>
-                  <span class="hidden sm:inline">&bull;</span>
-                  <span class="flex items-center gap-1 text-slate-400 group-hover:text-blue-500"><i data-lucide="message-square" class="w-3 h-3"></i> 0</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <!-- Actual Content (will be populated by JS) -->
+          <div id="requestsContent" class="hidden"></div>
 
           <div class="p-3 text-center border-t border-slate-100">
             <button class="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline">View all requests</button>
@@ -353,30 +335,36 @@
       <!-- RIGHT SIDEBAR -->
       <div class="lg:col-span-3 space-y-6 mt-6 lg:mt-0">
         <!-- Announcements Widget -->
-        <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+        <div id="announcementsContainer" class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
           <div class="px-4 py-3 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
             <h3 class="font-semibold text-slate-800 text-sm">Latest Announcements</h3>
           </div>
-          <div class="divide-y divide-slate-100">
-            <div class="p-3 hover:bg-slate-50 transition-colors">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase bg-red-100 text-red-600">Urgent</span>
-                <span class="text-xs text-slate-400">2 hours ago</span>
+          
+          <!-- Loading Skeleton -->
+          <div id="announcementsLoadingState" class="divide-y divide-slate-100">
+            <div class="p-3 animate-pulse">
+              <div class="flex items-center justify-between mb-2">
+                <div class="h-4 bg-slate-200 rounded w-12"></div>
+                <div class="h-3 bg-slate-200 rounded w-16"></div>
               </div>
-              <h4 class="text-sm font-medium text-slate-800 mb-1 leading-snug">Scheduled Water Interruption</h4>
-              <p class="text-xs text-slate-500 line-clamp-2">Please be advised of a scheduled maintenance on Oct 28...</p>
+              <div class="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
+              <div class="h-3 bg-slate-200 rounded w-full"></div>
             </div>
-            <div class="p-3 hover:bg-slate-50 transition-colors">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase bg-blue-100 text-blue-600">News</span>
-                <span class="text-xs text-slate-400">1 day ago</span>
+            <div class="p-3 animate-pulse">
+              <div class="flex items-center justify-between mb-2">
+                <div class="h-4 bg-slate-200 rounded w-12"></div>
+                <div class="h-3 bg-slate-200 rounded w-16"></div>
               </div>
-              <h4 class="text-sm font-medium text-slate-800 mb-1 leading-snug">New Online Payment Partners</h4>
-              <p class="text-xs text-slate-500 line-clamp-2">You can now pay via GCash and Maya directly in the app...</p>
+              <div class="h-4 bg-slate-200 rounded w-2/3 mb-2"></div>
+              <div class="h-3 bg-slate-200 rounded w-full"></div>
             </div>
           </div>
+
+          <!-- Actual Content (will be populated by JS) -->
+          <div id="announcementsContent" class="divide-y divide-slate-100 hidden"></div>
+
           <div class="px-4 py-2 border-t border-slate-100 bg-slate-50">
-            <a href="#" class="text-xs font-medium text-blue-600 hover:text-blue-700">View all announcements &rarr;</a>
+            <a href="announcements.php" class="text-xs font-medium text-blue-600 hover:text-blue-700">View all announcements &rarr;</a>
           </div>
         </div>
 

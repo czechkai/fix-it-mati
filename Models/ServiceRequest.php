@@ -71,8 +71,10 @@ class ServiceRequest
     public function find(int $id): ?array
     {
         $sql = "SELECT sr.*, 
-                       u.name as customer_name, u.email as customer_email,
-                       t.name as technician_name, t.email as technician_email
+                       CONCAT(u.first_name, ' ', u.last_name) as customer_name, 
+                       u.email as customer_email,
+                       CONCAT(t.first_name, ' ', t.last_name) as technician_name, 
+                       t.email as technician_email
                 FROM service_requests sr
                 LEFT JOIN users u ON sr.user_id = u.id
                 LEFT JOIN users t ON sr.assigned_to = t.id
@@ -86,6 +88,10 @@ class ServiceRequest
             if ($request) {
                 // Parse photos array
                 $request['photos'] = $this->parsePhotosArray($request['photos']);
+                // Parse before_images array
+                $request['before_images'] = $this->parsePhotosArray($request['before_images'] ?? null);
+                // Parse after_images array
+                $request['after_images'] = $this->parsePhotosArray($request['after_images'] ?? null);
             }
 
             return $request ?: null;
@@ -130,11 +136,12 @@ class ServiceRequest
     public function getAll(array $filters = []): array
     {
         $sql = "SELECT sr.*, 
-                       u.full_name as customer_name, u.email as customer_email,
-                       t.full_name as technician_name
+                       CONCAT(u.first_name, ' ', u.last_name) as customer_name, 
+                       u.email as customer_email,
+                       CONCAT(t.first_name, ' ', t.last_name) as technician_name
                 FROM service_requests sr
                 LEFT JOIN users u ON sr.user_id = u.id
-                LEFT JOIN users t ON sr.assigned_technician_id = t.id
+                LEFT JOIN users t ON sr.assigned_to = t.id
                 WHERE 1=1";
 
         $params = [];
@@ -193,13 +200,11 @@ class ServiceRequest
             $stmt->execute();
             $requests = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-            // Parse photos for each request if column exists
+            // Parse arrays for each request
             foreach ($requests as &$request) {
-                if (isset($request['photos'])) {
-                    $request['photos'] = $this->parsePhotosArray($request['photos']);
-                } else {
-                    $request['photos'] = [];
-                }
+                $request['photos'] = $this->parsePhotosArray($request['photos'] ?? null);
+                $request['before_images'] = $this->parsePhotosArray($request['before_images'] ?? null);
+                $request['after_images'] = $this->parsePhotosArray($request['after_images'] ?? null);
             }
 
             return $requests;
@@ -207,6 +212,14 @@ class ServiceRequest
             error_log("Error getting service requests: " . $e->getMessage());
             return [];
         }
+    }
+
+    /**
+     * Alias for getAll - used by Facade
+     */
+    public function findAll(array $filters = []): array
+    {
+        return $this->getAll($filters);
     }
 
     /**
@@ -266,7 +279,9 @@ class ServiceRequest
     {
         $allowedFields = ['category', 'issue_type', 'title', 'description', 'location', 
                           'contact_phone', 'preferred_contact', 'priority', 'assigned_to', 
-                          'admin_notes', 'estimated_completion'];
+                          'admin_notes', 'estimated_completion', 'rating', 'feedback', 
+                          'rated_at', 'resolution', 'technician_notes', 'resolved_at', 
+                          'resolved_by'];
 
         $updates = [];
         $params = ['id' => $id];

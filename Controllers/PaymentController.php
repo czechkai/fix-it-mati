@@ -228,41 +228,32 @@ class PaymentController
         $userId = $request->user()['id'] ?? null;
         
         if (!$userId) {
-            return Response::json([
-                'success' => false,
-                'message' => 'User not authenticated'
-            ], 401);
+            return Response::error('User not authenticated', 401);
         }
         
         try {
-            // Get limit parameter
-            $limit = (int) $request->query('limit', 10);
+            $type = $request->query('type');
+            $transactions = $this->paymentModel->getTransactionHistory($userId, $type);
             
-            $history = $this->paymentModel->getHistory($userId, $limit);
-            
-            // Process history data
+            // Process transaction data for frontend
             $processedHistory = [];
-            foreach ($history as $transaction) {
+            foreach ($transactions as $transaction) {
                 $processedHistory[] = [
                     'id' => $transaction['id'],
+                    'reference_number' => $transaction['reference_number'],
                     'amount' => (float) $transaction['amount'],
                     'type' => $transaction['type'],
-                    'status' => $transaction['status'],
-                    'payment_method' => $transaction['payment_method'] ?? null,
-                    'reference_number' => $transaction['reference_number'],
-                    'bill_month' => $transaction['bill_month'] ?? null,
-                    'created_at' => $transaction['created_at'],
-                    'notes' => $transaction['notes'] ?? null
+                    'biller' => $transaction['biller'],
+                    'status' => ucfirst($transaction['status']),
+                    'payment_method' => $transaction['payment_method'] ?? 'N/A',
+                    'billing_period' => $transaction['billing_period'] ?? 'N/A',
+                    'transaction_date' => $transaction['transaction_date'],
+                    'gateway' => $transaction['gateway'] ?? null,
+                    'gateway_reference' => $transaction['gateway_reference'] ?? null
                 ];
             }
             
-            return Response::json([
-                'success' => true,
-                'data' => [
-                    'payments' => $processedHistory,
-                    'count' => count($processedHistory)
-                ]
-            ]);
+            return Response::success($processedHistory);
             
         } catch (\Exception $e) {
             error_log("Error fetching payment history: " . $e->getMessage());
@@ -305,6 +296,29 @@ class PaymentController
         ]);
     }
     
+    /**
+     * Get transaction history for authenticated user
+     * GET /api/payments/history
+     */
+    public function getTransactionHistory(Request $request): Response
+    {
+        $userId = $request->user()['id'] ?? null;
+        
+        if (!$userId) {
+            return Response::error('User not authenticated', 401);
+        }
+
+        try {
+            $type = $request->query('type');
+            $transactions = $this->paymentModel->getTransactionHistory($userId, $type);
+
+            return Response::success($transactions);
+        } catch (\Exception $e) {
+            error_log("Error fetching transaction history: " . $e->getMessage());
+            return Response::error('Failed to retrieve transaction history', 500);
+        }
+    }
+
     /**
      * Get gateway configuration by gateway type
      */

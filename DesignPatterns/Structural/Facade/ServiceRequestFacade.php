@@ -414,4 +414,148 @@ class ServiceRequestFacade
 
         return false;
     }
+
+    /**
+     * Get resolved/completed service requests
+     */
+    public function getResolvedRequests(string $userId, string $userRole): array
+    {
+        $filters = ['status' => 'completed'];
+
+        // Filter by user role
+        if ($userRole === 'customer') {
+            $filters['user_id'] = $userId;
+        } elseif ($userRole === 'technician') {
+            $filters['assigned_to'] = $userId;
+        }
+        // Admin can see all
+
+        $requests = $this->requestModel->findAll($filters);
+
+        // Enrich with additional data
+        $enrichedRequests = [];
+        foreach ($requests as $req) {
+            $enrichedRequests[] = $this->enrichRequestData($req);
+        }
+
+        return $enrichedRequests;
+    }
+
+    /**
+     * Submit rating and feedback for a resolved request
+     */
+    public function submitRating(string $requestId, string $userId, int $rating, string $feedback = ''): array
+    {
+        // Get the request
+        $request = $this->requestModel->find($requestId);
+        if (!$request) {
+            return ['success' => false, 'error' => 'Request not found'];
+        }
+
+        // Verify the request is completed
+        if ($request['status'] !== 'completed') {
+            return ['success' => false, 'error' => 'Can only rate completed requests'];
+        }
+
+        // Verify user owns this request
+        if ($request['user_id'] !== $userId) {
+            return ['success' => false, 'error' => 'You can only rate your own requests'];
+        }
+
+        // Check if already rated
+        if (!empty($request['rating'])) {
+            return ['success' => false, 'error' => 'This request has already been rated'];
+        }
+
+        // Update the request with rating and feedback
+        $updated = $this->requestModel->update($requestId, [
+            'rating' => $rating,
+            'feedback' => $feedback,
+            'rated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        if (!$updated) {
+            return ['success' => false, 'error' => 'Failed to save rating'];
+        }
+
+        // Get updated request
+        $updatedRequest = $this->requestModel->find($requestId);
+
+        return [
+            'success' => true,
+            'message' => 'Rating submitted successfully',
+            'data' => $this->enrichRequestData($updatedRequest)
+        ];
+    }
+
+    /**
+     * Report a recurring issue based on a resolved request
+     */
+    public function reportRecurringIssue(string $originalRequestId, string $userId, array $data): array
+    {
+        // Get the original request
+        $originalRequest = $this->requestModel->find($originalRequestId);
+        if (!$originalRequest) {
+            return ['success' => false, 'error' => 'Original request not found'];
+        }
+
+        // Verify user owns the original request
+        if ($originalRequest['user_id'] !== $userId) {
+            return ['success' => false, 'error' => 'You can only report recurring issues for your own requests'];
+        }
+
+        // Verify the original request is completed
+        if ($originalRequest['status'] !== 'completed') {
+            return ['success' => false, 'error' => 'Can only report recurring issues for completed requests'];
+        }
+
+        // Create new request based on original
+        $newRequestData = [
+            'user_id' => $userId,
+            'category' => $data['category'] ?? $originalRequest['category'],
+            'title' => $data['title'] ?? "Recurring: " . $originalRequest['title'],
+            'description' => $data['description'] ?? "This is a recurring issue from ticket #{$originalRequest['ticket_number']}. " . $originalRequest['description'],
+            'location' => $data['address'] ?? $originalRequest['location'],
+            'priority' => $data['priority'] ?? 'normal',
+            'original_request_id' => $originalRequestId
+        ];
+
+        // Submit the new request
+        $result = $this->submitRequest($userId, $newRequestData);
+
+        if (!$result['success']) {
+            return $result;
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Recurring issue reported successfully',
+            'request' => $result['request']
+        ];
+    }
+
+    /**
+     * Enrich request data with user info and formatted fields
+     */
+    private function enrichRequestData(array $request): array
+    {
+        // Add user information
+        if (!empty($request['user_id'])) {
+            $user = $this->userModel->find($request['user_id']);
+            if ($user) {
+                $request['user_name'] = ($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '');
+                $request['user_email'] = $user['email'] ?? '';
+            }
+        }
+
+        // Add technician information
+        if (!empty($request['assigned_to'])) {
+            $technician = $this->userModel->find($request['assigned_to']);
+            if ($technician) {
+                $request['resolved_by'] = ($technician['first_name'] ?? '') . ' ' . ($technician['last_name'] ?? '');
+            }
+        }
+
+        return $request;
+    }
 }

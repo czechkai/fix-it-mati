@@ -84,12 +84,18 @@ try {
     // Get current authenticated user
     $router->get('/api/auth/me', 'AuthController@me');
     
+    // Update user profile
+    $router->put('/api/auth/profile', 'AuthController@updateProfile');
+    
     // ============================================
     // SERVICE REQUEST ROUTES (Protected)
     // ============================================
     
     // Statistics (must come before {id} route)
     $router->get('/api/requests/statistics', 'RequestController@statistics');
+    
+    // Resolved/completed requests (must come before {id} route)
+    $router->get('/api/requests/resolved', 'RequestController@resolved');
     
     // List and create requests
     $router->get('/api/requests', 'RequestController@index');
@@ -105,6 +111,27 @@ try {
     $router->post('/api/requests/{id}/assign', 'RequestController@assign');
     $router->post('/api/requests/{id}/start', 'RequestController@start');
     $router->post('/api/requests/{id}/complete', 'RequestController@complete');
+    
+    // Rating and recurring issues
+    $router->post('/api/requests/{id}/rating', 'RequestController@submitRating');
+    $router->post('/api/requests/{id}/recurring', 'RequestController@reportRecurring');
+    
+    // ============================================
+    // DISCUSSION ROUTES (Protected)
+    // ============================================
+    
+    // List and create discussions
+    $router->get('/api/discussions', 'DiscussionController@index');
+    $router->post('/api/discussions', 'DiscussionController@create');
+    
+    // Get, update, delete specific discussion
+    $router->get('/api/discussions/{id}', 'DiscussionController@show');
+    $router->delete('/api/discussions/{id}', 'DiscussionController@delete');
+    
+    // Discussion actions
+    $router->post('/api/discussions/{id}/upvote', 'DiscussionController@upvote');
+    $router->post('/api/discussions/{id}/comments', 'DiscussionController@addComment');
+    $router->post('/api/discussions/{id}/comments/{commentId}/mark-solution', 'DiscussionController@markSolution');
     
     // ============================================
     // NOTIFICATION ROUTES (Protected)
@@ -123,6 +150,41 @@ try {
     
     // Test notification (development only)
     $router->post('/api/notifications/test', 'NotificationController@sendTest');
+    
+    // ============================================
+    // SERVICE ADDRESSES ROUTES (Protected)
+    // ============================================
+    
+    // Get default address (must come before {id} route)
+    $router->get('/api/service-addresses/default', 'ServiceAddressController@getDefault');
+    
+    // List and create addresses
+    $router->get('/api/service-addresses', 'ServiceAddressController@index');
+    $router->post('/api/service-addresses', 'ServiceAddressController@create');
+    
+    // Get, update, delete specific address
+    $router->get('/api/service-addresses/{id}', 'ServiceAddressController@show');
+    $router->put('/api/service-addresses/{id}', 'ServiceAddressController@update');
+    $router->delete('/api/service-addresses/{id}', 'ServiceAddressController@delete');
+    
+    // Set default address
+    $router->patch('/api/service-addresses/{id}/set-default', 'ServiceAddressController@setDefault');
+    
+    // ============================================
+    // LINKED METERS ROUTES (Protected)
+    // ============================================
+    
+    // Get meters by type (must come before {id} route)
+    $router->get('/api/linked-meters/type/{type}', 'LinkedMeterController@getByType');
+    
+    // List and create meters
+    $router->get('/api/linked-meters', 'LinkedMeterController@index');
+    $router->post('/api/linked-meters', 'LinkedMeterController@create');
+    
+    // Get, update, delete specific meter
+    $router->get('/api/linked-meters/{id}', 'LinkedMeterController@show');
+    $router->put('/api/linked-meters/{id}', 'LinkedMeterController@update');
+    $router->delete('/api/linked-meters/{id}', 'LinkedMeterController@delete');
     
     // ============================================
     // ANNOUNCEMENTS ROUTES (Protected Admin only)

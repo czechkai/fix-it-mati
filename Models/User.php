@@ -172,15 +172,16 @@ class User {
             $data['role'] = 'customer';
         }
         
-        $sql = "INSERT INTO users (email, full_name, phone, address, account_number, role, password_hash, created_at, updated_at) 
-                VALUES (:email, :full_name, :phone, :address, :account_number, :role, :password_hash, NOW(), NOW()) 
-                RETURNING id, email, full_name, phone, address, account_number, role, created_at, updated_at";
+        $sql = "INSERT INTO users (email, first_name, last_name, phone, address, account_number, role, password_hash, created_at, updated_at) 
+                VALUES (:email, :first_name, :last_name, :phone, :address, :account_number, :role, :password_hash, NOW(), NOW()) 
+                RETURNING id, email, first_name, last_name, phone, address, account_number, role, created_at, updated_at";
         
         try {
             $stmt = $conn->prepare($sql);
             $stmt->execute([
                 'email' => $data['email'],
-                'full_name' => $data['full_name'],
+                'first_name' => $data['first_name'] ?? '',
+                'last_name' => $data['last_name'] ?? '',
                 'phone' => $data['phone'] ?? null,
                 'address' => $data['address'] ?? null,
                 'account_number' => $data['account_number'],
@@ -193,7 +194,8 @@ class User {
             // Populate the object with the returned data
             $this->id = $result['id'];
             $this->email = $result['email'];
-            $this->full_name = $result['full_name'];
+            $this->first_name = $result['first_name'];
+            $this->last_name = $result['last_name'];
             $this->phone = $result['phone'];
             $this->address = $result['address'];
             $this->account_number = $result['account_number'];

@@ -26,23 +26,17 @@
                     <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-md text-slate-500 hover:bg-slate-100" aria-label="Toggle Menu">
                         <i data-lucide="menu" class="w-6 h-6"></i>
                     </button>
-                    <div class="flex items-center gap-2">
+                    <a href="user-dashboard.php" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
                         <div class="bg-blue-600 p-1.5 rounded-lg">
                             <i data-lucide="hammer" class="text-white w-5 h-5"></i>
                         </div>
                         <span class="text-xl font-bold tracking-tight text-blue-900">FixItMati</span>
-                    </div>
-                </div>
-                <div class="hidden md:flex flex-1 max-w-lg mx-8 relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i data-lucide="search" class="h-5 w-5 text-slate-400"></i>
-                    </div>
-                    <input type="text" class="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-full leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out" placeholder="Search requests, announcements, or help articles..." />
-                    <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
-                        <span class="text-xs border border-slate-200 rounded px-1.5 py-0.5 text-slate-400">/</span>
-                    </div>
+                    </a>
                 </div>
                 <div class="flex items-center gap-3">
+                    <a href="user-dashboard.php" class="p-2 text-slate-500 hover:bg-slate-100 rounded-full cursor-pointer transition-colors" title="Go to Dashboard">
+                        <i data-lucide="home" class="w-5 h-5"></i>
+                    </a>
                     <div class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full cursor-pointer" id="notificationBtn">
                         <i data-lucide="bell" class="w-5 h-5"></i>
                         <span class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" id="notificationDot"></span>

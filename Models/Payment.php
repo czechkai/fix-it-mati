@@ -263,6 +263,61 @@ class Payment
     }
 
     /**
+     * Get complete transaction history for a user
+     * Returns all payment transactions with detailed information
+     */
+    public function getTransactionHistory(string $userId, ?string $type = null): array
+    {
+        $sql = "SELECT 
+                    t.id,
+                    t.reference_number,
+                    t.payment_id,
+                    t.amount,
+                    t.status,
+                    t.payment_method,
+                    t.gateway,
+                    t.gateway_reference,
+                    t.created_at as transaction_date,
+                    p.bill_month as billing_period,
+                    p.due_date,
+                    CASE 
+                        WHEN pi.category = 'water' THEN 'Water'
+                        WHEN pi.category = 'electricity' THEN 'Electricity'
+                        ELSE 'Services'
+                    END as type,
+                    CASE 
+                        WHEN pi.category = 'water' THEN 'Mati Water District'
+                        WHEN pi.category = 'electricity' THEN 'Davao Light'
+                        ELSE 'City Services'
+                    END as biller
+                FROM transactions t
+                LEFT JOIN payments p ON t.payment_id = p.id
+                LEFT JOIN payment_items pi ON p.id = pi.payment_id
+                WHERE t.user_id = :user_id";
+
+        $params = ['user_id' => $userId];
+
+        if ($type && $type !== 'All') {
+            $sql .= " AND pi.category = :type";
+            $params['type'] = strtolower($type);
+        }
+
+        $sql .= " GROUP BY t.id, t.reference_number, t.payment_id, t.amount, t.status, 
+                          t.payment_method, t.gateway, t.gateway_reference, t.created_at,
+                          p.bill_month, p.due_date, pi.category
+                  ORDER BY t.created_at DESC";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log("Error fetching transaction history: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
      * Check for overdue payments and update status
      */
     public function updateOverduePayments(): int

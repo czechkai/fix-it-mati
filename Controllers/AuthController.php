@@ -9,6 +9,7 @@ namespace FixItMati\Controllers;
 use FixItMati\Core\Request;
 use FixItMati\Core\Response;
 use FixItMati\Services\AuthService;
+use FixItMati\Models\User;
 
 class AuthController {
     private $authService;
@@ -93,12 +94,19 @@ class AuthController {
             return Response::unauthorized('Not authenticated');
         }
         
-        // If user is already an array (from JWT), return it
-        if (is_array($user)) {
+        // If it's from JWT (array with only user_id, email, role), fetch full user data from database
+        if (is_array($user) && isset($user['user_id'])) {
+            $fullUser = User::find($user['user_id']);
+            
+            if ($fullUser) {
+                return Response::success($fullUser->toArray());
+            }
+            
+            // Fallback to JWT data if user not found in DB (shouldn't happen)
             return Response::success($user);
         }
         
-        // If user is a User object (from session), convert to array
+        // If user is already a User object (from session), convert to array
         if (is_object($user) && method_exists($user, 'toArray')) {
             return Response::success($user->toArray());
         }
@@ -135,5 +143,86 @@ class AuthController {
         return Response::success([
             'token' => $newToken
         ], 'Token refreshed successfully');
+    }
+    
+    /**
+     * PUT /api/auth/profile
+     * Update user profile
+     */
+    public function updateProfile(Request $request): Response {
+        $user = $request->user();
+        
+        if (!$user) {
+            return Response::unauthorized('Not authenticated');
+        }
+        
+        $data = $request->all();
+        
+        // Validate required fields
+        if (empty($data['first_name']) || empty($data['last_name'])) {
+            return Response::validationError('First name and last name are required');
+        }
+        
+        if (empty($data['email'])) {
+            return Response::validationError('Email address is required');
+        }
+        
+        // Validate email
+        if (!empty($data['email'])) {
+            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                return Response::validationError('Invalid email address');
+            }
+            
+            // Check if email changed
+            if ($data['email'] !== $user['email']) {
+                // Check if email already exists
+                $existingUser = User::findByEmail($data['email']);
+                if ($existingUser && $existingUser->id !== $user['id']) {
+                    return Response::validationError('Email address is already in use');
+                }
+            }
+        }
+        
+        // Check if password change is requested
+        if (!empty($data['new_password'])) {
+            if (empty($data['current_password'])) {
+                return Response::validationError('Current password is required to change password');
+            }
+            
+            // Verify current password
+            $result = $this->authService->verifyPassword($user['email'], $data['current_password']);
+            if (!$result) {
+                return Response::validationError('Current password is incorrect');
+            }
+            
+            if ($data['new_password'] !== $data['confirm_password']) {
+                return Response::validationError('New passwords do not match');
+            }
+            
+            if (strlen($data['new_password']) < 6) {
+                return Response::validationError('New password must be at least 6 characters');
+            }
+        }
+        
+        // Update profile
+        $updateData = [
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'] ?? $user['email'],
+            'phone' => $data['phone'] ?? null,
+            'address' => $data['address'] ?? null
+        ];
+        
+        if (!empty($data['new_password'])) {
+            $updateData['password'] = password_hash($data['new_password'], PASSWORD_DEFAULT);
+        }
+        
+        $result = $this->authService->updateProfile($user['id'], $updateData);
+        
+        if ($result['success']) {
+            return Response::success($result['user'], 'Profile updated successfully');
+        }
+        
+        return Response::error('Failed to update profile');
     }
 }

@@ -53,7 +53,7 @@
             window.location.href = window.location.pathname.includes('/public/') ? 'announcements.php' : 'public/announcements.php';
             break;
           case 'discussions':
-            alert('Discussions feature coming soon!');
+            window.location.href = window.location.pathname.includes('/public/') ? 'discussions.php' : 'public/discussions.php';
             break;
           case 'payments':
             window.location.href = window.location.pathname.includes('/public/') ? 'payments.php' : 'public/payments.php';
@@ -348,26 +348,40 @@
   }
 
   function displayRequests(requests) {
-    const container = document.querySelector('.bg-white.border.border-slate-200.rounded-lg.shadow-sm.divide-y');
+    const container = document.getElementById('requestsContent');
+    const loadingState = document.getElementById('requestsLoadingState');
+    const countElement = document.getElementById('requestsCount');
+    
     if (!container) return;
     
-    // Keep header, clear rest
-    const children = Array.from(container.children);
-    children.slice(1).forEach(child => child.remove());
+    // Hide loading state and show content
+    if (loadingState) loadingState.classList.add('hidden');
+    container.classList.remove('hidden');
+    
+    // Update count
+    if (countElement) {
+      countElement.textContent = requests.length > 0 ? `Showing ${Math.min(requests.length, 3)} of ${allRequests.length}` : 'No requests';
+    }
+    
+    // Clear content
+    container.innerHTML = '';
     
     if (requests.length === 0) {
-      container.insertAdjacentHTML('beforeend', `
+      container.innerHTML = `
         <div class="px-4 py-8 text-center text-slate-500">
           <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-2 text-slate-300"></i>
           <p class="mb-2">No requests found</p>
-          ${currentCategory !== 'all' ? `<button class="text-sm text-blue-600 hover:underline" onclick="document.querySelector('[data-category=\\'all\\']').click()">Show all requests</button>` : ''}
+          ${currentCategory !== 'all' ? `<button class="text-sm text-blue-600 hover:underline" onclick="document.querySelector('[data-category=\'all\']').click()">Show all requests</button>` : ''}
         </div>
-      `);
+      `;
       lucide.createIcons();
       return;
     }
     
-    requests.forEach(request => {
+    // Show only first 3 requests
+    const displayRequests = requests.slice(0, 3);
+    
+    displayRequests.forEach(request => {
       const statusColors = {
         pending: 'bg-yellow-100 text-yellow-800',
         in_progress: 'bg-blue-100 text-blue-800',
@@ -412,14 +426,6 @@
       container.insertAdjacentHTML('beforeend', html);
     });
     
-    // Add view all button
-    const requestsLink = window.location.pathname.includes('/public/') ? 'active-requests.php' : 'public/active-requests.php';
-    container.insertAdjacentHTML('beforeend', `
-      <div class="p-3 text-center border-t border-slate-100">
-        <a href="${requestsLink}" class="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline">View all requests</a>
-      </div>
-    `);
-    
     lucide.createIcons();
     
     // Add click handlers to requests
@@ -433,11 +439,26 @@
   }
 
   function displayAnnouncements() {
-    const container = document.querySelector('.bg-white.rounded-lg.border.border-slate-200.shadow-sm.overflow-hidden .divide-y');
-    if (!container || allAnnouncements.length === 0) return;
+    const container = document.getElementById('announcementsContent');
+    const loadingState = document.getElementById('announcementsLoadingState');
+    
+    if (!container) return;
+    
+    // Hide loading state and show content
+    if (loadingState) loadingState.classList.add('hidden');
+    container.classList.remove('hidden');
     
     // Clear existing
     container.innerHTML = '';
+    
+    if (allAnnouncements.length === 0) {
+      container.innerHTML = `
+        <div class="p-4 text-center text-slate-500">
+          <p class="text-sm">No announcements available</p>
+        </div>
+      `;
+      return;
+    }
     
     // Show latest 2 announcements
     const latest = allAnnouncements.slice(0, 2);
@@ -622,61 +643,8 @@
       // Close dropdown
       profileDropdown.classList.add('hidden');
       
-      // Show profile edit modal or navigate to profile page
-      const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-      
-      // Create modal for profile editing
-      const modal = document.createElement('div');
-      modal.className = 'fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4';
-      modal.innerHTML = `
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-slate-900">Edit Profile</h3>
-            <button class="text-slate-400 hover:text-slate-600" onclick="this.closest('.fixed').remove()">
-              <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-          </div>
-          <form id="editProfileForm" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-              <input type="text" name="full_name" value="${user.full_name || ''}" 
-                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-              <input type="tel" name="phone" value="${user.phone || ''}" 
-                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Address</label>
-              <textarea name="address" rows="2" 
-                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">${user.address || ''}</textarea>
-            </div>
-            <div class="flex gap-3 pt-4">
-              <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                Save Changes
-              </button>
-              <button type="button" onclick="this.closest('.fixed').remove()" 
-                class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      lucide.createIcons();
-      
-      // Handle form submission
-      document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData);
-        
-        // TODO: Implement API call to update profile
-        alert('Profile update API not yet implemented. Data: ' + JSON.stringify(data));
-        modal.remove();
-      });
+      // Redirect to edit profile page
+      window.location.href = 'edit-profile.php';
     });
   }
 
@@ -684,66 +652,7 @@
   if (serviceAddressesBtn) {
     serviceAddressesBtn.addEventListener('click', () => {
       profileDropdown.classList.add('hidden');
-      
-      const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-      const modal = document.createElement('div');
-      modal.className = 'fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4';
-      modal.innerHTML = `
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-slate-900">Service Addresses</h3>
-            <button class="text-slate-400 hover:text-slate-600" onclick="this.closest('.fixed').remove()">
-              <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-          </div>
-          
-          <div class="mb-4">
-            <button class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2">
-              <i data-lucide="plus" class="w-4 h-4"></i>
-              Add New Address
-            </button>
-          </div>
-
-          <div class="space-y-3">
-            <div class="border border-slate-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-              <div class="flex items-start justify-between">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-2">
-                    <i data-lucide="home" class="w-4 h-4 text-blue-600"></i>
-                    <span class="font-medium text-slate-900">Primary Residence</span>
-                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Primary</span>
-                  </div>
-                  <p class="text-sm text-slate-600">${user.address || 'No address on file'}</p>
-                  <div class="flex gap-4 mt-3 text-xs text-slate-500">
-                    <span><i data-lucide="droplets" class="w-3 h-3 inline"></i> Water Service</span>
-                    <span><i data-lucide="zap" class="w-3 h-3 inline"></i> Electricity Service</span>
-                  </div>
-                </div>
-                <button class="text-slate-400 hover:text-slate-600">
-                  <i data-lucide="more-vertical" class="w-5 h-5"></i>
-                </button>
-              </div>
-            </div>
-
-            <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
-              <div class="text-center py-6 text-slate-500">
-                <i data-lucide="map-pin" class="w-8 h-8 mx-auto mb-2 text-slate-400"></i>
-                <p class="text-sm">No additional service addresses</p>
-                <p class="text-xs mt-1">Add addresses where you receive utility services</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-6 pt-4 border-t border-slate-100">
-            <p class="text-xs text-slate-500">
-              <i data-lucide="info" class="w-3 h-3 inline"></i>
-              Service addresses must match official records. Contact support for assistance.
-            </p>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      lucide.createIcons();
+      window.location.href = 'service-addresses.php';
     });
   }
 
@@ -758,122 +667,7 @@
   // Help & Support button
   if (helpSupportBtn) {
     helpSupportBtn.addEventListener('click', () => {
-      profileDropdown.classList.add('hidden');
-      
-      const modal = document.createElement('div');
-      modal.className = 'fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4';
-      modal.innerHTML = `
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-slate-900">Help & Support</h3>
-            <button class="text-slate-400 hover:text-slate-600" onclick="this.closest('.fixed').remove()">
-              <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-          </div>
-
-          <div class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <a href="#" class="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i data-lucide="phone" class="w-5 h-5 text-blue-600"></i>
-                  </div>
-                  <div>
-                    <p class="font-medium text-slate-900">Call Support</p>
-                    <p class="text-sm text-slate-500">(082) 123-4567</p>
-                  </div>
-                </div>
-              </a>
-
-              <a href="#" class="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i data-lucide="mail" class="w-5 h-5 text-green-600"></i>
-                  </div>
-                  <div>
-                    <p class="font-medium text-slate-900">Email Support</p>
-                    <p class="text-sm text-slate-500">support@mati.gov.ph</p>
-                  </div>
-                </div>
-              </a>
-
-              <a href="#" class="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <i data-lucide="message-circle" class="w-5 h-5 text-purple-600"></i>
-                  </div>
-                  <div>
-                    <p class="font-medium text-slate-900">Live Chat</p>
-                    <p class="text-sm text-slate-500">Available 8AM-5PM</p>
-                  </div>
-                </div>
-              </a>
-
-              <a href="#" class="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <i data-lucide="map-pin" class="w-5 h-5 text-orange-600"></i>
-                  </div>
-                  <div>
-                    <p class="font-medium text-slate-900">Visit Office</p>
-                    <p class="text-sm text-slate-500">Mati City Hall</p>
-                  </div>
-                </div>
-              </a>
-            </div>
-
-            <div class="border-t border-slate-100 pt-4">
-              <h4 class="font-medium text-slate-900 mb-3">Frequently Asked Questions</h4>
-              <div class="space-y-2">
-                <details class="border border-slate-200 rounded-lg">
-                  <summary class="px-4 py-3 cursor-pointer hover:bg-slate-50 font-medium text-sm text-slate-700">
-                    How do I report a water/electricity issue?
-                  </summary>
-                  <div class="px-4 pb-3 text-sm text-slate-600">
-                    Click the "New Request" button on the dashboard to submit a service request. Include details about the issue and location.
-                  </div>
-                </details>
-                
-                <details class="border border-slate-200 rounded-lg">
-                  <summary class="px-4 py-3 cursor-pointer hover:bg-slate-50 font-medium text-sm text-slate-700">
-                    How do I pay my utility bills?
-                  </summary>
-                  <div class="px-4 pb-3 text-sm text-slate-600">
-                    Go to the Payments section to view current bills and pay online using GCash, Maya, or credit/debit card.
-                  </div>
-                </details>
-                
-                <details class="border border-slate-200 rounded-lg">
-                  <summary class="px-4 py-3 cursor-pointer hover:bg-slate-50 font-medium text-sm text-slate-700">
-                    How do I track my service request?
-                  </summary>
-                  <div class="px-4 pb-3 text-sm text-slate-600">
-                    Visit "My Requests" to see all your service requests and their current status. You'll receive notifications when status changes.
-                  </div>
-                </details>
-
-                <details class="border border-slate-200 rounded-lg">
-                  <summary class="px-4 py-3 cursor-pointer hover:bg-slate-50 font-medium text-sm text-slate-700">
-                    What are the office hours?
-                  </summary>
-                  <div class="px-4 pb-3 text-sm text-slate-600">
-                    Monday to Friday: 8:00 AM - 5:00 PM. Emergency services available 24/7 for critical issues.
-                  </div>
-                </details>
-              </div>
-            </div>
-
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p class="text-sm text-blue-900">
-                <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
-                For emergencies (water main breaks, power outages), call our 24/7 hotline: <strong>(082) 911-HELP</strong>
-              </p>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-      lucide.createIcons();
+      window.location.href = 'help-support.php';
     });
   }
 

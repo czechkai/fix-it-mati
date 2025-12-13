@@ -90,10 +90,10 @@ if (isset($_SESSION['user_id'])) {
     }
   </style>
 </head>
-<body class="min-h-screen flex bg-white font-sans text-slate-800 overflow-hidden">
+<body class="min-h-screen flex bg-white font-sans text-slate-800">
   
   <!-- LEFT SIDE: BRANDING & INFO -->
-  <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 relative overflow-hidden flex-col justify-between p-12 text-white">
+  <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 relative overflow-hidden flex-col justify-between p-8 text-white h-screen">
     
     <!-- Background Decorative Circles -->
     <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
@@ -114,8 +114,8 @@ if (isset($_SESSION['user_id'])) {
     </div>
 
     <!-- Central Message -->
-    <div class="relative z-10 max-w-lg">
-      <div class="inline-block mb-4">
+    <div class="relative z-10 max-w-lg -mt-8">
+      <div class="inline-block mb-3">
         <span class="px-4 py-1.5 bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-full text-xs font-semibold text-blue-200 uppercase tracking-wider">
           Join Mati City Today
         </span>
@@ -172,9 +172,9 @@ if (isset($_SESSION['user_id'])) {
   </div>
 
   <!-- RIGHT SIDE: REGISTRATION FORM -->
-  <div class="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 lg:bg-white h-screen">
-    
-    <div class="w-full max-w-md bg-white p-10 rounded-3xl shadow-xl border border-slate-100 lg:border-none lg:shadow-none lg:p-0">
+  <div class="w-full lg:w-1/2 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 lg:bg-white h-screen overflow-y-auto">
+    <div class="flex flex-col justify-center items-center min-h-full p-4 sm:p-8">
+      <div class="w-full max-w-md bg-white p-6 sm:p-10 rounded-3xl shadow-xl border border-slate-100 lg:border-none lg:shadow-none lg:p-0 my-8">
       
       <!-- Mobile Logo (Visible only on small screens) -->
       <div class="lg:hidden flex justify-center mb-6">
@@ -221,10 +221,10 @@ if (isset($_SESSION['user_id'])) {
         <!-- STEP 1: Personal Information -->
         <div id="step1" class="form-step active space-y-3.5">
         
-        <!-- Full Name -->
+        <!-- First Name -->
         <div class="space-y-1.5">
           <label class="text-xs font-bold text-slate-800 ml-1 flex items-center gap-1.5">
-            Full Name
+            First Name
             <span class="text-red-500">*</span>
           </label>
           <div class="relative group">
@@ -233,10 +233,31 @@ if (isset($_SESSION['user_id'])) {
             </div>
             <input
               type="text"
-              id="fullName"
-              name="fullName"
+              id="firstName"
+              name="firstName"
               class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
-              placeholder="Juan Dela Cruz"
+              placeholder="Juan"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Last Name -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-800 ml-1 flex items-center gap-1.5">
+            Last Name
+            <span class="text-red-500">*</span>
+          </label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i data-lucide="user" class="h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"></i>
+            </div>
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
+              placeholder="Dela Cruz"
               required
             />
           </div>
@@ -457,7 +478,25 @@ if (isset($_SESSION['user_id'])) {
 
       </form>
 
-      <div class="mt-6 text-center">
+      <!-- Trust Badges -->
+      <div class="mt-6 pt-6 border-t border-slate-100">
+        <div class="flex items-center justify-center gap-4 text-[10px] text-slate-400">
+          <div class="flex flex-col items-center gap-1">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+            <span>SSL Secured</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            <span>Encrypted</span>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            <span>Verified</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 text-center">
         <p class="text-xs text-slate-600">
           Already have an account?
           <a href="login.php" class="font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
@@ -466,24 +505,7 @@ if (isset($_SESSION['user_id'])) {
         </p>
       </div>
       
-      <!-- Trust Badges -->
-      <div class="mt-6 pt-6 border-t border-slate-100">
-        <div class="flex items-center justify-center gap-4 text-[10px] text-slate-400">
-          <div class="flex items-center gap-1">
-            <i data-lucide="shield-check" class="w-3 h-3"></i>
-            <span>SSL Secured</span>
-          </div>
-          <div class="flex items-center gap-1">
-            <i data-lucide="lock" class="w-3 h-3"></i>
-            <span>Encrypted</span>
-          </div>
-          <div class="flex items-center gap-1">
-            <i data-lucide="check-circle" class="w-3 h-3"></i>
-            <span>Verified</span>
-          </div>
-        </div>
       </div>
-      
     </div>
   </div>
 
@@ -525,12 +547,13 @@ if (isset($_SESSION['user_id'])) {
     // Navigate to step 2
     nextBtn.addEventListener('click', () => {
       // Validate step 1 fields
-      const fullName = document.getElementById('fullName').value;
+      const firstName = document.getElementById('firstName').value;
+      const lastName = document.getElementById('lastName').value;
       const email = document.getElementById('email').value;
       const phone = document.getElementById('phone').value;
       const address = document.getElementById('address').value;
 
-      if (!fullName || !email || !phone || !address) {
+      if (!firstName || !lastName || !email || !phone || !address) {
         showError('Please fill in all required fields before continuing.');
         return;
       }
@@ -690,7 +713,8 @@ if (isset($_SESSION['user_id'])) {
       setLoading(true);
 
       const formData = {
-        full_name: document.getElementById('fullName').value,
+        first_name: document.getElementById('firstName').value,
+        last_name: document.getElementById('lastName').value,
         email: document.getElementById('email').value,
         phone: document.getElementById('phone').value,
         address: document.getElementById('address').value,
