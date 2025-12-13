@@ -52,7 +52,9 @@ const ApiClient = {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || `HTTP ${response.status}`);
+        const error = new Error(data.error || data.message || `HTTP ${response.status}`);
+        error.response = data; // Attach full response data including validation errors
+        throw error;
       }
 
       return data;

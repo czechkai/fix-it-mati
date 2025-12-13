@@ -192,7 +192,7 @@ session_start();
                                         </div>
                                         <div class="technician-details">
                                             <p id="technicianName"></p>
-                                            <p>Mati Water District</p>
+                                            <p id="organizationName"></p>
                                         </div>
                                     </div>
                                 </div>
@@ -281,9 +281,9 @@ session_start();
         </div>
     </div>
 
-    <script src="/assets/api-client.js?v=6"></script>
+    <script src="/assets/api-client.js?v=7"></script>
     <script src="/assets/dashboard.js"></script>
-    <script src="/assets/active-requests.js?v=5"></script>
+    <script src="/assets/active-requests.js?v=12"></script>
     <script>lucide.createIcons();</script>
 </body>
 </html>

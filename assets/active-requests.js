@@ -3,59 +3,47 @@
 // State management
 let selectedRequestId = null;
 let activeRequests = [];
+let autoRefreshInterval = null;
 
 // Initialize the page
 async function init() {
-    try {
-        // Check authentication
-        const token = sessionStorage.getItem('auth_token');
-        if (!token) {
-            window.location.replace('login.php');
+    console.log('[Active Requests] Initializing...');
+    
+    // Check authentication
+    const token = sessionStorage.getItem('auth_token');
+    console.log('[Active Requests] Auth token:', token ? 'Present' : 'Missing');
+    console.log('[Active Requests] Token value:', token ? token.substring(0, 50) + '...' : 'null');
+    
+    if (!token) {
+        console.error('[Active Requests] No auth token found');
+        console.log('[Active Requests] Checking localStorage...');
+        const rememberToken = localStorage.getItem('auth_token');
+        if (rememberToken) {
+            console.log('[Active Requests] Found token in localStorage, copying to sessionStorage');
+            sessionStorage.setItem('auth_token', rememberToken);
+            const user = localStorage.getItem('user');
+            if (user) {
+                sessionStorage.setItem('user', user);
+            }
+            // Retry initialization
+            location.reload();
             return;
         }
-
-        // Show loading state immediately
-        const requestsList = document.getElementById('requestsList');
-        if (requestsList) {
-            requestsList.innerHTML = `
-                <div style="padding: 40px 20px; text-align: center; color: #64748b;">
-                    <div style="width: 48px; height: 48px; margin: 0 auto 16px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                    <p style="font-size: 16px; font-weight: 500;">Loading requests...</p>
-                </div>
-            `;
-        }
-
-        // Load requests from API
-        const response = await ApiClient.requests.getAll();
         
-        console.log('API Response:', response);
-        
-        if (response.success && response.data && response.data.requests) {
-            // Filter for active requests (pending, in_progress)
-            activeRequests = response.data.requests.filter(r => 
-                r.status === 'pending' || r.status === 'in_progress'
-            );
-            
-            console.log('Active requests filtered:', activeRequests.length);
-            
-            // Select first request if available
-            if (activeRequests.length > 0) {
-                selectedRequestId = activeRequests[0].id;
-                renderRequestsList();
-                renderDetailView();
-            } else {
-                showEmptyState();
-            }
-        } else {
-            console.error('Invalid response structure:', response);
-            showEmptyState();
-        }
-    } catch (error) {
-        console.error('Failed to load requests:', error);
-        showEmptyState();
+        console.error('[Active Requests] No token anywhere, redirecting to login');
+        alert('Your session has expired. Please login again.');
+        window.location.replace('login.php');
+        return;
     }
     
+    // Load requests initially
+    console.log('[Active Requests] Loading requests...');
+    await loadRequests(false);
+    
+    // Attach event listeners
+    console.log('[Active Requests] Attaching event listeners');
     attachEventListeners();
+    console.log('[Active Requests] Initialization complete');
 }
 
 // Show empty state when no requests
@@ -235,6 +223,19 @@ function renderDetailView() {
             techName.textContent = currentRequest.assigned_technician_name;
         } else {
             techName.textContent = 'Awaiting Assignment';
+        }
+    }
+    
+    // Update organization based on category
+    const orgName = document.getElementById('organizationName');
+    if (orgName) {
+        const category = currentRequest.category?.toLowerCase();
+        if (category === 'water') {
+            orgName.textContent = 'Mati Water District';
+        } else if (category === 'electricity') {
+            orgName.textContent = 'Davao Oriental Electric Cooperative (DORECO)';
+        } else {
+            orgName.textContent = 'Municipal Engineering Office';
         }
     }
     
@@ -447,7 +448,98 @@ function handleRequestAction(choice) {
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+        init();
+        startAutoRefresh();
+    });
 } else {
     init();
+    startAutoRefresh();
 }
+
+// Start auto-refresh for real-time updates
+function startAutoRefresh() {
+    // Auto-refresh every 30 seconds
+    autoRefreshInterval = setInterval(async () => {
+        await loadRequests(true); // Silent reload without showing loading state
+    }, 30000);
+}
+
+// Load requests from API (can be silent for auto-refresh)
+async function loadRequests(silent = false) {
+    try {
+        const token = sessionStorage.getItem('auth_token');
+        if (!token) {
+            window.location.replace('login.php');
+            return;
+        }
+
+        // Show loading state only if not silent
+        if (!silent) {
+            const requestsList = document.getElementById('requestsList');
+            if (requestsList) {
+                requestsList.innerHTML = `
+                    <div style="padding: 40px 20px; text-align: center; color: #64748b;">
+                        <div style="width: 48px; height: 48px; margin: 0 auto 16px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <p style="font-size: 16px; font-weight: 500;">Loading requests...</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load requests from API
+        const response = await ApiClient.requests.getAll();
+        
+        console.log('API Response:', response);
+        console.log('Response.data:', response.data);
+        console.log('Response.data.requests:', response.data?.requests);
+        console.log('Is Array?:', Array.isArray(response.data?.requests));
+        
+        // Check if we have a valid response with requests array
+        if (response.success && response.data) {
+            const requestsArray = response.data.requests || [];
+            
+            console.log('Requests array:', requestsArray);
+            console.log('Requests count:', requestsArray.length);
+            
+            // Store previous selected ID
+            const previouslySelectedId = selectedRequestId;
+            
+            // Filter for active requests (pending, in_progress)
+            activeRequests = requestsArray.filter(r => 
+                r.status === 'pending' || r.status === 'in_progress'
+            );
+            
+            console.log('Active requests filtered:', activeRequests.length);
+            console.log('Active requests:', activeRequests);
+            
+            // Maintain selection if still exists, otherwise select first
+            if (activeRequests.length > 0) {
+                const stillExists = activeRequests.find(r => r.id === previouslySelectedId);
+                selectedRequestId = stillExists ? previouslySelectedId : activeRequests[0].id;
+                renderRequestsList();
+                renderDetailView();
+            } else {
+                selectedRequestId = null;
+                showEmptyState();
+            }
+        } else {
+            console.error('Invalid response structure:', response);
+            if (!silent) {
+                showEmptyState();
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load requests:', error);
+        if (!silent) {
+            showEmptyState();
+        }
+    }
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+});

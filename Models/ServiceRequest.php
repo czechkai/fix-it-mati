@@ -77,7 +77,7 @@ class ServiceRequest
                        t.email as technician_email
                 FROM service_requests sr
                 LEFT JOIN users u ON sr.user_id = u.id
-                LEFT JOIN users t ON sr.assigned_to = t.id
+                LEFT JOIN users t ON sr.assigned_technician_id = t.id
                 WHERE sr.id = :id";
 
         try {
@@ -111,7 +111,7 @@ class ServiceRequest
                        t.name as technician_name, t.email as technician_email
                 FROM service_requests sr
                 LEFT JOIN users u ON sr.user_id = u.id
-                LEFT JOIN users t ON sr.assigned_to = t.id
+                LEFT JOIN users t ON sr.assigned_technician_id = t.id
                 WHERE sr.tracking_number = :tracking_number";
 
         try {
@@ -141,7 +141,7 @@ class ServiceRequest
                        CONCAT(t.first_name, ' ', t.last_name) as technician_name
                 FROM service_requests sr
                 LEFT JOIN users u ON sr.user_id = u.id
-                LEFT JOIN users t ON sr.assigned_to = t.id
+                LEFT JOIN users t ON sr.assigned_technician_id = t.id
                 WHERE 1=1";
 
         $params = [];
@@ -168,7 +168,7 @@ class ServiceRequest
         }
 
         if (!empty($filters['assigned_to'])) {
-            $sql .= " AND sr.assigned_to = :assigned_to";
+            $sql .= " AND sr.assigned_technician_id = :assigned_to";
             $params['assigned_to'] = $filters['assigned_to'];
         }
 
@@ -426,7 +426,7 @@ class ServiceRequest
         }
 
         if (!empty($filters['assigned_to'])) {
-            $sql .= " AND assigned_to = :assigned_to";
+            $sql .= " AND assigned_technician_id = :assigned_to";
             $params['assigned_to'] = $filters['assigned_to'];
         }
 

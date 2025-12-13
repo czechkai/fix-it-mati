@@ -18,6 +18,8 @@ class User {
     public $id;
     public $email;
     public $full_name;
+    public $first_name;
+    public $last_name;
     public $phone;
     public $address;
     public $account_number;

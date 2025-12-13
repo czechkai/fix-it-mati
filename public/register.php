@@ -740,7 +740,29 @@ if (isset($_SESSION['user_id'])) {
         }
       } catch (error) {
         console.error('Registration error:', error);
-        showError(error.message || 'An error occurred. Please try again later.');
+        console.error('Error details:', error.response);
+        
+        // Try to show validation errors if available
+        let errorMessage = 'Registration failed';
+        
+        // Check if there are validation errors in the response
+        if (error.response) {
+          if (error.response.message) {
+            errorMessage = error.response.message;
+          }
+          
+          if (error.response.errors) {
+            const errors = error.response.errors;
+            const errorList = Object.entries(errors).map(([field, msg]) => {
+              return `${field}: ${Array.isArray(msg) ? msg.join(', ') : msg}`;
+            }).join('\n');
+            errorMessage += '\n\n' + errorList;
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        showError(errorMessage);
         setLoading(false);
       }
     });
