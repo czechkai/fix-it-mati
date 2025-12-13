@@ -270,9 +270,9 @@ function displayDiscussions() {
 
           <!-- Stats -->
           <div class="flex flex-col items-center gap-2 text-slate-400">
-            <button onclick="handleUpvote(event, '${discussion.id}')" class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-100 min-w-[60px] justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors">
-              <i data-lucide="thumbs-up" class="w-3.5 h-3.5"></i>
-              <span class="font-bold text-slate-600">${discussion.upvotes}</span>
+            <button onclick="handleUpvote(event, '${discussion.id}')" class="flex items-center gap-1 ${discussion.user_upvoted ? 'bg-blue-100 border-blue-300' : 'bg-slate-50 border-slate-100'} px-2 py-1 rounded border min-w-[60px] justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors">
+              <i data-lucide="thumbs-up" class="w-3.5 h-3.5 ${discussion.user_upvoted ? 'text-blue-600' : ''}"></i>
+              <span class="font-bold ${discussion.user_upvoted ? 'text-blue-600' : 'text-slate-600'}">${discussion.upvotes}</span>
             </button>
             <div class="flex items-center gap-1">
               <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>

@@ -27,10 +27,11 @@ class DiscussionController
     public function index(Request $request): Response
     {
         try {
+            $user = $request->user();
             $category = $request->query('category');
             $sort = $request->query('sort', 'newest');
             
-            $discussions = $this->discussionModel->getAll($category, $sort);
+            $discussions = $this->discussionModel->getAll($category, $sort, $user['id'] ?? null);
             
             return Response::success($discussions);
         } catch (\Exception $e) {
@@ -45,9 +46,10 @@ class DiscussionController
     public function show(Request $request): Response
     {
         try {
+            $user = $request->user();
             $id = $request->param('id');
             
-            $discussion = $this->discussionModel->find($id);
+            $discussion = $this->discussionModel->find($id, $user['id'] ?? null);
             
             if (!$discussion) {
                 return Response::error('Discussion not found', 404);

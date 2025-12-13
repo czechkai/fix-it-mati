@@ -22,17 +22,34 @@ class Discussion
     /**
      * Get all discussions with filters
      */
-    public function getAll(?string $category = null, string $sort = 'newest'): array
+    public function getAll(?string $category = null, string $sort = 'newest', ?string $currentUserId = null): array
     {
         $sql = "SELECT d.*, 
                        CONCAT(u.first_name, ' ', u.last_name) as author_name,
                        u.email as author_email,
-                       (SELECT COUNT(*) FROM discussion_comments WHERE discussion_id = d.id) as comments_count
+                       (SELECT COUNT(*) FROM discussion_comments WHERE discussion_id = d.id) as comments_count";
+        
+        // Add user upvote check if user ID provided
+        if ($currentUserId) {
+            $sql .= ",
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM discussion_upvotes 
+                        WHERE discussion_id = d.id AND user_id = :current_user_id
+                    ) THEN TRUE ELSE FALSE END as user_upvoted";
+        } else {
+            $sql .= ", FALSE as user_upvoted";
+        }
+        
+        $sql .= "
                 FROM discussions d
                 LEFT JOIN users u ON d.user_id = u.id
                 WHERE 1=1";
 
         $params = [];
+        
+        if ($currentUserId) {
+            $params['current_user_id'] = $currentUserId;
+        }
 
         if ($category && $category !== 'All') {
             $sql .= " AND d.category = :category";
@@ -61,19 +78,37 @@ class Discussion
     /**
      * Find discussion by ID
      */
-    public function find(string $id): ?array
+    public function find(string $id, ?string $currentUserId = null): ?array
     {
         $sql = "SELECT d.*, 
                        CONCAT(u.first_name, ' ', u.last_name) as author_name,
                        u.email as author_email,
-                       (SELECT COUNT(*) FROM discussion_comments WHERE discussion_id = d.id) as comments_count
+                       (SELECT COUNT(*) FROM discussion_comments WHERE discussion_id = d.id) as comments_count";
+        
+        // Add user upvote check if user ID provided
+        if ($currentUserId) {
+            $sql .= ",
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM discussion_upvotes 
+                        WHERE discussion_id = d.id AND user_id = :current_user_id
+                    ) THEN TRUE ELSE FALSE END as user_upvoted";
+        } else {
+            $sql .= ", FALSE as user_upvoted";
+        }
+        
+        $sql .= "
                 FROM discussions d
                 LEFT JOIN users u ON d.user_id = u.id
                 WHERE d.id = :id";
 
         try {
+            $params = ['id' => $id];
+            if ($currentUserId) {
+                $params['current_user_id'] = $currentUserId;
+            }
+            
             $stmt = $this->db->prepare($sql);
-            $stmt->execute(['id' => $id]);
+            $stmt->execute($params);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result ?: null;
         } catch (\PDOException $e) {
