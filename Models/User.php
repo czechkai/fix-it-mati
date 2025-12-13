@@ -367,4 +367,123 @@ class User {
     private function generateAccountNumber(): string {
         return 'ACC' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
     }
+    
+    /**
+     * Get user settings
+     */
+    public function getSettings(string $userId): array {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT * FROM user_settings WHERE user_id = :user_id";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        
+        $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Return default settings if none exist
+        if (!$settings) {
+            return $this->getDefaultSettings();
+        }
+        
+        // Remove unnecessary fields
+        unset($settings['id'], $settings['user_id'], $settings['created_at'], $settings['updated_at']);
+        
+        return $settings;
+    }
+    
+    /**
+     * Update user settings
+     */
+    public function updateSettings(string $userId, array $settings): bool {
+        $conn = $this->db->getConnection();
+        
+        // Check if settings exist
+        $checkSql = "SELECT id FROM user_settings WHERE user_id = :user_id";
+        $stmt = $conn->prepare($checkSql);
+        $stmt->execute(['user_id' => $userId]);
+        $exists = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$exists) {
+            // Insert new settings with support PIN
+            $settings['support_pin'] = $settings['support_pin'] ?? $this->generateSupportPin();
+            
+            $fields = array_keys($settings);
+            $placeholders = array_map(fn($field) => ":$field", $fields);
+            
+            $sql = "INSERT INTO user_settings (user_id, " . implode(', ', $fields) . ") 
+                    VALUES (:user_id, " . implode(', ', $placeholders) . ")";
+            
+            $stmt = $conn->prepare($sql);
+            $settings['user_id'] = $userId;
+            return $stmt->execute($settings);
+        } else {
+            // Update existing settings
+            $setParts = [];
+            foreach (array_keys($settings) as $field) {
+                $setParts[] = "$field = :$field";
+            }
+            
+            $sql = "UPDATE user_settings SET " . implode(', ', $setParts) . " 
+                    WHERE user_id = :user_id";
+            
+            $stmt = $conn->prepare($sql);
+            $settings['user_id'] = $userId;
+            return $stmt->execute($settings);
+        }
+    }
+    
+    /**
+     * Get payment methods for user
+     */
+    public function getPaymentMethods(string $userId): array {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT * FROM payment_methods WHERE user_id = :user_id ORDER BY is_default DESC, created_at DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Get household members for user
+     */
+    public function getHouseholdMembers(string $userId): array {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT * FROM household_members WHERE user_id = :user_id ORDER BY created_at ASC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Get default settings
+     */
+    private function getDefaultSettings(): array {
+        return [
+            'bill_reminders' => true,
+            'bill_reminder_days' => 3,
+            'high_consumption_water' => true,
+            'high_consumption_power' => false,
+            'water_interrupt_alerts' => true,
+            'power_interrupt_alerts' => true,
+            'auto_pay' => false,
+            'paperless' => true,
+            'calendar_sync' => false,
+            'language' => 'English',
+            'font_size' => 'Normal',
+            'dark_mode' => false,
+            'two_factor' => false,
+            'support_pin' => $this->generateSupportPin()
+        ];
+    }
+    
+    /**
+     * Generate random 4-digit support PIN
+     */
+    private function generateSupportPin(): string {
+        return str_pad((string)rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+    }
 }

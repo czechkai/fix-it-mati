@@ -222,7 +222,7 @@
               <span class="mr-3 text-slate-400 group-hover:text-slate-500"><i data-lucide="credit-card" class="w-4.5 h-4.5"></i></span>
               Payment History
             </a>
-            <a href="#" class="group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:bg-slate-50 hover:text-slate-900">
+            <a href="settings.php" class="group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:bg-slate-50 hover:text-slate-900">
               <span class="mr-3 text-slate-400 group-hover:text-slate-500"><i data-lucide="settings" class="w-4.5 h-4.5"></i></span>
               Settings
             </a>

@@ -250,6 +250,19 @@ try {
     $router->get('/api/payments/history', 'PaymentController@getHistory');
     
     // ============================================
+    // SETTINGS ROUTES (Protected)
+    // ============================================
+    
+    // Get user settings with payment methods and household members
+    $router->get('/api/settings', 'SettingsController@index');
+    
+    // Update user settings
+    $router->put('/api/settings', 'SettingsController@update');
+    
+    // Reset settings to defaults
+    $router->post('/api/settings/reset', 'SettingsController@reset');
+    
+    // ============================================
     // TEMPLATE METHOD PATTERN ROUTES (Protected)
     // ============================================
     

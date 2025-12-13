@@ -35,6 +35,7 @@ $publicPages = [
     'edit-profile.php',
     'service-history.php',
     'discussions.php',
+    'settings.php',
     'test-db.php',
     'test-frontend.html',
     'test-sprint3.php',
