@@ -67,12 +67,19 @@ class LinkedMeterController
     {
         $user = $request->user();
         $userId = $user['id'];
-        $data = $request->getBody();
+        
+        // Get parsed JSON data (not raw body string)
+        $data = $request->all();
+        
+        // Debug logging
+        error_log("LinkedMeter Create - Received data: " . json_encode($data));
+        error_log("LinkedMeter Create - Data type: " . gettype($data));
         
         // Validation
         $required = ['provider', 'meter_type', 'account_number', 'account_holder_name'];
         foreach ($required as $field) {
-            if (empty($data[$field])) {
+            if (!isset($data[$field]) || $data[$field] === null || $data[$field] === '') {
+                error_log("LinkedMeter Create - Missing field: {$field}, value: " . var_export($data[$field] ?? 'NOT_SET', true));
                 return Response::badRequest("Field '{$field}' is required");
             }
         }
