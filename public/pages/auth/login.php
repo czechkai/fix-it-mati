@@ -171,7 +171,7 @@
         <span id="successText"></span>
       </div>
 
-      <form id="loginForm" class="space-y-4">
+      <form id="loginForm" class="space-y-4" novalidate>
         
         <!-- Email Field -->
         <div class="space-y-1.5">
@@ -189,9 +189,12 @@
               name="email"
               class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
               placeholder="citizen@mati.gov.ph"
-              required
             />
           </div>
+          <p id="emailError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+            <span id="emailErrorText"></span>
+          </p>
         </div>
 
         <!-- Password Field -->
@@ -213,7 +216,6 @@
               name="password"
               class="block w-full pl-10 pr-10 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
               placeholder="••••••••"
-              required
             />
             <button
               type="button"
@@ -223,6 +225,10 @@
               <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
             </button>
           </div>
+          <p id="passwordError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+            <span id="passwordErrorText"></span>
+          </p>
         </div>
 
         <!-- Remember Me -->
@@ -306,20 +312,6 @@
     console.log('typeof ApiClient:', typeof ApiClient);
     console.log('typeof window.ApiClient:', typeof window.ApiClient);
     
-    // Verify ApiClient loaded
-    if (typeof ApiClient === 'undefined') {
-      console.error('ApiClient is undefined!');
-      console.error('window object keys:', Object.keys(window).filter(k => k.includes('Api')));
-      alert('Error: API Client failed to load. Please refresh the page or check console for details.');
-    } else if (typeof ApiClient.auth === 'undefined') {
-      console.error('ApiClient exists but auth is undefined!');
-      console.error('ApiClient keys:', Object.keys(ApiClient));
-      alert('Error: API Client auth module failed to load. Please refresh the page.');
-    } else {
-      console.log('✓ ApiClient loaded successfully');
-      console.log('✓ ApiClient.auth is available');
-    }
-
     // Initialize Lucide icons
     if (typeof lucide !== 'undefined') {
       lucide.createIcons();
@@ -338,16 +330,32 @@
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
     const eyeIcon = document.getElementById('eyeIcon');
+    const emailInput = document.getElementById('email');
 
-    // Password visibility toggle
-    togglePassword.addEventListener('click', () => {
-      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      passwordInput.setAttribute('type', type);
-      
-      // Toggle eye icon
-      eyeIcon.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
-      lucide.createIcons();
-    });
+    // Field error elements
+    const emailError = document.getElementById('emailError');
+    const emailErrorText = document.getElementById('emailErrorText');
+    const passwordError = document.getElementById('passwordError');
+    const passwordErrorText = document.getElementById('passwordErrorText');
+
+    // Show field error
+    function showFieldError(field, message) {
+      if (field === 'email') {
+        emailErrorText.textContent = message;
+        emailError.classList.remove('hidden');
+        lucide.createIcons();
+      } else if (field === 'password') {
+        passwordErrorText.textContent = message;
+        passwordError.classList.remove('hidden');
+        lucide.createIcons();
+      }
+    }
+
+    // Clear all field errors
+    function clearFieldErrors() {
+      emailError.classList.add('hidden');
+      passwordError.classList.add('hidden');
+    }
 
     // Show error message
     function showError(message) {
@@ -387,16 +395,70 @@
         spinner.classList.add('hidden');
       }
     }
+    
+    // Verify ApiClient loaded
+    if (typeof ApiClient === 'undefined') {
+      console.error('ApiClient is undefined!');
+      console.error('window object keys:', Object.keys(window).filter(k => k.includes('Api')));
+      showError('Failed to load API client. Please refresh the page.');
+    } else if (typeof ApiClient.auth === 'undefined') {
+      console.error('ApiClient exists but auth is undefined!');
+      console.error('ApiClient keys:', Object.keys(ApiClient));
+      showError('Failed to load authentication module. Please refresh the page.');
+    } else {
+      console.log('✓ ApiClient loaded successfully');
+      console.log('✓ ApiClient.auth is available');
+    }
+
+    // Clear field errors on input
+    emailInput.addEventListener('focus', () => {
+      emailError.classList.add('hidden');
+    });
+    
+    passwordInput.addEventListener('focus', () => {
+      passwordError.classList.add('hidden');
+    });
+
+    // Password visibility toggle
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      
+      // Toggle eye icon
+      eyeIcon.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
+      lucide.createIcons();
+    });
 
     // Handle form submission
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideMessages();
+      clearFieldErrors();
       setLoading(true);
 
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
       const remember = document.getElementById('remember').checked;
+
+      // Validation
+      let hasErrors = false;
+      if (!email) {
+        showFieldError('email', 'Email is required');
+        hasErrors = true;
+      } else if (!email.includes('@') || !email.includes('.')) {
+        showFieldError('email', 'Please enter a valid email address');
+        hasErrors = true;
+      }
+
+      if (!password) {
+        showFieldError('password', 'Password is required');
+        hasErrors = true;
+      }
+
+      if (hasErrors) {
+        setLoading(false);
+        return;
+      }
 
       try {
         // Call login API
@@ -428,12 +490,65 @@
             }
           }, 1000);
         } else {
-          showError(result.error || 'Invalid email or password. Please try again.');
+          // Handle error responses from server
+          if (result.errors && (result.errors.email || result.errors.password)) {
+            // Specific field validation errors
+            if (result.errors.email) {
+              showFieldError('email', result.errors.email);
+            }
+            if (result.errors.password) {
+              showFieldError('password', result.errors.password);
+            }
+          } else {
+            // No field specifics provided -> show top-level generic message
+            showError(result.message || result.error || 'Login failed. Please try again.');
+          }
+          
           setLoading(false);
         }
       } catch (error) {
         console.error('Login error:', error);
-        showError('An error occurred. Please try again later.');
+        
+        // Detailed error handling
+        if (error.response) {
+          const status = error.response.status;
+          
+          if (status === 401 || status === 422) {
+            // Unauthorized or validation error - invalid credentials
+            showFieldError('email', 'Invalid email or password');
+            showFieldError('password', 'Invalid email or password');
+          } else if (status === 404) {
+            // Not found - user account doesn't exist
+            showFieldError('email', 'Email account not found. Please check and try again.');
+          } else if (status === 429) {
+            // Too many login attempts
+            showFieldError('email', 'Too many login attempts. Please try again in a few minutes.');
+          } else if (status === 500 || status === 502 || status === 503) {
+            // Server error
+            showFieldError('email', 'Server error. Please try again later.');
+          } else if (error.response.errors) {
+            // Backend validation errors
+            if (error.response.errors.email) {
+              showFieldError('email', error.response.errors.email);
+            }
+            if (error.response.errors.password) {
+              showFieldError('password', error.response.errors.password);
+            }
+          } else {
+            // Other server error
+            showFieldError('email', 'Login failed. Please try again.');
+          }
+        } else if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
+          // Network timeout or connection error
+          showFieldError('email', 'Connection timeout. Please check your internet and try again.');
+        } else if (!navigator.onLine) {
+          // No internet connection
+          showFieldError('email', 'No internet connection. Please check your network.');
+        } else {
+          // Unknown error
+          showFieldError('email', 'An unexpected error occurred. Please try again.');
+        }
+        
         setLoading(false);
       }
     });

@@ -16,7 +16,7 @@ async function init() {
     
     if (!token) {
         console.error('[Active Requests] No auth token found');
-        alert('Your session has expired. Please login again.');
+        UIHelpers.showError('Your session has expired. Please login again.');
         window.location.replace('/login.php');
         return;
     }
@@ -388,10 +388,10 @@ Select an option:`;
         sendBtn.addEventListener('click', function() {
             const message = messageInput.value.trim();
             if (message) {
-                alert(`Message sent: "${message}"\n\nYour message has been forwarded to the assigned technician.`);
+                UIHelpers.showSuccess(`Message sent: "${message}"\n\nYour message has been forwarded to the assigned technician.`);
                 messageInput.value = '';
             } else {
-                alert('Please enter a message');
+                UIHelpers.showError('Please enter a message');
             }
         });
         
@@ -405,28 +405,37 @@ Select an option:`;
 }
 
 // Handle request actions
-function handleRequestAction(choice) {
+async function handleRequestAction(choice) {
     const currentRequest = activeRequests.find(r => r.id === selectedRequestId);
     if (!currentRequest) return;
     
     switch(choice) {
         case '1':
-            alert(`Request Details:\n\nID: ${currentRequest.id}\nTitle: ${currentRequest.title}\nStatus: ${currentRequest.status}\nCategory: ${currentRequest.category}\nLocation: ${currentRequest.location}`);
+            UIHelpers.showInfo(`Request Details:\n\nID: ${currentRequest.id}\nTitle: ${currentRequest.title}\nStatus: ${currentRequest.status}\nCategory: ${currentRequest.category}\nLocation: ${currentRequest.location}`);
             break;
         case '2':
             const comment = prompt('Enter your comment:');
             if (comment) {
-                alert('Comment added successfully!');
+                UIHelpers.showSuccess('Comment added successfully!');
             }
             break;
         case '3':
-            alert('Update request sent to technician. You will be notified of any changes.');
+            UIHelpers.showSuccess('Update request sent to technician. You will be notified of any changes.');
             break;
-        case '4':
-            if (confirm('Are you sure you want to cancel this request?')) {
-                alert('Request cancelled successfully.');
+        case '4': {
+            const ok = await UIHelpers.confirm({
+                title: 'Cancel Request',
+                message: 'Are you sure you want to cancel this request?',
+                confirmText: 'Cancel Request',
+                cancelText: 'Keep Request',
+                variant: 'danger'
+            });
+            if (ok) {
+                UIHelpers.showSuccess('Request cancelled successfully.');
                 window.location.href = 'user-dashboard.php';
             }
+            break;
+        }
             break;
     }
 }

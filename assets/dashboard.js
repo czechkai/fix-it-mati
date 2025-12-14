@@ -160,7 +160,7 @@
   const newDiscussionBtn = document.querySelector('[class*="bg-green-600"]');
   if (newDiscussionBtn && newDiscussionBtn.textContent.includes('New Discussion')) {
     newDiscussionBtn.addEventListener('click', () => {
-      alert('Create New Discussion feature coming soon!');
+      UIHelpers.showInfo('Create New Discussion feature coming soon!');
     });
   }
 
@@ -821,8 +821,15 @@
 
   // Logout functionality
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-      if (confirm('Are you sure you want to logout?')) {
+      logoutBtn.addEventListener('click', async () => {
+        const ok = await UIHelpers.confirm({
+          title: 'Logout',
+          message: 'Are you sure you want to logout?',
+          confirmText: 'Logout',
+          cancelText: 'Cancel',
+          variant: 'danger'
+        });
+        if (ok) {
         try {
           // Call API logout to destroy backend session
           await ApiClient.auth.logout();
@@ -877,7 +884,7 @@
   const profileSettingsBtn = document.getElementById('profileSettingsBtn');
   if (profileSettingsBtn) {
     profileSettingsBtn.addEventListener('click', () => {
-      alert('Settings page coming soon!');
+      UIHelpers.showInfo('Settings page coming soon!');
     });
   }
 

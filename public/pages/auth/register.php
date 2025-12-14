@@ -216,7 +216,7 @@ if (isset($_SESSION['user_id'])) {
         <span id="successText"></span>
       </div>
 
-      <form id="registerForm" class="space-y-4">
+      <form id="registerForm" class="space-y-4" novalidate>
         
         <!-- STEP 1: Personal Information -->
         <div id="step1" class="form-step active space-y-3.5">
@@ -237,9 +237,12 @@ if (isset($_SESSION['user_id'])) {
               name="firstName"
               class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
               placeholder="Juan"
-              required
             />
           </div>
+          <p id="firstNameError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+            <span id="firstNameErrorText"></span>
+          </p>
         </div>
 
         <!-- Last Name -->
@@ -258,9 +261,12 @@ if (isset($_SESSION['user_id'])) {
               name="lastName"
               class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
               placeholder="Dela Cruz"
-              required
             />
           </div>
+          <p id="lastNameError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+            <span id="lastNameErrorText"></span>
+          </p>
         </div>
 
         <!-- Email Field -->
@@ -279,9 +285,12 @@ if (isset($_SESSION['user_id'])) {
               name="email"
               class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
               placeholder="juan@example.com"
-              required
             />
           </div>
+          <p id="emailError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+            <span id="emailErrorText"></span>
+          </p>
         </div>
 
         <!-- Phone Number -->
@@ -300,9 +309,12 @@ if (isset($_SESSION['user_id'])) {
               name="phone"
               class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
               placeholder="+63 912 345 6789"
-              required
             />
           </div>
+          <p id="phoneError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+            <span id="phoneErrorText"></span>
+          </p>
         </div>
 
         <!-- Address -->
@@ -321,9 +333,12 @@ if (isset($_SESSION['user_id'])) {
               rows="2"
               class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300 resize-none"
               placeholder="Barangay, Street, Mati City"
-              required
             ></textarea>
           </div>
+          <p id="addressError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+            <span id="addressErrorText"></span>
+          </p>
         </div>
 
         <!-- Next Button -->
@@ -357,7 +372,6 @@ if (isset($_SESSION['user_id'])) {
               name="password"
               class="block w-full pl-10 pr-10 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
               placeholder="••••••••"
-              required
             />
             <button
               type="button"
@@ -368,6 +382,10 @@ if (isset($_SESSION['user_id'])) {
             </button>
           </div>
           <p class="text-[10px] text-slate-500 ml-1">At least 8 characters</p>
+          <p id="passwordError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+            <span id="passwordErrorText"></span>
+          </p>
         </div>
 
         <!-- Confirm Password -->
@@ -386,7 +404,6 @@ if (isset($_SESSION['user_id'])) {
               name="confirmPassword"
               class="block w-full pl-10 pr-10 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
               placeholder="••••••••"
-              required
             />
             <button
               type="button"
@@ -396,6 +413,10 @@ if (isset($_SESSION['user_id'])) {
               <i data-lucide="eye" id="eyeIconConfirm" class="w-4 h-4"></i>
             </button>
           </div>
+          <p id="confirmPasswordError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+            <span id="confirmPasswordErrorText"></span>
+          </p>
         </div>
 
         <!-- Account Type -->
@@ -412,7 +433,6 @@ if (isset($_SESSION['user_id'])) {
               id="role"
               name="role"
               class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white text-slate-700 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300 cursor-pointer"
-              required
             >
               <option value="customer">Citizen / Resident</option>
               <option value="technician">Technician / Service Provider</option>
@@ -427,7 +447,6 @@ if (isset($_SESSION['user_id'])) {
             name="terms"
             type="checkbox"
             class="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer mt-0.5"
-            required
           />
           <label for="terms" class="ml-2 block text-xs text-slate-600 cursor-pointer select-none">
             I agree to the <a href="#" class="text-blue-600 hover:text-blue-700 font-semibold hover:underline">Terms</a> and <a href="#" class="text-blue-600 hover:text-blue-700 font-semibold hover:underline">Privacy Policy</a>
@@ -544,24 +563,85 @@ if (isset($_SESSION['user_id'])) {
 
     let currentStep = 1;
 
+    // Field error handling
+    function showFieldError(fieldId, message) {
+      const errorEl = document.getElementById(fieldId + 'Error');
+      const errorTextEl = document.getElementById(fieldId + 'ErrorText');
+      if (errorEl && errorTextEl) {
+        errorTextEl.textContent = message;
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    function clearFieldError(fieldId) {
+      const errorEl = document.getElementById(fieldId + 'Error');
+      if (errorEl) {
+        errorEl.classList.add('hidden');
+      }
+    }
+
+    function clearAllFieldErrors() {
+      ['firstName', 'lastName', 'email', 'phone', 'address', 'password', 'confirmPassword'].forEach(field => {
+        clearFieldError(field);
+      });
+    }
+
+    // Add input event listeners to clear field errors
+    ['firstName', 'lastName', 'email', 'phone', 'address', 'password', 'confirmPassword'].forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.addEventListener('focus', () => {
+          clearFieldError(fieldId);
+        });
+      }
+    });
+
     // Navigate to step 2
     nextBtn.addEventListener('click', () => {
+      // Clear all field errors
+      clearAllFieldErrors();
+      
       // Validate step 1 fields
-      const firstName = document.getElementById('firstName').value;
-      const lastName = document.getElementById('lastName').value;
-      const email = document.getElementById('email').value;
-      const phone = document.getElementById('phone').value;
-      const address = document.getElementById('address').value;
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
 
-      if (!firstName || !lastName || !email || !phone || !address) {
-        showError('Please fill in all required fields before continuing.');
-        return;
+      let hasErrors = false;
+
+      if (!firstName) {
+        showFieldError('firstName', 'First name is required');
+        hasErrors = true;
+      }
+      
+      if (!lastName) {
+        showFieldError('lastName', 'Last name is required');
+        hasErrors = true;
+      }
+      
+      if (!email) {
+        showFieldError('email', 'Email is required');
+        hasErrors = true;
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          showFieldError('email', 'Please enter a valid email address');
+          hasErrors = true;
+        }
+      }
+      
+      if (!phone) {
+        showFieldError('phone', 'Phone number is required');
+        hasErrors = true;
+      }
+      
+      if (!address) {
+        showFieldError('address', 'Address is required');
+        hasErrors = true;
       }
 
-      // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        showError('Please enter a valid email address.');
+      if (hasErrors) {
         return;
       }
 
@@ -675,29 +755,38 @@ if (isset($_SESSION['user_id'])) {
 
     // Validate form
     function validateForm() {
+      clearAllFieldErrors();
       const password = passwordInput.value;
       const confirmPassword = confirmPasswordInput.value;
+      const terms = document.getElementById('terms');
+
+      let hasErrors = false;
 
       // Check password length
-      if (password.length < 8) {
-        showError('Password must be at least 8 characters long.');
-        return false;
+      if (!password) {
+        showFieldError('password', 'Password is required');
+        hasErrors = true;
+      } else if (password.length < 8) {
+        showFieldError('password', 'Password must be at least 8 characters');
+        hasErrors = true;
       }
 
       // Check passwords match
-      if (password !== confirmPassword) {
-        showError('Passwords do not match. Please try again.');
-        return false;
+      if (!confirmPassword) {
+        showFieldError('confirmPassword', 'Please confirm your password');
+        hasErrors = true;
+      } else if (password !== confirmPassword) {
+        showFieldError('confirmPassword', 'Passwords do not match');
+        hasErrors = true;
       }
 
       // Check terms acceptance
-      const terms = document.getElementById('terms');
       if (!terms.checked) {
         showError('You must agree to the Terms of Service and Privacy Policy.');
-        return false;
+        hasErrors = true;
       }
 
-      return true;
+      return !hasErrors;
     }
 
     // Handle form submission
@@ -735,34 +824,81 @@ if (isset($_SESSION['user_id'])) {
             window.location.href = '/';
           }, 2000);
         } else {
-          showError(result.message || 'Registration failed. Please try again.');
+          // Handle field-level errors
+          if (result.errors) {
+            const fieldMap = {
+              'first_name': 'firstName',
+              'last_name': 'lastName',
+              'email': 'email',
+              'phone': 'phone',
+              'address': 'address',
+              'password': 'password'
+            };
+            
+            Object.entries(result.errors).forEach(([field, message]) => {
+              const fieldId = fieldMap[field] || field;
+              showFieldError(fieldId, Array.isArray(message) ? message[0] : message);
+            });
+          } else {
+            showError(result.message || 'Registration failed. Please try again.');
+          }
           setLoading(false);
         }
       } catch (error) {
         console.error('Registration error:', error);
         console.error('Error details:', error.response);
         
-        // Try to show validation errors if available
-        let errorMessage = 'Registration failed';
+        let hasFieldErrors = false;
         
-        // Check if there are validation errors in the response
+        // Detailed error handling
         if (error.response) {
-          if (error.response.message) {
-            errorMessage = error.response.message;
-          }
+          const status = error.response.status;
           
           if (error.response.errors) {
-            const errors = error.response.errors;
-            const errorList = Object.entries(errors).map(([field, msg]) => {
-              return `${field}: ${Array.isArray(msg) ? msg.join(', ') : msg}`;
-            }).join('\n');
-            errorMessage += '\n\n' + errorList;
+            // Field validation errors from server
+            const fieldMap = {
+              'first_name': 'firstName',
+              'last_name': 'lastName',
+              'email': 'email',
+              'phone': 'phone',
+              'address': 'address',
+              'password': 'password'
+            };
+            
+            Object.entries(error.response.errors).forEach(([field, message]) => {
+              const fieldId = fieldMap[field] || field;
+              const errorMsg = Array.isArray(message) ? message[0] : message;
+              showFieldError(fieldId, errorMsg);
+              hasFieldErrors = true;
+            });
+          } else if (status === 409 || status === 422) {
+            // Conflict - email already exists or validation error
+            showFieldError('email', 'Email is already registered. Please use a different email or login.');
+          } else if (status === 400) {
+            // Bad request
+            showError('Invalid information provided. Please check all fields and try again.');
+          } else if (status === 429) {
+            // Too many requests
+            showError('Too many registration attempts. Please try again later.');
+          } else if (status === 500 || status === 502 || status === 503) {
+            // Server error
+            showError('Server error. Please try again later.');
+          } else if (!hasFieldErrors && error.response.message) {
+            showError(error.response.message);
+          } else {
+            showError('Registration failed. Please try again.');
           }
-        } else if (error.message) {
-          errorMessage = error.message;
+        } else if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
+          // Network timeout or connection error
+          showError('Connection timeout. Please check your internet connection and try again.');
+        } else if (!navigator.onLine) {
+          // No internet connection
+          showError('No internet connection. Please check your network and try again.');
+        } else {
+          // Unknown error
+          showError('An unexpected error occurred. Please try again.');
         }
         
-        showError(errorMessage);
         setLoading(false);
       }
     });

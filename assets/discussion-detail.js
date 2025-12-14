@@ -255,11 +255,11 @@ async function handleUpvote() {
       
       console.log(`✅ Upvote ${response.data.user_upvoted ? 'added' : 'removed'}`);
     } else {
-      alert(response.message || 'Failed to upvote');
+      UIHelpers.showError(response.message || 'Failed to upvote');
     }
   } catch (error) {
     console.error('Error upvoting:', error);
-    alert('Failed to upvote discussion');
+    UIHelpers.showError('Failed to upvote discussion');
   } finally {
     button.disabled = false;
     button.classList.remove('opacity-50');
@@ -277,7 +277,7 @@ async function handleAddComment(e) {
   
   const content = contentInput.value.trim();
   if (!content) {
-    alert('Please enter a comment');
+    UIHelpers.showError('Please enter a comment');
     return;
   }
   
@@ -300,11 +300,11 @@ async function handleAddComment(e) {
       await loadDiscussion(); // Reload to show new comment
       console.log('✅ Comment added successfully');
     } else {
-      alert(response.message || 'Failed to add comment');
+      UIHelpers.showError(response.message || 'Failed to add comment');
     }
   } catch (error) {
     console.error('Error adding comment:', error);
-    alert('Failed to add comment');
+    UIHelpers.showError('Failed to add comment');
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -317,9 +317,14 @@ async function handleAddComment(e) {
  * Mark comment as solution
  */
 async function markAsSolution(commentId) {
-  if (!confirm('Mark this comment as the solution?')) {
-    return;
-  }
+  const ok = await UIHelpers.confirm({
+    title: 'Mark as Solution',
+    message: 'Mark this comment as the solution?',
+    confirmText: 'Mark Solution',
+    cancelText: 'Cancel',
+    variant: 'primary'
+  });
+  if (!ok) return;
   
   try {
     const response = await ApiClient.post(`/discussions/${discussionId}/comments/${commentId}/mark-solution`);
@@ -328,11 +333,11 @@ async function markAsSolution(commentId) {
       await loadDiscussion(); // Reload to show solution badge
       console.log('✅ Comment marked as solution');
     } else {
-      alert(response.message || 'Failed to mark solution');
+      UIHelpers.showError(response.message || 'Failed to mark solution');
     }
   } catch (error) {
     console.error('Error marking solution:', error);
-    alert('Failed to mark solution');
+    UIHelpers.showError('Failed to mark solution');
   }
 }
 
@@ -340,22 +345,27 @@ async function markAsSolution(commentId) {
  * Handle delete discussion
  */
 async function handleDeleteDiscussion() {
-  if (!confirm('Are you sure you want to delete this discussion? This action cannot be undone.')) {
-    return;
-  }
+  const ok = await UIHelpers.confirm({
+    title: 'Delete Discussion',
+    message: 'Are you sure you want to delete this discussion? This action cannot be undone.',
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+    variant: 'danger'
+  });
+  if (!ok) return;
   
   try {
     const response = await ApiClient.delete(`/discussions/${discussionId}`);
     
     if (response.success) {
-      alert('Discussion deleted successfully');
+      UIHelpers.showSuccess('Discussion deleted successfully');
       window.location.href = 'discussions.php';
     } else {
-      alert(response.message || 'Failed to delete discussion');
+      UIHelpers.showError(response.message || 'Failed to delete discussion');
     }
   } catch (error) {
     console.error('Error deleting discussion:', error);
-    alert('Failed to delete discussion');
+    UIHelpers.showError('Failed to delete discussion');
   }
 }
 

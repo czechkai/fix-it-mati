@@ -584,7 +584,14 @@ async function loadUsers() {
  * Handle logout
  */
 async function handleLogout() {
-  if (!confirm('Are you sure you want to logout?')) return;
+  const ok = await UIHelpers.confirm({
+    title: 'Logout',
+    message: 'Are you sure you want to logout?',
+    confirmText: 'Logout',
+    cancelText: 'Cancel',
+    variant: 'danger'
+  });
+  if (!ok) return;
   
   try {
     await ApiClient.post('/auth/logout');
@@ -641,15 +648,15 @@ async function handleCreateAnnouncement(e) {
   try {
     const response = await ApiClient.post('/announcements', data);
     if (response.success) {
-      alert('Announcement published successfully!');
+      UIHelpers.showSuccess('Announcement published successfully!');
       closeAnnouncementModal();
       loadAnnouncements();
     } else {
-      alert('Failed to create announcement: ' + (response.message || 'Unknown error'));
+      UIHelpers.showError('Failed to create announcement: ' + (response.message || 'Unknown error'));
     }
   } catch (error) {
     console.error('Error creating announcement:', error);
-    alert('Failed to create announcement. Please try again.');
+    UIHelpers.showError('Failed to create announcement. Please try again.');
   }
 }
 
@@ -657,19 +664,26 @@ async function handleCreateAnnouncement(e) {
  * Delete announcement
  */
 async function deleteAnnouncement(id) {
-  if (!confirm('Are you sure you want to delete this announcement?')) return;
+  const ok = await UIHelpers.confirm({
+    title: 'Delete Announcement',
+    message: 'Are you sure you want to delete this announcement?',
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+    variant: 'danger'
+  });
+  if (!ok) return;
   
   try {
     const response = await ApiClient.delete(`/announcements/${id}`);
     if (response.success) {
-      alert('Announcement deleted successfully!');
+      UIHelpers.showSuccess('Announcement deleted successfully!');
       loadAnnouncements();
     } else {
-      alert('Failed to delete announcement: ' + (response.message || 'Unknown error'));
+      UIHelpers.showError('Failed to delete announcement: ' + (response.message || 'Unknown error'));
     }
   } catch (error) {
     console.error('Error deleting announcement:', error);
-    alert('Failed to delete announcement. Please try again.');
+    UIHelpers.showError('Failed to delete announcement. Please try again.');
   }
 }
 

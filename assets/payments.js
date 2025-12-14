@@ -374,7 +374,7 @@ function attachEventListeners() {
     const statementBtn = document.getElementById('statementBtn');
     if (statementBtn) {
         statementBtn.addEventListener('click', function() {
-            alert('View billing statement');
+            UIHelpers.showInfo('View billing statement');
         });
     }
     
@@ -420,7 +420,7 @@ function attachEventListeners() {
 // Open payment modal
 function openPaymentModal() {
     if (bills.length === 0) {
-        alert('No bills to pay');
+        UIHelpers.showInfo('No bills to pay');
         return;
     }
     
@@ -461,7 +461,7 @@ function closePaymentModal() {
 // Process payment through selected gateway
 async function processPayment(gateway) {
     if (!currentPaymentId) {
-        alert('No payment selected');
+        UIHelpers.showError('No payment selected');
         return;
     }
     
@@ -499,7 +499,7 @@ async function processPayment(gateway) {
             closePaymentModal();
             
             // Show success message
-            alert(`Payment successful! Reference: ${result.data.reference_number}`);
+            UIHelpers.showSuccess(`Payment successful! Reference: ${result.data.reference_number}`);
             
             // Reload page data
             init();
@@ -508,7 +508,7 @@ async function processPayment(gateway) {
         }
     } catch (error) {
         console.error('Payment error:', error);
-        alert(`Payment failed: ${error.message}`);
+        UIHelpers.showError(`Payment failed: ${error.message}`);
     } finally {
         // Hide processing state
         if (processing) {

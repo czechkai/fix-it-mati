@@ -144,9 +144,35 @@
             class="w-full sm:w-64 pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <button class="p-2 border border-slate-200 rounded-lg bg-white text-slate-500 hover:text-blue-600 transition-colors">
+        <button id="dateFilterBtn" class="p-2 border border-slate-200 rounded-lg bg-white text-slate-500 hover:text-blue-600 transition-colors" title="Filter by date">
           <i data-lucide="calendar" class="w-5 h-5"></i>
         </button>
+      </div>
+
+      <!-- Date Range Picker (Hidden by default) -->
+      <div id="dateRangeModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md">
+          <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="font-semibold text-slate-900">Filter by Date</h3>
+            <button id="closeDateModal" class="text-slate-400 hover:text-slate-600">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+          <div class="p-5 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">From Date</label>
+              <input type="date" id="dateFrom" class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">To Date</label>
+              <input type="date" id="dateTo" class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+          </div>
+          <div class="p-5 border-t border-slate-100 flex gap-3 justify-end">
+            <button id="resetDatesBtn" class="px-4 py-2 text-slate-700 hover:bg-slate-50 rounded-lg transition-colors font-medium">Reset</button>
+            <button id="applyDatesBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">Apply</button>
+          </div>
+        </div>
       </div>
 
     </div>

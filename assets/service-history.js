@@ -502,9 +502,14 @@ async function submitRating() {
  * Report recurring issue
  */
 async function reportRecurringIssue() {
-  if (!confirm('This will create a new service request based on this resolved issue. Continue?')) {
-    return;
-  }
+  const ok = await UIHelpers.confirm({
+    title: 'Report Recurring Issue',
+    message: 'This will create a new service request based on this resolved issue. Continue?',
+    confirmText: 'Create Request',
+    cancelText: 'Cancel',
+    variant: 'primary'
+  });
+  if (!ok) return;
 
   try {
     const response = await ApiClient.post(`/requests/${currentIssue.id}/recurring`, {
@@ -746,14 +751,12 @@ function escapeHtml(text) {
  * Show success message
  */
 function showSuccess(message) {
-  // You can implement a toast notification system here
-  alert(message);
+  UIHelpers.showSuccess(message);
 }
 
 /**
  * Show error message
  */
 function showError(message) {
-  // You can implement a toast notification system here
-  alert(message);
+  UIHelpers.showError(message);
 }

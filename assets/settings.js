@@ -591,8 +591,15 @@ function addPaymentMethod() {
   showInfo('Payment method addition coming soon!');
 }
 
-function deletePaymentMethod(id) {
-  if (confirm('Remove this payment method?')) {
+async function deletePaymentMethod(id) {
+  const ok = await UIHelpers.confirm({
+    title: 'Remove Payment Method',
+    message: 'Remove this payment method?',
+    confirmText: 'Remove',
+    cancelText: 'Cancel',
+    variant: 'danger'
+  });
+  if (ok) {
     showInfo('Payment method removal coming soon!');
   }
 }
@@ -601,8 +608,15 @@ function inviteMember() {
   showInfo('Member invitation coming soon!');
 }
 
-function removeMember(id) {
-  if (confirm('Remove this member from your household?')) {
+async function removeMember(id) {
+  const ok = await UIHelpers.confirm({
+    title: 'Remove Member',
+    message: 'Remove this member from your household?',
+    confirmText: 'Remove',
+    cancelText: 'Cancel',
+    variant: 'danger'
+  });
+  if (ok) {
     showInfo('Member removal coming soon!');
   }
 }
@@ -615,8 +629,15 @@ function downloadData() {
   showInfo('Data export coming soon!');
 }
 
-function deleteAccount() {
-  if (confirm('Are you sure you want to delete your account? This action cannot be undone!')) {
+async function deleteAccount() {
+  const ok = await UIHelpers.confirm({
+    title: 'Delete Account',
+    message: 'Are you sure you want to delete your account? This action cannot be undone!',
+    confirmText: 'Delete Account',
+    cancelText: 'Cancel',
+    variant: 'danger'
+  });
+  if (ok) {
     showInfo('Account deletion coming soon!');
   }
 }
@@ -638,13 +659,13 @@ function escapeHtml(text) {
 }
 
 function showSuccess(message) {
-  alert(message); // TODO: Replace with toast notification
+  UIHelpers.showSuccess(message);
 }
 
 function showError(message) {
-  alert(message); // TODO: Replace with toast notification
+  UIHelpers.showError(message);
 }
 
 function showInfo(message) {
-  alert(message); // TODO: Replace with toast notification
+  UIHelpers.showInfo(message);
 }

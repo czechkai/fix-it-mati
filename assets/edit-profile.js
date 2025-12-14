@@ -300,6 +300,8 @@
           // Update localStorage so other pages have the latest data
           localStorage.setItem('user', JSON.stringify(currentUser));
           populateForm(currentUser);
+          // Trigger profile sync event to navbar on all tabs
+          localStorage.setItem('profile_updated_event', Date.now().toString());
         }
 
         // Hide success message after 3 seconds

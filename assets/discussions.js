@@ -522,12 +522,12 @@ function escapeHtml(text) {
  * Show success message
  */
 function showSuccess(message) {
-  alert(message); // TODO: Replace with toast notification
+  UIHelpers.showSuccess(message);
 }
 
 /**
  * Show error message
  */
 function showError(message) {
-  alert(message); // TODO: Replace with toast notification
+  UIHelpers.showError(message);
 }

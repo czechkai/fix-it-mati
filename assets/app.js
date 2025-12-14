@@ -4,6 +4,13 @@
   const mobileDrawer = document.getElementById('mobileDrawer');
   const tabsNav = document.getElementById('tabsNav');
 
+  // Listen for profile updates from other tabs
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'profile_updated_event' || e.key === 'user') {
+      loadProfileDisplay();
+    }
+  });
+
   // Load profile image/initials on every page
   function loadProfileDisplay() {
     const user = localStorage.getItem('user');
@@ -115,7 +122,7 @@
             break;
           case 'discussions':
             // Would navigate to discussions page when implemented
-            alert('Discussions feature coming soon!');
+            UIHelpers.showInfo('Discussions feature coming soon!');
             break;
           case 'payments':
             window.location.href = 'payments.php';

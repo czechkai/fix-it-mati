@@ -133,11 +133,6 @@
               <i data-lucide="shield" class="w-4.5 h-4.5"></i>
               Security & Privacy
             </button>
-            <div class="border-t border-slate-100 my-1"></div>
-            <button id="logoutBtnMobile" class="flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-red-600 hover:bg-red-50 border-l-4 border-transparent transition-colors">
-              <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
-              Sign Out
-            </button>
           </nav>
         </div>
       </div>

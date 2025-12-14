@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const user = JSON.parse(userData);
       if (user.role !== 'admin' && user.role !== 'staff') {
-        alert('Access denied. Admin privileges required.');
+        UIHelpers.showError('Access denied. Admin privileges required.');
         window.location.replace('/user-dashboard.php');
         return;
       }
@@ -103,8 +103,7 @@ async function loadTechnicians() {
 async function loadTickets() {
   try {
     const response = await ApiClient.get('/service-requests/admin');
-    // Use the existing /api/requests endpoint
-    const response = await ApiClient.get('/requests
+    if (response.success) {
       allTickets = response.data || [];
       filterTickets();
       updatePendingCount();
@@ -270,20 +269,20 @@ async function updateAssignment() {
   
   const techId = document.getElementById('technicianSelect').value;
   if (!techId) {
-    alert('Please select a technician');
+    UIHelpers.showError('Please select a technician');
     return;
   }
   
-  tr// Use the existing /api/requests/{id} endpoint to update
-    const response = await ApiClient.put(`/requests/${selectedTicket.id}`, {
-      assigned_to= await ApiClient.put(`/service-requests/${selectedTicket.id}/assign`, {
+  try {
+    const response = await ApiClient.put(`/service-requests/${selectedTicket.id}/assign`, {
       technician_id: techId
     });
-    
     if (response.success) {
       showSuccess('Technician assigned successfully');
       await loadTickets();
       openDrawer(selectedTicket.id); // Refresh drawer
+    } else {
+      showError(response.message || 'Failed to assign technician');
     }
   } catch (error) {
     console.error('Error assigning technician:', error);
@@ -295,9 +294,14 @@ async function updateAssignment() {
 async function markResolved() {
   if (!selectedTicket) return;
   
-  if (!confirm('Mark this ticket as resolved?')) return;
-  // Use the existing /api/requests/{id} endpoint to update status
-    const response = await ApiClient.put(`/requests/${selectedTicket.id}
+  const ok = await UIHelpers.confirm({
+    title: 'Mark as Resolved',
+    message: 'Mark this ticket as resolved?',
+    confirmText: 'Mark Resolved',
+    cancelText: 'Cancel',
+    variant: 'primary'
+  });
+  if (!ok) return;
   try {
     const response = await ApiClient.put(`/service-requests/${selectedTicket.id}/status`, {
       status: 'Resolved'
@@ -307,6 +311,8 @@ async function markResolved() {
       showSuccess('Ticket marked as resolved');
       await loadTickets();
       openDrawer(selectedTicket.id); // Refresh drawer
+    } else {
+      showError(response.message || 'Failed to update status');
     }
   } catch (error) {
     console.error('Error updating status:', error);
@@ -381,7 +387,14 @@ function setupEventListeners() {
   
   // Logout
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-    if (confirm('Are you sure you want to logout?')) {
+    const ok = await UIHelpers.confirm({
+      title: 'Logout',
+      message: 'Are you sure you want to logout?',
+      confirmText: 'Logout',
+      cancelText: 'Cancel',
+      variant: 'danger'
+    });
+    if (ok) {
       try {
         await ApiClient.auth.logout();
       } catch (error) {
@@ -459,9 +472,9 @@ function escapeHtml(text) {
 }
 
 function showSuccess(message) {
-  alert(message);
+  UIHelpers.showSuccess(message);
 }
 
 function showError(message) {
-  alert('Error: ' + message);
+  UIHelpers.showError(message);
 }

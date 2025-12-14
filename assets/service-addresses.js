@@ -279,8 +279,15 @@ async function setDefaultAddress(id) {
 /**
  * Confirm and delete address
  */
-function confirmDelete(id, label) {
-  if (confirm(`Are you sure you want to delete "${label}"?\n\nThis action cannot be undone.`)) {
+async function confirmDelete(id, label) {
+  const ok = await UIHelpers.confirm({
+    title: 'Delete Address',
+    message: `Are you sure you want to delete "${label}"? This action cannot be undone.`,
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+    variant: 'danger'
+  });
+  if (ok) {
     deleteAddress(id);
   }
 }
@@ -317,7 +324,7 @@ function showLoading() {
  * Show error message
  */
 function showError(message) {
-  alert('❌ ' + message);
+  UIHelpers.showError(message);
 }
 
 /**

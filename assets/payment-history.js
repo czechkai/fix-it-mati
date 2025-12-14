@@ -8,6 +8,9 @@ let filteredTransactions = [];
 let currentFilter = 'All';
 let currentPage = 1;
 let itemsPerPage = 10;
+let dateFilterActive = false;
+let dateFromFilter = null;
+let dateToFilter = null;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -29,6 +32,61 @@ function setupEventListeners() {
   const searchInput = document.getElementById('searchInput');
   if (searchInput) {
     searchInput.addEventListener('input', handleSearch);
+  }
+
+  // Date filter button
+  const dateFilterBtn = document.getElementById('dateFilterBtn');
+  if (dateFilterBtn) {
+    dateFilterBtn.addEventListener('click', () => {
+      document.getElementById('dateRangeModal').classList.remove('hidden');
+    });
+  }
+
+  // Date modal close
+  const closeDateModal = document.getElementById('closeDateModal');
+  if (closeDateModal) {
+    closeDateModal.addEventListener('click', () => {
+      document.getElementById('dateRangeModal').classList.add('hidden');
+    });
+  }
+
+  // Apply dates button
+  const applyDatesBtn = document.getElementById('applyDatesBtn');
+  if (applyDatesBtn) {
+    applyDatesBtn.addEventListener('click', () => {
+      const from = document.getElementById('dateFrom').value;
+      const to = document.getElementById('dateTo').value;
+      if (from || to) {
+        dateFromFilter = from ? new Date(from) : null;
+        dateToFilter = to ? new Date(to) : null;
+        dateFilterActive = true;
+        applyFilters();
+        document.getElementById('dateRangeModal').classList.add('hidden');
+      }
+    });
+  }
+
+  // Reset dates button
+  const resetDatesBtn = document.getElementById('resetDatesBtn');
+  if (resetDatesBtn) {
+    resetDatesBtn.addEventListener('click', () => {
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+      dateFilterActive = false;
+      dateFromFilter = null;
+      dateToFilter = null;
+      applyFilters();
+    });
+  }
+
+  // Close modal on backdrop click
+  const dateRangeModal = document.getElementById('dateRangeModal');
+  if (dateRangeModal) {
+    dateRangeModal.addEventListener('click', (e) => {
+      if (e.target === dateRangeModal) {
+        dateRangeModal.classList.add('hidden');
+      }
+    });
   }
 
   // Export button
@@ -77,6 +135,20 @@ function applyFilters() {
     filteredTransactions = [...allTransactions];
   } else {
     filteredTransactions = allTransactions.filter(t => t.type === currentFilter);
+  }
+
+  // Apply date filter if active
+  if (dateFilterActive && (dateFromFilter || dateToFilter)) {
+    filteredTransactions = filteredTransactions.filter(t => {
+      const txDate = new Date(t.date);
+      if (dateFromFilter && txDate < dateFromFilter) return false;
+      if (dateToFilter) {
+        const toDate = new Date(dateToFilter);
+        toDate.setHours(23, 59, 59, 999); // Include entire day
+        if (txDate > toDate) return false;
+      }
+      return true;
+    });
   }
 
   // Apply search if active
@@ -353,7 +425,7 @@ async function downloadReceipt(transactionId) {
 function viewDetails(transactionId) {
   const transaction = allTransactions.find(t => t.id === transactionId);
   if (transaction) {
-    alert(`Transaction Details:\n\nReference: ${transaction.reference_number}\nStatus: ${transaction.status}\nAmount: ₱${transaction.amount}\nBiller: ${transaction.biller}`);
+    UIHelpers.showInfo(`Transaction Details:\n\nReference: ${transaction.reference_number}\nStatus: ${transaction.status}\nAmount: ₱${transaction.amount}\nBiller: ${transaction.biller}`);
   }
 }
 
@@ -420,12 +492,12 @@ function escapeHtml(text) {
  * Show success message
  */
 function showSuccess(message) {
-  alert(message); // TODO: Replace with toast notification
+  UIHelpers.showSuccess(message);
 }
 
 /**
  * Show error message
  */
 function showError(message) {
-  alert(message); // TODO: Replace with toast notification
+  UIHelpers.showError(message);
 }

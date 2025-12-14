@@ -419,7 +419,7 @@ async function markAllAsRead() {
     
   } catch (error) {
     console.error('Error marking all as read:', error);
-    alert('Failed to mark all notifications as read. Please try again.');
+    UIHelpers.showError('Failed to mark all notifications as read. Please try again.');
   }
 }
 
@@ -449,7 +449,7 @@ async function deleteNotification(notificationId) {
     
   } catch (error) {
     console.error('Error deleting notification:', error);
-    alert('Failed to delete notification. Please try again.');
+    UIHelpers.showError('Failed to delete notification. Please try again.');
   }
 }
 
@@ -785,7 +785,7 @@ async function savePreferences() {
       }, 2000);
     }
     
-    alert('Failed to save preferences. Please try again.');
+    UIHelpers.showError('Failed to save preferences. Please try again.');
   }
 }
 

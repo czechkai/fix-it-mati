@@ -229,9 +229,14 @@ async function editMeter(meterId) {
 
 // Delete meter
 async function deleteMeter(meterId) {
-    if (!confirm('Are you sure you want to unlink this meter?')) {
-        return;
-    }
+    const ok = await UIHelpers.confirm({
+        title: 'Unlink Meter',
+        message: 'Are you sure you want to unlink this meter?',
+        confirmText: 'Unlink',
+        cancelText: 'Cancel',
+        variant: 'danger'
+    });
+    if (!ok) return;
     
     try {
         const response = await ApiClient.delete(`/linked-meters/${meterId}`);

@@ -503,23 +503,197 @@ const UIHelpers = {
   },
 
   /**
-   * Show error toast notification
-   * @param {string} message - Error message
+   * Show toast notification (info|success|error)
+   * @param {string} message
+   * @param {'info'|'success'|'error'} type
    */
+  showToast(message, type = 'info') {
+    if (!message) return;
+    // Container
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.className = 'fixed top-4 right-4 z-[1100] flex flex-col gap-2 max-w-sm';
+      document.body.appendChild(container);
+    }
+
+    // Toast element
+    const toast = document.createElement('div');
+    const palette = {
+      info: 'border-slate-200 bg-white text-slate-800',
+      success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
+      error: 'border-rose-200 bg-rose-50 text-rose-900'
+    };
+    toast.className = `shadow-lg border rounded-xl px-4 py-3 flex items-start gap-3 ${palette[type] || palette.info}`;
+    toast.innerHTML = `
+      <div class="mt-0.5">
+        ${type === 'success' ? '<i data-lucide="check-circle" class="w-5 h-5"></i>' : type === 'error' ? '<i data-lucide="alert-circle" class="w-5 h-5"></i>' : '<i data-lucide="info" class="w-5 h-5"></i>'}
+      </div>
+      <div class="flex-1 text-sm leading-5">${message}</div>
+      <button class="text-slate-400 hover:text-slate-600" aria-label="Close toast">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    `;
+
+    // Close handlers
+    const close = () => {
+      if (!toast.parentElement) return;
+      toast.classList.add('opacity-0', 'translate-x-2');
+      setTimeout(() => toast.remove(), 150);
+    };
+    toast.querySelector('button').addEventListener('click', close);
+    setTimeout(close, 4000);
+
+    container.appendChild(toast);
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons({ icons: lucide.icons, attrs: { 'stroke-width': 2 } });
+    }
+  },
+
+  /** Show error toast */
   showError(message) {
     console.error('Error:', message);
-    // Simple alert for now - can be replaced with toast notification library
-    alert(`Error: ${message}`);
+    this.showToast(message || 'Something went wrong', 'error');
+  },
+
+  /** Show success toast */
+  showSuccess(message) {
+    console.log('Success:', message);
+    this.showToast(message || 'Done', 'success');
+  },
+
+  /** Show info toast */
+  showInfo(message) {
+    this.showToast(message || 'Notice', 'info');
   },
 
   /**
-   * Show success toast notification
-   * @param {string} message - Success message
+   * Show success modal dialog
+   * @param {Object|string} opts - Options or message string
+   * @param {string} [opts.title] - Modal title
+   * @param {string} [opts.message] - Body message
+   * @param {string} [opts.buttonText] - Button label (default: 'Done')
+   * @returns {Promise<boolean>} resolves when modal is closed
    */
-  showSuccess(message) {
-    console.log('Success:', message);
-    // Simple alert for now - can be replaced with toast notification library
-    alert(`Success: ${message}`);
+  showSuccessModal(opts) {
+    const options = typeof opts === 'string' ? { message: opts } : (opts || {});
+    const title = options.title || 'Success';
+    const message = options.message || 'Operation completed successfully';
+    const buttonText = options.buttonText || 'Done';
+
+    return new Promise((resolve) => {
+      // Overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'fixed inset-0 z-[1000] bg-black/50 flex items-center justify-center p-4';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+
+      // Modal container
+      const modal = document.createElement('div');
+      modal.className = 'w-full max-w-sm rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden';
+
+      modal.innerHTML = `
+        <div class="px-5 pt-5 pb-3">
+          <div class="flex items-start gap-3">
+            <div class="shrink-0 w-12 h-12 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+            </div>
+            <div class="text-left flex-1">
+              <h2 class="text-lg font-semibold text-slate-900">${title}</h2>
+            </div>
+          </div>
+        </div>
+        <div class="px-5 py-4 text-slate-700 leading-6 text-sm">${message}</div>
+        <div class="px-5 py-4 border-t border-slate-100 flex gap-2 justify-end">
+          <button class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors">${buttonText}</button>
+        </div>
+      `;
+
+      const closeModal = () => {
+        overlay.remove();
+        resolve(true);
+      };
+      modal.querySelector('button').addEventListener('click', closeModal);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeModal();
+      });
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+    });
+  }
+
+  /**
+   * Show a confirmation modal (Promise-based)
+   * @param {Object|string} opts - Options or message string
+   * @param {string} [opts.title] - Optional title text
+   * @param {string} [opts.message] - Body message
+   * @param {string} [opts.confirmText] - Confirm button label
+   * @param {string} [opts.cancelText] - Cancel button label
+   * @param {('danger'|'primary'|'default')} [opts.variant] - Confirm button style
+   * @returns {Promise<boolean>} resolves true on confirm, false on cancel/close
+   */
+  confirm(opts) {
+    const options = typeof opts === 'string' ? { message: opts } : (opts || {});
+    const title = options.title || 'Confirm Action';
+    const message = options.message || 'Are you sure?';
+    const confirmText = options.confirmText || 'Confirm';
+    const cancelText = options.cancelText || 'Cancel';
+    const variant = options.variant || 'default';
+
+    return new Promise((resolve) => {
+      // Overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'fixed inset-0 z-[1000] bg-black/50 flex items-center justify-center p-4';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+
+      // Modal container
+      const modal = document.createElement('div');
+      modal.className = 'w-full max-w-sm rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden';
+
+      modal.innerHTML = `
+        <div class="px-5 pt-5 pb-3">
+          <div class="flex items-start gap-3">
+            <div class="shrink-0 w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
+            </div>
+            <div class="text-left">
+              <h3 class="text-sm font-bold text-slate-900">${title}</h3>
+              <p class="mt-1 text-sm text-slate-600">${message}</p>
+            </div>
+          </div>
+        </div>
+        <div class="px-5 pb-5 pt-2 flex items-center justify-end gap-2 bg-slate-50">
+          <button type="button" id="fim-cancel" class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-200/60 focus:outline-none">${cancelText}</button>
+          <button type="button" id="fim-confirm" class="px-4 py-2 rounded-lg text-sm font-semibold text-white focus:outline-none ${variant === 'danger' ? 'bg-red-600 hover:bg-red-700' : variant === 'primary' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-900 hover:bg-black'}">${confirmText}</button>
+        </div>
+      `;
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+      const resolveAndClose = (val) => {
+        resolve(val);
+        document.body.removeChild(overlay);
+      };
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) resolveAndClose(false);
+      });
+      modal.querySelector('#fim-cancel').addEventListener('click', () => resolveAndClose(false));
+      modal.querySelector('#fim-confirm').addEventListener('click', () => resolveAndClose(true));
+
+      // ESC to cancel
+      const onKey = (e) => {
+        if (e.key === 'Escape') {
+          resolveAndClose(false);
+          document.removeEventListener('keydown', onKey);
+        }
+      };
+      document.addEventListener('keydown', onKey);
+    });
   },
 
   /**
