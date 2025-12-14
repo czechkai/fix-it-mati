@@ -415,9 +415,22 @@ class AuthService {
                 $params[] = $data['address'];
             }
             
+            if (isset($data['profile_image'])) {
+                $fields[] = "profile_image = ?";
+                $params[] = $data['profile_image'];
+            }
+            
             if (isset($data['password'])) {
-                $fields[] = "password = ?";
+                $fields[] = "password_hash = ?";
                 $params[] = $data['password'];
+            }
+            
+            // If no fields to update, return success
+            if (empty($fields)) {
+                return [
+                    'success' => true,
+                    'user' => User::find($userId)->toArray()
+                ];
             }
             
             $fields[] = "updated_at = CURRENT_TIMESTAMP";
@@ -428,13 +441,12 @@ class AuthService {
             $stmt->execute($params);
             
             // Fetch updated user
-            $userModel = new User();
-            $updatedUser = $userModel->findById($userId);
+            $updatedUser = User::find($userId);
             
             if ($updatedUser) {
                 return [
                     'success' => true,
-                    'user' => $updatedUser
+                    'user' => $updatedUser->toArray()
                 ];
             }
             
@@ -444,6 +456,8 @@ class AuthService {
             ];
             
         } catch (Exception $e) {
+            error_log("AuthService updateProfile error: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return [
                 'success' => false,
                 'message' => 'Failed to update profile: ' . $e->getMessage()

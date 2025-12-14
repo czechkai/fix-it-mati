@@ -609,17 +609,42 @@
         const profileName = document.getElementById('profileName');
         const profileEmail = document.getElementById('profileEmail');
         const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+        const profileBtn = document.getElementById('profileBtn');
         
-        if (profileName) profileName.textContent = userData.full_name || userData.email;
+        // Build display name
+        const firstName = (userData.first_name || '').trim();
+        const lastName = (userData.last_name || '').trim();
+        let displayName = `${firstName} ${lastName}`.trim();
+        
+        if (!displayName && userData.email) {
+          // Format email username
+          const username = userData.email.split('@')[0];
+          displayName = username.replace(/[._-]/g, ' ').split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+        }
+        
+        if (profileName) profileName.textContent = displayName || userData.email;
         if (profileEmail) profileEmail.textContent = userData.email;
-        if (profileAvatarLarge) {
-          const initials = (userData.full_name || userData.email)
-            .split(' ')
-            .map(n => n[0])
-            .join('')
-            .toUpperCase()
-            .substring(0, 2);
-          profileAvatarLarge.textContent = initials;
+        
+        // Handle profile image or initials
+        if (userData.profile_image) {
+          // Display profile image - handle both file paths and base64
+          const imageSrc = userData.profile_image.startsWith('data:') 
+            ? userData.profile_image 
+            : '/' + userData.profile_image.replace(/\\/g, '/');
+          
+          if (profileAvatarLarge) {
+            profileAvatarLarge.innerHTML = `<img src="${imageSrc}" class="w-full h-full object-cover rounded-full" alt="Profile" />`;
+          }
+          if (profileBtn) {
+            profileBtn.innerHTML = `<img src="${imageSrc}" class="w-full h-full object-cover rounded-full" alt="Profile" />`;
+          }
+        } else {
+          // Display initials
+          const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+          if (profileAvatarLarge) profileAvatarLarge.textContent = initials;
+          if (profileBtn) profileBtn.textContent = initials;
         }
       } catch (error) {
         console.error('Error loading user data:', error);

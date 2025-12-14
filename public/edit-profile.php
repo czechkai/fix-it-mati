@@ -105,10 +105,13 @@
   <div class="bg-white border-b border-slate-200 overflow-x-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between">
-        <nav class="flex -mb-px space-x-8">
-          <a href="user-dashboard.php" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
-          </a>
+        <nav class="flex -mb-px items-center space-x-8">
+          <div class="flex items-center gap-2 py-4 border-b-2 border-blue-600">
+            <a href="user-dashboard.php" class="text-slate-500 hover:text-blue-600 transition-colors" title="Back to Dashboard">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </a>
+            <h1 class="text-sm font-bold text-slate-900">Profile</h1>
+          </div>
         </nav>
         <button id="saveChangesBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors">
           <i data-lucide="save" class="w-4 h-4"></i>
@@ -134,10 +137,12 @@
         
         <!-- Profile Card -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col items-center text-center">
-          <div class="relative mb-4 group cursor-pointer">
+          <input type="file" id="profileImageInput" accept="image/*" class="hidden" />
+          <div id="profileAvatarContainer" class="relative mb-4 group cursor-pointer">
             <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 p-1">
-              <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                <i data-lucide="user" class="text-slate-300 w-10 h-10"></i>
+              <div id="profileAvatarImage" class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                <img id="profileImage" class="hidden w-full h-full object-cover" alt="Profile" />
+                <i data-lucide="user" class="text-slate-300 w-10 h-10" id="profileImagePlaceholder"></i>
               </div>
             </div>
             <div class="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md border border-slate-100 group-hover:scale-110 transition-transform">
@@ -185,23 +190,29 @@
           <form id="personalDetailsForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="space-y-1.5">
               <label class="text-xs font-bold text-slate-500 uppercase">First Name</label>
-              <input 
-                type="text" 
-                id="firstName" 
-                name="first_name"
-                class="w-full border border-slate-200 rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none" 
-                required
-              />
+              <div class="relative">
+                <i data-lucide="user" class="absolute left-3 top-3 text-slate-400 w-4 h-4"></i>
+                <input 
+                  type="text" 
+                  id="firstName" 
+                  name="first_name"
+                  placeholder="Enter first name"
+                  class="w-full border border-slate-200 rounded-lg pl-10 pr-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none" 
+                />
+              </div>
             </div>
             <div class="space-y-1.5">
               <label class="text-xs font-bold text-slate-500 uppercase">Last Name</label>
-              <input 
-                type="text" 
-                id="lastName" 
-                name="last_name"
-                class="w-full border border-slate-200 rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none" 
-                required
-              />
+              <div class="relative">
+                <i data-lucide="user" class="absolute left-3 top-3 text-slate-400 w-4 h-4"></i>
+                <input 
+                  type="text" 
+                  id="lastName" 
+                  name="last_name"
+                  placeholder="Enter last name"
+                  class="w-full border border-slate-200 rounded-lg pl-10 pr-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none" 
+                />
+              </div>
             </div>
             <div class="space-y-1.5 md:col-span-2">
               <label class="text-xs font-bold text-slate-500 uppercase">Email Address</label>
@@ -289,6 +300,23 @@
       </div>
     </div>
   </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 mt-12 py-8">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+      <div class="flex justify-center items-center gap-2 mb-4">
+        <i data-lucide="hammer" class="text-blue-600 w-5 h-5"></i>
+        <span class="text-lg font-bold text-slate-700">FixItMati</span>
+      </div>
+      <p class="text-slate-400 text-sm mb-6">Mati Public Utilities Online Service Request &amp; Tracking System</p>
+      <div class="flex justify-center gap-6 text-sm text-slate-500">
+        <a href="#" class="hover:text-blue-600">Privacy Policy</a>
+        <a href="#" class="hover:text-blue-600">Terms of Service</a>
+        <a href="#" class="hover:text-blue-600">Contact Support</a>
+      </div>
+      <p class="text-slate-400 text-xs mt-6">&copy; 2025 City of Mati. All rights reserved.</p>
+    </div>
+  </footer>
 
   <!-- Mobile Drawer (hidden by default) -->
   <div id="mobileDrawer" class="hidden"></div>

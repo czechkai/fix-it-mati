@@ -150,22 +150,25 @@ class AuthController {
      * Update user profile
      */
     public function updateProfile(Request $request): Response {
-        $user = $request->user();
-        
-        if (!$user) {
-            return Response::unauthorized('Not authenticated');
-        }
-        
-        $data = $request->all();
-        
-        // Validate required fields
-        if (empty($data['first_name']) || empty($data['last_name'])) {
-            return Response::validationError('First name and last name are required');
-        }
-        
-        if (empty($data['email'])) {
-            return Response::validationError('Email address is required');
-        }
+        try {
+            $user = $request->user();
+            
+            if (!$user) {
+                return Response::unauthorized('Not authenticated');
+            }
+            
+            $data = $request->all();
+            
+            // Debug logging
+            error_log("Profile update request data: " . json_encode($data));
+            error_log("Files: " . json_encode($_FILES));
+            error_log("Request method: " . $request->getMethod());
+            
+            // Validate required fields (only email is required)
+            if (empty($data['email'])) {
+                error_log("Email validation failed. Data received: " . json_encode($data));
+                return Response::validationError('Email address is required');
+            }
         
         // Validate email
         if (!empty($data['email'])) {
@@ -206,12 +209,66 @@ class AuthController {
         
         // Update profile
         $updateData = [
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
             'email' => $data['email'] ?? $user['email'],
             'phone' => $data['phone'] ?? null,
             'address' => $data['address'] ?? null
         ];
+        
+        // Only include first_name and last_name if they are provided
+        if (isset($data['first_name'])) {
+            $updateData['first_name'] = $data['first_name'];
+        }
+        
+        if (isset($data['last_name'])) {
+            $updateData['last_name'] = $data['last_name'];
+        }
+        
+        // Handle profile image upload
+        if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES['profile_image'];
+            
+            // Validate file type using finfo
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $fileType = $finfo->file($file['tmp_name']);
+            
+            if (!in_array($fileType, $allowedTypes)) {
+                return Response::validationError('Invalid image file type. Only JPEG, PNG, GIF, and WebP are allowed.');
+            }
+            
+            // Validate file size (max 5MB)
+            if ($file['size'] > 5 * 1024 * 1024) {
+                return Response::validationError('Image size must be less than 5MB');
+            }
+            
+            // Create uploads directory if it doesn't exist
+            $uploadDir = __DIR__ . '/../public/uploads/profiles';
+            if (!\is_dir($uploadDir)) {
+                \mkdir($uploadDir, 0755, true);
+            }
+            
+            // Generate unique filename
+            $extension = \pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = 'profile_' . $user['id'] . '_' . \time() . '.' . $extension;
+            $uploadPath = $uploadDir . '/' . $filename;
+            
+            // Move uploaded file
+            if (\move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                // Delete old profile image if exists
+                if (!empty($user['profile_image'])) {
+                    $oldImagePath = __DIR__ . '/../public/' . $user['profile_image'];
+                    if (\file_exists($oldImagePath) && \is_file($oldImagePath)) {
+                        \unlink($oldImagePath);
+                    }
+                }
+                
+                // Store relative path in database
+                $updateData['profile_image'] = 'uploads/profiles/' . $filename;
+            } else {
+                error_log("Failed to move uploaded file to: " . $uploadPath);
+                return Response::error('Failed to upload profile image');
+            }
+        }
         
         if (!empty($data['new_password'])) {
             $updateData['password'] = password_hash($data['new_password'], PASSWORD_DEFAULT);
@@ -223,6 +280,16 @@ class AuthController {
             return Response::success($result['user'], 'Profile updated successfully');
         }
         
-        return Response::error('Failed to update profile');
+        // Log the error for debugging
+        error_log("Profile update failed: " . ($result['message'] ?? 'Unknown error'));
+        error_log("Update data: " . json_encode($updateData));
+        
+        return Response::error($result['message'] ?? 'Failed to update profile');
+        
+        } catch (\Exception $e) {
+            error_log("Exception in updateProfile: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return Response::error('An error occurred while updating profile: ' . $e->getMessage());
+        }
     }
 }

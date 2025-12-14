@@ -23,6 +23,7 @@ class User {
     public $phone;
     public $address;
     public $account_number;
+    public $profile_image;
     public $role; // 'customer', 'admin', 'technician'
     public $created_at;
     public $updated_at;
@@ -353,10 +354,13 @@ class User {
         return [
             'id' => $this->id,
             'email' => $this->email,
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
             'full_name' => $this->full_name,
             'phone' => $this->phone,
             'address' => $this->address,
             'account_number' => $this->account_number,
+            'profile_image' => $this->profile_image,
             'role' => $this->role,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at

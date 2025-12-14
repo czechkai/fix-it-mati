@@ -23,6 +23,12 @@ class Request {
         $this->queryParams = $_GET ?? [];
         $this->bodyParams = $this->parseBody();
         $this->files = $_FILES ?? [];
+        
+        // Handle method override for file uploads (POST with _method=PUT)
+        if ($this->method === 'POST' && isset($this->bodyParams['_method'])) {
+            $this->method = strtoupper($this->bodyParams['_method']);
+            unset($this->bodyParams['_method']); // Remove the override param
+        }
     }
     
     /**
@@ -68,7 +74,7 @@ class Request {
             return $data ?? [];
         }
         
-        // Handle form data
+        // Handle form data (POST or POST with method override)
         return $_POST;
     }
     
