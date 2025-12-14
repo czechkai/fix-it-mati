@@ -693,7 +693,7 @@
     console.log('[Profile Display] Function called');
     
     // First, refresh user data from API to ensure we have latest profile_image
-    const token = sessionStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token');
     if (token) {
       try {
         console.log('[Profile Display] Refreshing user data from API...');
@@ -703,7 +703,7 @@
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
-            sessionStorage.setItem('user', JSON.stringify(data.data));
+            localStorage.setItem('user', JSON.stringify(data.data));
             console.log('[Profile Display] User data refreshed from API');
           }
         }
@@ -712,9 +712,9 @@
       }
     }
     
-    const user = sessionStorage.getItem('user');
+    const user = localStorage.getItem('user');
     if (!user) {
-      console.log('[Profile Display] No user in sessionStorage');
+      console.log('[Profile Display] No user in localStorage');
       return;
     }
 

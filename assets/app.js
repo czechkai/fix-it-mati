@@ -6,7 +6,7 @@
 
   // Load profile image/initials on every page
   function loadProfileDisplay() {
-    const user = sessionStorage.getItem('user');
+    const user = localStorage.getItem('user');
     if (!user) return;
 
     try {

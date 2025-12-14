@@ -101,7 +101,7 @@
             <a href="user-dashboard.php" class="text-slate-500 hover:text-blue-600 transition-colors" title="Back to Dashboard">
               <i data-lucide="arrow-left" class="w-4 h-4"></i>
             </a>
-            <h1 class="text-sm font-bold text-slate-900">Notifications</h1>
+            <h1 class="text-lg font-bold text-slate-800">Notifications</h1>
             <span id="newCountBadge" class="hidden bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
           </div>
         </nav>

@@ -241,8 +241,8 @@
     lucide.createIcons();
 
     try {
-      // Get auth token (check both possible keys)
-      const token = sessionStorage.getItem('auth_token') || sessionStorage.getItem('token');
+      // Get auth token
+      const token = localStorage.getItem('auth_token');
       
       // Add method override for PUT (standard pattern for file uploads)
       formData.append('_method', 'PUT');
@@ -297,8 +297,8 @@
         const userResponse = await ApiClient.get('/auth/me');
         if (userResponse.success && userResponse.data) {
           currentUser = userResponse.data;
-          // Update sessionStorage so other pages have the latest data
-          sessionStorage.setItem('user', JSON.stringify(currentUser));
+          // Update localStorage so other pages have the latest data
+          localStorage.setItem('user', JSON.stringify(currentUser));
           populateForm(currentUser);
         }
 

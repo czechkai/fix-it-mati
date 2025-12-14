@@ -591,8 +591,11 @@ async function handleLogout() {
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
-    sessionStorage.clear();
-    window.location.href = 'login.php';
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('remember_me');
+    localStorage.setItem('logout_event', Date.now().toString());
+    window.location.href = '/login.php';
   }
 }
 

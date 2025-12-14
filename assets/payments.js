@@ -14,7 +14,7 @@ async function init() {
         // Load current bills from database
         const billsResponse = await fetch('/api/payments/current', {
             headers: {
-                'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
             }
         });
         
@@ -30,7 +30,7 @@ async function init() {
         // Load payment history from database
         const historyResponse = await fetch('/api/payments/history?limit=5', {
             headers: {
-                'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
             }
         });
         
@@ -483,7 +483,7 @@ async function processPayment(gateway) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${sessionStorage.getItem('auth_token')}`
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
             },
             body: JSON.stringify({
                 payment_id: currentPaymentId,

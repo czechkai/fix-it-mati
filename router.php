@@ -35,7 +35,13 @@ $pathMappings = [
     'discussions.php' => 'public/pages/user/discussions.php',
     'discussion-detail.php' => 'public/pages/user/discussion-detail.php',
     'settings.php' => 'public/pages/user/settings.php',
-    'admin-dashboard.php' => 'public/admin/dashboard.php'
+    'admin-dashboard.php' => 'public/admin/dashboard.php',
+    'admin/service-requests.php' => 'public/admin/service-requests.php',
+    'admin/billing.php' => 'public/admin/billing.php',
+    'admin/users.php' => 'public/admin/users.php',
+    'admin/technicians.php' => 'public/admin/technicians.php',
+    'admin/announcements.php' => 'public/admin/announcements.php',
+    'admin/analytics.php' => 'public/admin/analytics.php'
 ];
 
 // Check if requesting a mapped page

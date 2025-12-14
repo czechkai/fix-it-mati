@@ -100,7 +100,7 @@
             <a href="user-dashboard.php" class="text-slate-500 hover:text-blue-600 transition-colors" title="Back to Dashboard">
               <i data-lucide="arrow-left" class="w-4 h-4"></i>
             </a>
-            <h1 class="text-sm font-bold text-slate-900">Profile</h1>
+            <h1 class="text-lg font-bold text-slate-800">Profile</h1>
           </div>
         </nav>
         <button id="saveChangesBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors">

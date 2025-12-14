@@ -450,15 +450,15 @@ const AuthAPI = {
    * @returns {boolean} Is authenticated
    */
   isAuthenticated() {
-    return !!sessionStorage.getItem('auth_token');
+    return !!localStorage.getItem('auth_token');
   },
 
   /**
-   * Get stored user from session
+   * Get stored user from storage
    * @returns {object|null} User object or null
    */
   getStoredUser() {
-    const user = sessionStorage.getItem('user');
+    const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   },
 };

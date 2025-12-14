@@ -90,10 +90,13 @@
     <div class="bg-white border-b border-slate-200 overflow-x-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between">
-                <nav class="flex -mb-px space-x-8">
-                    <a href="user-dashboard.php" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Dashboard
-                    </a>
+                <nav class="flex -mb-px items-center space-x-8">
+                    <div class="flex items-center gap-2 py-4 border-b-2 border-blue-600">
+                        <a href="user-dashboard.php" class="text-slate-500 hover:text-blue-600 transition-colors" title="Back to Dashboard">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        </a>
+                        <h1 class="text-lg font-bold text-slate-800">Announcements</h1>
+                    </div>
                 </nav>
             </div>
         </div>

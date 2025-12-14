@@ -10,29 +10,14 @@ async function init() {
     console.log('[Active Requests] Initializing...');
     
     // Check authentication
-    const token = sessionStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token');
     console.log('[Active Requests] Auth token:', token ? 'Present' : 'Missing');
     console.log('[Active Requests] Token value:', token ? token.substring(0, 50) + '...' : 'null');
     
     if (!token) {
         console.error('[Active Requests] No auth token found');
-        console.log('[Active Requests] Checking localStorage...');
-        const rememberToken = localStorage.getItem('auth_token');
-        if (rememberToken) {
-            console.log('[Active Requests] Found token in localStorage, copying to sessionStorage');
-            sessionStorage.setItem('auth_token', rememberToken);
-            const user = localStorage.getItem('user');
-            if (user) {
-                sessionStorage.setItem('user', user);
-            }
-            // Retry initialization
-            location.reload();
-            return;
-        }
-        
-        console.error('[Active Requests] No token anywhere, redirecting to login');
         alert('Your session has expired. Please login again.');
-        window.location.replace('login.php');
+        window.location.replace('/login.php');
         return;
     }
     
@@ -468,9 +453,9 @@ function startAutoRefresh() {
 // Load requests from API (can be silent for auto-refresh)
 async function loadRequests(silent = false) {
     try {
-        const token = sessionStorage.getItem('auth_token');
+        const token = localStorage.getItem('auth_token');
         if (!token) {
-            window.location.replace('login.php');
+            window.location.replace('/login.php');
             return;
         }
 
