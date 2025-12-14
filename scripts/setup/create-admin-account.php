@@ -86,7 +86,7 @@ try {
     }
     
     echo "🌐 Access the admin dashboard at:\n";
-    echo "   http://localhost:8000/admin-dashboard.php\n\n";
+    echo "   http://localhost:8000/admin/dashboard.php\n\n";
     
     echo "🔐 Login Credentials:\n";
     echo "   Email: admin@fixitmati.com\n";

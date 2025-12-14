@@ -105,10 +105,10 @@
         // Navigate to appropriate page
         switch(tab) {
           case 'dashboard':
-            window.location.href = 'user-dashboard.php';
+            window.location.href = 'pages/user/user-dashboard.php';
             break;
           case 'my requests':
-            window.location.href = 'active-requests.php';
+            window.location.href = 'pages/user/active-requests.php';
             break;
           case 'announcements':
             window.location.href = 'announcements.php';

@@ -520,7 +520,7 @@ async function reportRecurringIssue() {
       
       // Optionally navigate to active requests
       setTimeout(() => {
-        window.location.href = 'user-dashboard.php';
+        window.location.href = 'pages/user/user-dashboard.php';
       }, 2000);
     } else {
       showError(response.message || 'Failed to report recurring issue');

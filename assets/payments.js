@@ -412,7 +412,7 @@ function attachEventListeners() {
     const reportBtn = document.getElementById('reportBtn');
     if (reportBtn) {
         reportBtn.addEventListener('click', function() {
-            window.location.href = 'create-request.php'; // Redirect to create request
+            window.location.href = 'pages/user/create-request.php'; // Redirect to create request
         });
     }
 }

@@ -52,10 +52,10 @@
         
         switch(tab) {
           case 'dashboard':
-            window.location.href = window.location.pathname.includes('/public/') ? 'user-dashboard.php' : 'public/user-dashboard.php';
+            window.location.href = window.location.pathname.includes('/public/') ? 'pages/user/user-dashboard.php' : 'public/pages/user/user-dashboard.php';
             break;
           case 'my requests':
-            window.location.href = window.location.pathname.includes('/public/') ? 'active-requests.php' : 'public/active-requests.php';
+            window.location.href = window.location.pathname.includes('/public/') ? 'pages/user/active-requests.php' : 'public/pages/user/active-requests.php';
             break;
           case 'announcements':
             window.location.href = window.location.pathname.includes('/public/') ? 'announcements.php' : 'public/announcements.php';
@@ -206,7 +206,7 @@
       // Check if it's an authentication error
       if (error.message && (error.message.includes('Unauthorized') || error.message.includes('Not authenticated') || error.message.includes('401'))) {
         // Redirect to login
-        window.location.href = window.location.pathname.includes('/public/') ? 'login.php' : 'public/login.php';
+        window.location.href = window.location.pathname.includes('/public/') ? 'pages/auth/login.php' : 'public/pages/auth/login.php';
         return;
       }
       
@@ -578,8 +578,29 @@
   }
 
   // Function to load profile display - called on every page
-  function loadProfileDisplay() {
+  async function loadProfileDisplay() {
     console.log('[Profile Display] Function called');
+    
+    // First, refresh user data from API to ensure we have latest profile_image
+    const token = sessionStorage.getItem('auth_token');
+    if (token) {
+      try {
+        console.log('[Profile Display] Refreshing user data from API...');
+        const response = await fetch('/api/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            sessionStorage.setItem('user', JSON.stringify(data.data));
+            console.log('[Profile Display] User data refreshed from API');
+          }
+        }
+      } catch (error) {
+        console.log('[Profile Display] Could not refresh from API:', error.message);
+      }
+    }
+    
     const user = sessionStorage.getItem('user');
     if (!user) {
       console.log('[Profile Display] No user in sessionStorage');
@@ -699,7 +720,7 @@
           // Fallback: clear storage and redirect manually
           sessionStorage.clear();
           localStorage.clear();
-          window.location.href = window.location.pathname.includes('/public/') ? 'login.php' : 'public/login.php';
+          window.location.href = window.location.pathname.includes('/public/') ? 'pages/auth/login.php' : 'public/pages/auth/login.php';
         }
       }
     });
@@ -767,7 +788,7 @@
       loadDashboardData();
     } else {
       console.warn('No auth token found, skipping data load');
-      window.location.replace(window.location.pathname.includes('/public/') ? 'login.php' : 'public/login.php');
+      window.location.replace(window.location.pathname.includes('/public/') ? 'pages/auth/login.php' : 'public/pages/auth/login.php');
     }
   }
 })();

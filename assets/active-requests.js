@@ -63,7 +63,7 @@ function showEmptyState() {
                 </svg>
                 <p style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No Active Requests</p>
                 <p style="font-size: 14px; margin-bottom: 20px;">You don't have any pending or in-progress requests.</p>
-                <a href="create-request.php" style="display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">Create New Request</a>
+                <a href="pages/user/create-request.php" style="display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">Create New Request</a>
             </div>
         `;
     }

@@ -359,7 +359,7 @@ const AuthAPI = {
     localStorage.removeItem('user');
     
     // Redirect to login
-    window.location.href = '/login.php';
+    window.location.href = '/pages/auth/login.php';
   },
 
   /**
