@@ -1,0 +1,80 @@
+/* Service Requests Admin Page Styles */
+
+/* Drawer animation */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.drawer-slide-in {
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+/* Custom scrollbar for drawer */
+#drawerPanel .overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+#drawerPanel .overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+#drawerPanel .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+#drawerPanel .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Table hover effect */
+#ticketsTableBody tr {
+  transition: background-color 0.15s ease;
+}
+
+/* Drawer positioning */
+#ticketDrawer {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#ticketDrawer.hidden {
+  display: none;
+}
+
+/* Backdrop */
+#drawerBackdrop {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+
+/* Drawer panel */
+#drawerPanel {
+  position: relative;
+  z-index: 10;
+}
+
+/* Filter button transitions */
+.filter-btn {
+  transition: all 0.2s ease;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
