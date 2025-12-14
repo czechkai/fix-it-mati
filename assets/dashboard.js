@@ -4,6 +4,7 @@
   let currentSort = 'newest';
   let allRequests = [];
   let allAnnouncements = [];
+  let discussionActivity = [];
 
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
   const mobileDrawer = document.getElementById('mobileDrawer');
@@ -40,7 +41,7 @@
   const notificationBtn = document.getElementById('notificationBtn');
   if (notificationBtn) {
     notificationBtn.addEventListener('click', () => {
-      window.location.href = window.location.pathname.includes('/public/') ? 'notifications.php' : 'public/notifications.php';
+      window.location.href = '/notifications.php';
     });
   }
 
@@ -52,19 +53,19 @@
         
         switch(tab) {
           case 'dashboard':
-            window.location.href = window.location.pathname.includes('/public/') ? 'pages/user/user-dashboard.php' : 'public/pages/user/user-dashboard.php';
+            window.location.href = '/user-dashboard.php';
             break;
           case 'my requests':
-            window.location.href = window.location.pathname.includes('/public/') ? 'pages/user/active-requests.php' : 'public/pages/user/active-requests.php';
+            window.location.href = '/active-requests.php';
             break;
           case 'announcements':
-            window.location.href = window.location.pathname.includes('/public/') ? 'announcements.php' : 'public/announcements.php';
+            window.location.href = '/announcements.php';
             break;
           case 'discussions':
-            window.location.href = window.location.pathname.includes('/public/') ? 'discussions.php' : 'public/discussions.php';
+            window.location.href = '/discussions.php';
             break;
           case 'payments':
-            window.location.href = window.location.pathname.includes('/public/') ? 'payments.php' : 'public/payments.php';
+            window.location.href = '/payments.php';
             break;
         }
       });
@@ -170,6 +171,16 @@
       const requestsData = await ApiClient.requests.getAll();
       allRequests = (requestsData.data && requestsData.data.requests) || [];
       
+      // Load discussion activity
+      try {
+        const activityData = await ApiClient.discussions.getMyActivity(10);
+        discussionActivity = (activityData.data && activityData.data.activity) || [];
+        console.log('Discussion activity loaded:', discussionActivity.length, 'items');
+      } catch (error) {
+        console.error('Error loading discussion activity:', error);
+        discussionActivity = [];
+      }
+      
       // Load announcements
       const announcementsData = await ApiClient.get('/announcements');
       allAnnouncements = (announcementsData.data && announcementsData.data.announcements) || announcementsData.data || [];
@@ -194,7 +205,7 @@
       // Update announcements card
       updateAnnouncementsCard();
       
-      // Display requests
+      // Display requests and discussions
       filterAndSortRequests();
       
       // Display announcements
@@ -206,7 +217,7 @@
       // Check if it's an authentication error
       if (error.message && (error.message.includes('Unauthorized') || error.message.includes('Not authenticated') || error.message.includes('401'))) {
         // Redirect to login
-        window.location.href = window.location.pathname.includes('/public/') ? 'pages/auth/login.php' : 'public/pages/auth/login.php';
+        window.location.href = '/login.php';
         return;
       }
       
@@ -328,34 +339,44 @@
   }
 
   function filterAndSortRequests(searchTerm = '') {
-    let filtered = [...allRequests];
+    let filteredRequests = [...allRequests];
+    let filteredDiscussions = [...discussionActivity];
     
-    // Filter by category
+    // Filter requests by category
     if (currentCategory !== 'all') {
-      filtered = filtered.filter(r => r.category === currentCategory);
+      filteredRequests = filteredRequests.filter(r => r.category === currentCategory);
+      // Also filter discussions by category
+      filteredDiscussions = filteredDiscussions.filter(d => {
+        // Map discussion categories to request categories
+        const categoryMap = {
+          'Water Supply': 'water',
+          'Electricity': 'electricity',
+          'Billing': 'billing',
+          'General': 'general'
+        };
+        return categoryMap[d.category] === currentCategory;
+      });
     }
     
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(r => 
+      filteredRequests = filteredRequests.filter(r => 
         (r.title && r.title.toLowerCase().includes(searchTerm)) ||
         (r.description && r.description.toLowerCase().includes(searchTerm)) ||
         (r.location && r.location.toLowerCase().includes(searchTerm))
       );
+      filteredDiscussions = filteredDiscussions.filter(d => 
+        (d.title && d.title.toLowerCase().includes(searchTerm)) ||
+        (d.description && d.description.toLowerCase().includes(searchTerm)) ||
+        (d.discussion_title && d.discussion_title.toLowerCase().includes(searchTerm))
+      );
     }
     
-    // Sort
-    if (currentSort === 'newest') {
-      filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    } else if (currentSort === 'oldest') {
-      filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    }
-    
-    // Display filtered requests
-    displayRequests(filtered);
+    // Display filtered items (they will be sorted in displayRequests)
+    displayRequests(filteredRequests, filteredDiscussions);
   }
 
-  function displayRequests(requests) {
+  function displayRequests(requests, discussions = discussionActivity) {
     const container = document.getElementById('requestsContent');
     const loadingState = document.getElementById('requestsLoadingState');
     const countElement = document.getElementById('requestsCount');
@@ -366,70 +387,153 @@
     if (loadingState) loadingState.classList.add('hidden');
     container.classList.remove('hidden');
     
-    // Update count
+    // Combine service requests and discussion activity
+    const combinedItems = [
+      ...requests.map(r => ({ ...r, itemType: 'request' })),
+      ...discussions.map(d => ({ ...d, itemType: 'discussion' }))
+    ];
+    
+    // Sort by created_at
+    combinedItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    // Update count - show total across all items regardless of filtering
+    const totalAllItems = allRequests.length + discussionActivity.length;
+    const isShowingAll = (typeof showingAll !== 'undefined' && showingAll);
+    const displayCount = isShowingAll ? combinedItems.length : Math.min(combinedItems.length, 5);
     if (countElement) {
-      countElement.textContent = requests.length > 0 ? `Showing ${Math.min(requests.length, 3)} of ${allRequests.length}` : 'No requests';
+      if (combinedItems.length === 0) {
+        countElement.textContent = 'No activity';
+      } else if (currentCategory === 'all') {
+        countElement.textContent = `Showing ${displayCount} of ${totalAllItems}`;
+      } else {
+        countElement.textContent = `Showing ${displayCount} of ${combinedItems.length} filtered`;
+      }
+    }
+    
+    // Show/hide "See more" button based on item count
+    const seeMoreContainer = document.getElementById('seeMoreContainer');
+    if (seeMoreContainer) {
+      if (combinedItems.length <= 5) {
+        seeMoreContainer.classList.add('hidden');
+      } else {
+        seeMoreContainer.classList.remove('hidden');
+      }
     }
     
     // Clear content
     container.innerHTML = '';
     
-    if (requests.length === 0) {
+    if (combinedItems.length === 0) {
       container.innerHTML = `
         <div class="px-4 py-8 text-center text-slate-500">
           <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-2 text-slate-300"></i>
-          <p class="mb-2">No requests found</p>
-          ${currentCategory !== 'all' ? `<button class="text-sm text-blue-600 hover:underline" onclick="document.querySelector('[data-category=\'all\']').click()">Show all requests</button>` : ''}
+          <p class="mb-2">No activity found</p>
+          ${currentCategory !== 'all' ? `<button class="text-sm text-blue-600 hover:underline" onclick="document.querySelector('[data-category=\'all\']').click()">Show all</button>` : ''}
         </div>
       `;
       lucide.createIcons();
       return;
     }
     
-    // Show only first 3 requests
-    const displayRequests = requests.slice(0, 3);
+    // Show limited items or all based on showingAll state
+    const itemsToShow = (typeof showingAll !== 'undefined' && showingAll) ? combinedItems.length : 5;
+    const displayItems = combinedItems.slice(0, itemsToShow);
     
-    displayRequests.forEach(request => {
-      const statusColors = {
-        pending: 'bg-yellow-100 text-yellow-800',
-        in_progress: 'bg-blue-100 text-blue-800',
-        completed: 'bg-green-100 text-green-800',
-        cancelled: 'bg-red-100 text-red-800'
-      };
+    displayItems.forEach(item => {
+      let html = '';
       
-      const categoryIcons = {
-        water: 'droplets',
-        electricity: 'zap'
-      };
-      
-      const html = `
-        <div class="p-4 hover:bg-slate-50 transition-colors cursor-pointer request-item" data-id="${request.id}">
-          <div class="flex items-start gap-3">
-            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-              <i data-lucide="${categoryIcons[request.category] || 'file-text'}" class="w-5 h-5 text-blue-600"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between gap-2">
-                <h4 class="text-sm font-semibold text-slate-900 truncate">${request.title || 'Service Request'}</h4>
-                <span class="text-xs px-2 py-1 rounded-full whitespace-nowrap ${statusColors[request.status] || statusColors.pending}">
-                  ${request.status.replace('_', ' ')}
-                </span>
+      if (item.itemType === 'request') {
+        // Service Request item
+        const statusColors = {
+          pending: 'bg-yellow-100 text-yellow-800',
+          in_progress: 'bg-blue-100 text-blue-800',
+          completed: 'bg-green-100 text-green-800',
+          cancelled: 'bg-red-100 text-red-800'
+        };
+        
+        const categoryIcons = {
+          water: 'droplets',
+          electricity: 'zap'
+        };
+        
+        html = `
+          <div class="p-4 hover:bg-slate-50 transition-colors cursor-pointer request-item" data-id="${item.id}" data-type="request">
+            <div class="flex items-start gap-3">
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <i data-lucide="${categoryIcons[item.category] || 'file-text'}" class="w-5 h-5 text-blue-600"></i>
               </div>
-              <p class="text-sm text-slate-600 mt-1 line-clamp-2">${request.description || 'No description'}</p>
-              <div class="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                <span class="flex items-center gap-1">
-                  <i data-lucide="calendar" class="w-3 h-3"></i>
-                  ${new Date(request.created_at).toLocaleDateString()}
-                </span>
-                <span class="flex items-center gap-1">
-                  <i data-lucide="map-pin" class="w-3 h-3"></i>
-                  ${request.location || 'N/A'}
-                </span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                  <h4 class="text-sm font-semibold text-slate-900 truncate">${item.title || 'Service Request'}</h4>
+                  <span class="text-xs px-2 py-1 rounded-full whitespace-nowrap ${statusColors[item.status] || statusColors.pending}">
+                    ${item.status.replace('_', ' ')}
+                  </span>
+                </div>
+                <p class="text-sm text-slate-600 mt-1 line-clamp-2">${item.description || 'No description'}</p>
+                <div class="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                    ${new Date(item.created_at).toLocaleDateString()}
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="map-pin" class="w-3 h-3"></i>
+                    ${item.location || 'N/A'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      `;
+        `;
+      } else if (item.itemType === 'discussion') {
+        // Discussion activity item
+        const discussionIcon = item.type === 'discussion' ? 'message-square' : 'message-circle';
+        const discussionBgColor = item.type === 'discussion' ? 'bg-purple-100' : 'bg-green-100';
+        const discussionIconColor = item.type === 'discussion' ? 'text-purple-600' : 'text-green-600';
+        const discussionLabel = item.type === 'discussion' ? 'Discussion' : 'Comment';
+        const discussionLabelColor = item.type === 'discussion' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800';
+        
+        html = `
+          <div class="p-4 hover:bg-slate-50 transition-colors cursor-pointer discussion-item" data-id="${item.discussion_id || item.id}" data-type="${item.type}">
+            <div class="flex items-start gap-3">
+              <div class="flex-shrink-0 w-10 h-10 rounded-full ${discussionBgColor} flex items-center justify-center">
+                <i data-lucide="${discussionIcon}" class="w-5 h-5 ${discussionIconColor}"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                  <h4 class="text-sm font-semibold text-slate-900 truncate">${item.title || item.discussion_title || 'Discussion'}</h4>
+                  <span class="text-xs px-2 py-1 rounded-full whitespace-nowrap ${discussionLabelColor}">
+                    ${discussionLabel}
+                  </span>
+                </div>
+                <p class="text-sm text-slate-600 mt-1 line-clamp-2">${item.description || item.content || 'No content'}</p>
+                <div class="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                    ${new Date(item.created_at).toLocaleDateString()}
+                  </span>
+                  ${item.type === 'discussion' ? `
+                    <span class="flex items-center gap-1">
+                      <i data-lucide="message-circle" class="w-3 h-3"></i>
+                      ${item.comments_count || 0} comments
+                    </span>
+                    ${item.upvotes > 0 ? `
+                      <span class="flex items-center gap-1">
+                        <i data-lucide="arrow-up" class="w-3 h-3"></i>
+                        ${item.upvotes}
+                      </span>
+                    ` : ''}
+                  ` : `
+                    <span class="flex items-center gap-1">
+                      <i data-lucide="message-square" class="w-3 h-3"></i>
+                      on: ${item.discussion_title || 'Discussion'}
+                    </span>
+                  `}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
       
       container.insertAdjacentHTML('beforeend', html);
     });
@@ -440,8 +544,15 @@
     document.querySelectorAll('.request-item').forEach(item => {
       item.addEventListener('click', () => {
         const requestId = item.dataset.id;
-        const basePath = window.location.pathname.includes('/public/') ? '' : 'public/';
-        window.location.href = `${basePath}active-requests.php?id=${requestId}`;
+        window.location.href = `/active-requests.php?id=${requestId}`;
+      });
+    });
+    
+    // Add click handlers to discussion items
+    document.querySelectorAll('.discussion-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const discussionId = item.dataset.id;
+        window.location.href = `/discussion-detail.php?id=${discussionId}`;
       });
     });
   }
@@ -720,7 +831,7 @@
           // Fallback: clear storage and redirect manually
           sessionStorage.clear();
           localStorage.clear();
-          window.location.href = window.location.pathname.includes('/public/') ? 'pages/auth/login.php' : 'public/pages/auth/login.php';
+          window.location.href = '/login.php';
         }
       }
     });
@@ -733,7 +844,7 @@
       profileDropdown.classList.add('hidden');
       
       // Redirect to edit profile page
-      window.location.href = 'edit-profile.php';
+      window.location.href = '/edit-profile.php';
     });
   }
 
@@ -741,7 +852,7 @@
   if (serviceAddressesBtn) {
     serviceAddressesBtn.addEventListener('click', () => {
       profileDropdown.classList.add('hidden');
-      window.location.href = 'service-addresses.php';
+      window.location.href = '/service-addresses.php';
     });
   }
 
@@ -749,14 +860,14 @@
   if (linkedMetersBtn) {
     linkedMetersBtn.addEventListener('click', () => {
       profileDropdown.classList.add('hidden');
-      window.location.href = window.location.pathname.includes('/public/') ? 'linked-meters.php' : 'public/linked-meters.php';
+      window.location.href = '/linked-meters.php';
     });
   }
 
   // Help & Support button
   if (helpSupportBtn) {
     helpSupportBtn.addEventListener('click', () => {
-      window.location.href = 'help-support.php';
+      window.location.href = '/help-support.php';
     });
   }
 
@@ -765,6 +876,17 @@
   if (profileSettingsBtn) {
     profileSettingsBtn.addEventListener('click', () => {
       alert('Settings page coming soon!');
+    });
+  }
+
+  // See more button - expand to show all items
+  let showingAll = false;
+  const seeMoreBtn = document.getElementById('seeMoreBtn');
+  if (seeMoreBtn) {
+    seeMoreBtn.addEventListener('click', () => {
+      showingAll = !showingAll;
+      filterAndSortRequests();
+      seeMoreBtn.textContent = showingAll ? 'Show less' : 'See more';
     });
   }
 
@@ -788,7 +910,7 @@
       loadDashboardData();
     } else {
       console.warn('No auth token found, skipping data load');
-      window.location.replace(window.location.pathname.includes('/public/') ? 'pages/auth/login.php' : 'public/pages/auth/login.php');
+      window.location.replace('/login.php');
     }
   }
 })();

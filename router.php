@@ -1,14 +1,11 @@
 <?php
 /**
  * Root Router for PHP Built-in Server
- * Allows running: php -S localhost:8000
- * Without needing: php -S localhost:8000 -t public
+ * Allows running: php -S localhost:8000 router.php
  */
 
 // Get the requested URI
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-// Remove leading slash
 $uri = ltrim($uri, '/');
 
 // If it's an API request, route to public/api/index.php
@@ -44,17 +41,10 @@ $pathMappings = [
 // Check if requesting a mapped page
 if (isset($pathMappings[$uri])) {
     $file = __DIR__ . '/' . $pathMappings[$uri];
-    if (file_exists($file)) {
+    if (file_exists($file) && is_file($file)) {
         require $file;
         exit;
     }
-}
-
-// If not found in mappings, try checking public directory directly
-$publicFile = __DIR__ . '/public/' . $uri;
-if (file_exists($publicFile) && is_file($publicFile) && pathinfo($publicFile, PATHINFO_EXTENSION) === 'php') {
-    require $publicFile;
-    exit;
 }
 
 // Check if requesting a file in public/ directory structure
@@ -99,7 +89,7 @@ if (strpos($uri, 'assets/') === 0) {
 
 // If empty URI or root, redirect to login
 if (empty($uri) || $uri === 'index.php') {
-    header('Location: /pages/auth/login.php');
+    header('Location: /login.php');
     exit;
 }
 

@@ -93,6 +93,7 @@ const ApiClient = {
   payments: null, // Will be set after PaymentsAPI is defined
   notifications: null, // Will be set after NotificationsAPI is defined
   commands: null, // Will be set after CommandsAPI is defined
+  discussions: null, // Will be set after DiscussionsAPI is defined
 };
 
 // Export ApiClient to window immediately
@@ -306,6 +307,79 @@ window.CommandsAPI = CommandsAPI;
 console.log('[API Client] CommandsAPI defined and attached');
 
 /**
+ * Discussions API endpoints
+ */
+const DiscussionsAPI = {
+  /**
+   * Get user's recent activity (discussions and comments)
+   * @param {number} limit - Maximum number of items to return
+   * @returns {Promise<object>} User activity data
+   */
+  async getMyActivity(limit = 10) {
+    return ApiClient.get(`/discussions/my-activity?limit=${limit}`);
+  },
+
+  /**
+   * Get all discussions
+   * @param {object} params - Optional query parameters (category, sort)
+   * @returns {Promise<object>} Discussions list
+   */
+  async getAll(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return ApiClient.get(`/discussions${queryString ? '?' + queryString : ''}`);
+  },
+
+  /**
+   * Get single discussion with comments
+   * @param {string} id - Discussion ID
+   * @returns {Promise<object>} Discussion details
+   */
+  async getById(id) {
+    return ApiClient.get(`/discussions/${id}`);
+  },
+
+  /**
+   * Create new discussion
+   * @param {object} data - Discussion data (title, content, category)
+   * @returns {Promise<object>} Created discussion
+   */
+  async create(data) {
+    return ApiClient.post('/discussions', data);
+  },
+
+  /**
+   * Add comment to discussion
+   * @param {string} discussionId - Discussion ID
+   * @param {string} content - Comment content
+   * @returns {Promise<object>} Created comment
+   */
+  async addComment(discussionId, content) {
+    return ApiClient.post(`/discussions/${discussionId}/comments`, { content });
+  },
+
+  /**
+   * Upvote a discussion
+   * @param {string} discussionId - Discussion ID
+   * @returns {Promise<object>} Updated upvote count
+   */
+  async upvote(discussionId) {
+    return ApiClient.post(`/discussions/${discussionId}/upvote`);
+  },
+
+  /**
+   * Delete discussion
+   * @param {string} discussionId - Discussion ID
+   * @returns {Promise<object>} Deletion result
+   */
+  async delete(discussionId) {
+    return ApiClient.delete(`/discussions/${discussionId}`);
+  },
+};
+ApiClient.discussions = DiscussionsAPI;
+window.DiscussionsAPI = DiscussionsAPI;
+console.log('[API Client] DiscussionsAPI defined and attached');
+
+/**
  * Authentication API endpoints
  */
 const AuthAPI = {
@@ -359,7 +433,7 @@ const AuthAPI = {
     localStorage.removeItem('user');
     
     // Redirect to login
-    window.location.href = '/pages/auth/login.php';
+    window.location.href = '/login.php';
   },
 
   /**
@@ -496,6 +570,7 @@ if (typeof window !== 'undefined') {
     requests: typeof ApiClient.requests,
     payments: typeof ApiClient.payments,
     notifications: typeof ApiClient.notifications,
-    commands: typeof ApiClient.commands
+    commands: typeof ApiClient.commands,
+    discussions: typeof ApiClient.discussions
   });
 }

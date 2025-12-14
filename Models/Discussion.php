@@ -316,4 +316,63 @@ class Discussion
             return false;
         }
     }
+
+    /**
+     * Get user's recent activity (discussions and comments)
+     */
+    public function getUserActivity(string $userId, int $limit = 10): array
+    {
+        $sql = "
+            -- Get user's discussions
+            SELECT 
+                'discussion' as type,
+                d.id,
+                d.title,
+                d.content as description,
+                d.category,
+                d.upvotes,
+                d.is_answered,
+                d.created_at,
+                d.updated_at,
+                (SELECT COUNT(*) FROM discussion_comments WHERE discussion_id = d.id) as comments_count,
+                NULL as discussion_id,
+                NULL as discussion_title
+            FROM discussions d
+            WHERE d.user_id = :user_id
+            
+            UNION ALL
+            
+            -- Get user's comments
+            SELECT 
+                'comment' as type,
+                dc.id,
+                NULL as title,
+                dc.content as description,
+                d.category,
+                0 as upvotes,
+                dc.is_solution as is_answered,
+                dc.created_at,
+                dc.updated_at,
+                0 as comments_count,
+                d.id as discussion_id,
+                d.title as discussion_title
+            FROM discussion_comments dc
+            JOIN discussions d ON dc.discussion_id = d.id
+            WHERE dc.user_id = :user_id
+            
+            ORDER BY created_at DESC
+            LIMIT :limit
+        ";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':user_id', $userId, PDO::PARAM_STR);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log("Error getting user activity: " . $e->getMessage());
+            return [];
+        }
+    }
 }

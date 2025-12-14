@@ -419,11 +419,11 @@
           setTimeout(() => {
             const role = result.data.user.role;
             if (role === 'admin') {
-              window.location.href = '../../admin/dashboard.php';
+              window.location.href = '/admin-dashboard.php';
             } else if (role === 'technician') {
-              window.location.href = 'technician-dashboard.php';
+              window.location.href = '/technician-dashboard.php';
             } else {
-              window.location.href = '../user/user-dashboard.php';
+              window.location.href = '/user-dashboard.php';
             }
           }, 1000);
         } else {
@@ -459,11 +459,11 @@
           
           // Redirect based on role
           if (role === 'admin') {
-            window.location.href = '../../admin/dashboard.php';
+            window.location.href = '/admin-dashboard.php';
           } else if (role === 'technician') {
-            window.location.href = 'technician-dashboard.php';
+            window.location.href = '/technician-dashboard.php';
           } else {
-            window.location.href = '../user/user-dashboard.php';
+            window.location.href = '/user-dashboard.php';
           }
         }
       }).catch(() => {

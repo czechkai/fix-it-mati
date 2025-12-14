@@ -14,7 +14,7 @@
     (function() {
       const token = sessionStorage.getItem('auth_token');
       if (!token) {
-        window.location.replace('login.php');
+        window.location.replace('/login.php');
         // Stop execution
         throw new Error('Not authenticated');
       }
@@ -96,7 +96,7 @@
               </div>
               
               <div class="p-2 border-t border-slate-100">
-                <button id="logoutBtn" onclick="window.location.href='logout.php'" class="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                <button id="logoutBtn" class="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
                   <i data-lucide="log-out" class="w-4 h-4"></i>
                   <span>Logout</span>
                 </button>
@@ -326,8 +326,8 @@
           <!-- Actual Content (will be populated by JS) -->
           <div id="requestsContent" class="hidden"></div>
 
-          <div class="p-3 text-center border-t border-slate-100">
-            <button class="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline">View all requests</button>
+          <div id="seeMoreContainer" class="p-3 text-center border-t border-slate-100">
+            <button id="seeMoreBtn" class="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline">See more</button>
           </div>
         </div>
       </div>

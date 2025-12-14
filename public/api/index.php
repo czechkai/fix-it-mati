@@ -157,6 +157,9 @@ try {
     $router->get('/api/discussions', 'DiscussionController@index');
     $router->post('/api/discussions', 'DiscussionController@create');
     
+    // Get user's activity (discussions and comments)
+    $router->get('/api/discussions/my-activity', 'DiscussionController@myActivity');
+    
     // Get, update, delete specific discussion
     $router->get('/api/discussions/{id}', 'DiscussionController@show');
     $router->delete('/api/discussions/{id}', 'DiscussionController@delete');

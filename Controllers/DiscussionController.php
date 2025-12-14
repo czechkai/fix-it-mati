@@ -218,4 +218,22 @@ class DiscussionController
             return Response::error('Failed to delete discussion: ' . $e->getMessage(), 500);
         }
     }
+
+    /**
+     * Get user's recent activity (discussions and comments)
+     * GET /api/discussions/my-activity
+     */
+    public function myActivity(Request $request): Response
+    {
+        try {
+            $user = $request->user();
+            $limit = (int) $request->query('limit', 10);
+            
+            $activity = $this->discussionModel->getUserActivity($user['id'], $limit);
+            
+            return Response::success(['activity' => $activity]);
+        } catch (\Exception $e) {
+            return Response::error('Failed to fetch user activity: ' . $e->getMessage(), 500);
+        }
+    }
 }
