@@ -50,6 +50,13 @@ if (isset($pathMappings[$uri])) {
     }
 }
 
+// If not found in mappings, try checking public directory directly
+$publicFile = __DIR__ . '/public/' . $uri;
+if (file_exists($publicFile) && is_file($publicFile) && pathinfo($publicFile, PATHINFO_EXTENSION) === 'php') {
+    require $publicFile;
+    exit;
+}
+
 // Check if requesting a file in public/ directory structure
 if (strpos($uri, 'pages/') === 0 || strpos($uri, 'admin/') === 0) {
     $file = __DIR__ . '/public/' . $uri;

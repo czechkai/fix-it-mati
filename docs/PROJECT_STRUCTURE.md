@@ -167,13 +167,15 @@ php -S localhost:8000
 
 ## Assets Loading
 
-All assets (CSS/JS) remain in `public/assets/` and are accessible from any page using relative paths or absolute paths from root.
+All assets (CSS/JS) are located in the root `assets/` folder and are accessible from any page using absolute paths from root.
 
 Example:
 ```html
 <link rel="stylesheet" href="/assets/style.css">
 <script src="/assets/dashboard.js"></script>
 ```
+
+The router automatically serves files from root `assets/` when requested via `/assets/*` URLs.
 
 ## Notes
 
