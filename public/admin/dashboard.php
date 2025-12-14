@@ -11,11 +11,11 @@
   <!-- Check authentication and admin role -->
   <script>
     (function() {
-      const token = sessionStorage.getItem('auth_token');
-      const userData = sessionStorage.getItem('user_data');
+      const token = localStorage.getItem('auth_token');
+      const userData = localStorage.getItem('user');
       
       if (!token) {
-        window.location.replace('../pages/auth/login.php');
+        window.location.replace('/login.php');
         throw new Error('Not authenticated');
       }
       
@@ -25,7 +25,7 @@
           const user = JSON.parse(userData);
           if (user.role !== 'admin' && user.role !== 'staff') {
             alert('Access denied. Admin privileges required.');
-            window.location.replace('../pages/user/user-dashboard.php');
+            window.location.replace('/user-dashboard.php');
             throw new Error('Insufficient permissions');
           }
         } catch (e) {

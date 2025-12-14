@@ -28,8 +28,8 @@ const ApiClient = {
       ...options,
     };
 
-    // Add auth token if available (stored in sessionStorage)
-    const token = sessionStorage.getItem('auth_token');
+    // Add auth token if available (stored in localStorage for cross-tab consistency)
+    const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -393,8 +393,8 @@ const AuthAPI = {
     const result = await ApiClient.post('/auth/login', { email, password });
     // API returns {success: true, data: {user, token}, message}
     if (result.success && result.data && result.data.token) {
-      sessionStorage.setItem('auth_token', result.data.token);
-      sessionStorage.setItem('user', JSON.stringify(result.data.user));
+      localStorage.setItem('auth_token', result.data.token);
+      localStorage.setItem('user', JSON.stringify(result.data.user));
     }
     return result;
   },
@@ -408,8 +408,8 @@ const AuthAPI = {
     const result = await ApiClient.post('/auth/register', userData);
     // API returns {success: true, data: {user, token}, message}
     if (result.success && result.data && result.data.token) {
-      sessionStorage.setItem('auth_token', result.data.token);
-      sessionStorage.setItem('user', JSON.stringify(result.data.user));
+      localStorage.setItem('auth_token', result.data.token);
+      localStorage.setItem('user', JSON.stringify(result.data.user));
     }
     return result;
   },
@@ -427,10 +427,11 @@ const AuthAPI = {
     }
     
     // Clear client-side storage
-    sessionStorage.removeItem('auth_token');
-    sessionStorage.removeItem('user');
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
+    
+    // Notify other tabs about logout by setting a flag
+    localStorage.setItem('logout_event', Date.now().toString());
     
     // Redirect to login
     window.location.href = '/login.php';

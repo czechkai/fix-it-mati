@@ -405,14 +405,15 @@
         if (result.success) {
           showSuccess('Login successful! Redirecting to dashboard...');
           
-          // Store token in sessionStorage (used by API client)
-          sessionStorage.setItem('auth_token', result.data.token);
-          sessionStorage.setItem('user', JSON.stringify(result.data.user));
+          // Store token in localStorage (shared across tabs)
+          localStorage.setItem('auth_token', result.data.token);
+          localStorage.setItem('user', JSON.stringify(result.data.user));
           
+          // Set session duration based on "remember me"
           if (remember) {
-            // Also store in localStorage for "remember me" functionality
-            localStorage.setItem('auth_token', result.data.token);
-            localStorage.setItem('user', JSON.stringify(result.data.user));
+            localStorage.setItem('remember_me', 'true');
+          } else {
+            localStorage.setItem('remember_me', 'false');
           }
 
           // Redirect based on user role
@@ -437,19 +438,11 @@
       }
     });
 
-    // Check if already logged in - only auto-redirect for "remember me" from localStorage
-    const sessionToken = sessionStorage.getItem('auth_token');
-    const rememberToken = localStorage.getItem('auth_token');
+    // Check if already logged in and auto-redirect
+    const authToken = localStorage.getItem('auth_token');
     
-    // Only auto-redirect if coming from "remember me" (localStorage only, not sessionStorage)
-    // This prevents auto-redirect after logout while allowing "remember me" to work
-    if (!sessionToken && rememberToken) {
-      // Move remember me token to sessionStorage
-      sessionStorage.setItem('auth_token', rememberToken);
-      const user = localStorage.getItem('user');
-      if (user) {
-        sessionStorage.setItem('user', user);
-      }
+    // Auto-redirect if user is already authenticated
+    if (authToken) {
       
       // Verify token by calling /auth/me endpoint
       ApiClient.get('/auth/me').then(result => {
@@ -468,10 +461,9 @@
         }
       }).catch(() => {
         // Token invalid or expired, clear it
-        sessionStorage.removeItem('auth_token');
-        sessionStorage.removeItem('user');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
+        localStorage.removeItem('remember_me');
       });
     }
   </script>

@@ -829,8 +829,10 @@
         } catch (error) {
           console.error('Logout error:', error);
           // Fallback: clear storage and redirect manually
-          sessionStorage.clear();
-          localStorage.clear();
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('remember_me');
+          localStorage.setItem('logout_event', Date.now().toString());
           window.location.href = '/login.php';
         }
       }
@@ -905,7 +907,7 @@
   // Load data on page load
   if (window.location.pathname.includes('user-dashboard.php')) {
     // Check if authenticated before loading data
-    const token = sessionStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token');
     if (token) {
       loadDashboardData();
     } else {

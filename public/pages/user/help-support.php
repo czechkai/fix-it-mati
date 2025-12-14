@@ -7,18 +7,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Help Center - FixItMati</title>
-  <!-- Check authentication client-side -->
-  <script>
-    // Redirect to login if not authenticated - must happen IMMEDIATELY
-    (function() {
-      const token = sessionStorage.getItem('auth_token');
-      if (!token) {
-        window.location.replace('login.php');
-        // Stop execution
-        throw new Error('Not authenticated');
-      }
-    })();
-  </script>
+  <!-- Authentication check and cross-tab sync -->
+  <script src="/assets/auth-check.js"></script>
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons CDN -->
