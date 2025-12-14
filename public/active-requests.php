@@ -282,7 +282,7 @@ session_start();
     </div>
 
     <script src="/assets/api-client.js?v=7"></script>
-    <script src="/assets/dashboard.js"></script>
+    <script src="/assets/dashboard.js?v=20"></script>
     <script src="/assets/active-requests.js?v=12"></script>
     <script>lucide.createIcons();</script>
 </body>

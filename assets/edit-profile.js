@@ -108,10 +108,17 @@
       const profileImage = document.getElementById('profileImage');
       const placeholder = document.getElementById('profileImagePlaceholder');
       if (profileImage && placeholder) {
-        // If it's a path, prepend with base URL, otherwise use as-is
-        const imageSrc = user.profile_image.startsWith('data:') 
-          ? user.profile_image 
-          : '/' + user.profile_image.replace(/\\/g, '/');
+        // If it's a data URL, use as-is, otherwise construct API path
+        let imageSrc;
+        if (user.profile_image.startsWith('data:')) {
+          imageSrc = user.profile_image;
+        } else {
+          // Extract just the filename if full path is provided
+          const filename = user.profile_image.includes('/') || user.profile_image.includes('\\\\')
+            ? user.profile_image.split(/[\\/]/).pop()
+            : user.profile_image;
+          imageSrc = '/api/uploads/profiles/' + filename;
+        }
         profileImage.src = imageSrc;
         profileImage.classList.remove('hidden');
         placeholder.classList.add('hidden');

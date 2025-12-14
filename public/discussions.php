@@ -291,7 +291,7 @@
   <!-- API Client -->
   <script src="/assets/api-client.js"></script>
   <!-- Dashboard JS -->
-  <script src="/assets/dashboard.js"></script>
+  <script src="/assets/dashboard.js?v=20"></script>
   <!-- Discussions JS -->
   <script src="/assets/discussions.js"></script>
 </body>

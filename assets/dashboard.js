@@ -577,6 +577,91 @@
     return date.toLocaleDateString();
   }
 
+  // Function to load profile display - called on every page
+  function loadProfileDisplay() {
+    console.log('[Profile Display] Function called');
+    const user = sessionStorage.getItem('user');
+    if (!user) {
+      console.log('[Profile Display] No user in sessionStorage');
+      return;
+    }
+
+    try {
+      const userData = JSON.parse(user);
+      console.log('[Profile Display] User data:', userData);
+      console.log('[Profile Display] Profile image:', userData.profile_image);
+      
+      const profileName = document.getElementById('profileName');
+      const profileEmail = document.getElementById('profileEmail');
+      const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+      const profileBtn = document.getElementById('profileBtn');
+      
+      console.log('[Profile Display] Elements found:', {
+        profileName: !!profileName,
+        profileEmail: !!profileEmail,
+        profileAvatarLarge: !!profileAvatarLarge,
+        profileBtn: !!profileBtn
+      });
+      
+      // Build display name
+      const firstName = (userData.first_name || '').trim();
+      const lastName = (userData.last_name || '').trim();
+      let displayName = `${firstName} ${lastName}`.trim();
+      
+      if (!displayName && userData.email) {
+        // Format email username
+        const username = userData.email.split('@')[0];
+        displayName = username.replace(/[._-]/g, ' ').split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
+      }
+      
+      if (profileName) profileName.textContent = displayName || userData.email;
+      if (profileEmail) profileEmail.textContent = userData.email;
+      
+      // Handle profile image or initials
+      if (userData.profile_image) {
+        console.log('[Profile Display] Has profile image, processing...');
+        // Display profile image - handle both file paths and base64
+        let imageSrc;
+        if (userData.profile_image.startsWith('data:')) {
+          imageSrc = userData.profile_image;
+          console.log('[Profile Display] Using base64 image');
+        } else {
+          // Extract just the filename if full path is provided
+          const filename = userData.profile_image.includes('/') || userData.profile_image.includes('\\')
+            ? userData.profile_image.split(/[\\/]/).pop()
+            : userData.profile_image;
+          imageSrc = '/api/uploads/profiles/' + filename;
+          console.log('[Profile Display] Image URL:', imageSrc);
+        }
+        
+        if (profileAvatarLarge) {
+          profileAvatarLarge.innerHTML = `<img src="${imageSrc}" class="w-full h-full object-cover rounded-full" alt="Profile" />`;
+          console.log('[Profile Display] Updated profileAvatarLarge');
+        }
+        if (profileBtn) {
+          profileBtn.innerHTML = `<img src="${imageSrc}" class="w-full h-full object-cover rounded-full" alt="Profile" />`;
+          console.log('[Profile Display] Updated profileBtn');
+        }
+      } else {
+        console.log('[Profile Display] No profile image, using initials');
+        // Display initials
+        const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        if (profileAvatarLarge) profileAvatarLarge.textContent = initials;
+        if (profileBtn) profileBtn.textContent = initials;
+        console.log('[Profile Display] Set initials:', initials);
+      }
+      console.log('[Profile Display] Completed successfully');
+    } catch (error) {
+      console.error('[Profile Display] Error:', error);
+    }
+  }
+
+  // Call profile loader immediately
+  console.log('[Dashboard.js] Calling loadProfileDisplay immediately');
+  loadProfileDisplay();
+
   // Profile dropdown functionality
   const profileBtn = document.getElementById('profileBtn');
   const profileDropdown = document.getElementById('profileDropdown');
@@ -600,56 +685,6 @@
         profileDropdown.classList.add('hidden');
       }
     });
-
-    // Load user info into profile
-    const user = sessionStorage.getItem('user');
-    if (user) {
-      try {
-        const userData = JSON.parse(user);
-        const profileName = document.getElementById('profileName');
-        const profileEmail = document.getElementById('profileEmail');
-        const profileAvatarLarge = document.getElementById('profileAvatarLarge');
-        const profileBtn = document.getElementById('profileBtn');
-        
-        // Build display name
-        const firstName = (userData.first_name || '').trim();
-        const lastName = (userData.last_name || '').trim();
-        let displayName = `${firstName} ${lastName}`.trim();
-        
-        if (!displayName && userData.email) {
-          // Format email username
-          const username = userData.email.split('@')[0];
-          displayName = username.replace(/[._-]/g, ' ').split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(' ');
-        }
-        
-        if (profileName) profileName.textContent = displayName || userData.email;
-        if (profileEmail) profileEmail.textContent = userData.email;
-        
-        // Handle profile image or initials
-        if (userData.profile_image) {
-          // Display profile image - handle both file paths and base64
-          const imageSrc = userData.profile_image.startsWith('data:') 
-            ? userData.profile_image 
-            : '/' + userData.profile_image.replace(/\\/g, '/');
-          
-          if (profileAvatarLarge) {
-            profileAvatarLarge.innerHTML = `<img src="${imageSrc}" class="w-full h-full object-cover rounded-full" alt="Profile" />`;
-          }
-          if (profileBtn) {
-            profileBtn.innerHTML = `<img src="${imageSrc}" class="w-full h-full object-cover rounded-full" alt="Profile" />`;
-          }
-        } else {
-          // Display initials
-          const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-          if (profileAvatarLarge) profileAvatarLarge.textContent = initials;
-          if (profileBtn) profileBtn.textContent = initials;
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-      }
-    }
   }
 
   // Logout functionality

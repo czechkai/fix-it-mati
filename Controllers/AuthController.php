@@ -223,16 +223,42 @@ class AuthController {
             $updateData['last_name'] = $data['last_name'];
         }
         
+        // Handle direct profile image fix (for database update without file upload)
+        if (isset($data['fix_profile_image']) && !empty($data['fix_profile_image'])) {
+            $filename = $data['fix_profile_image'];
+            
+            // Verify file exists
+            $uploadDir = __DIR__ . '/../uploads/profiles';
+            $filePath = $uploadDir . '/' . $filename;
+            
+            if (file_exists($filePath) && is_file($filePath)) {
+                $updateData['profile_image'] = $filename;
+            } else {
+                return Response::validationError('Profile image file not found: ' . $filename);
+            }
+        }
         // Handle profile image upload
-        if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
+        else if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['profile_image'];
             
-            // Validate file type using finfo
+            // Validate file type using multiple methods
             $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            $finfo = new \finfo(FILEINFO_MIME_TYPE);
-            $fileType = $finfo->file($file['tmp_name']);
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
             
-            if (!in_array($fileType, $allowedTypes)) {
+            // Get file extension
+            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($extension, $allowedExtensions)) {
+                return Response::validationError('Invalid file extension. Only JPG, PNG, GIF, and WebP are allowed.');
+            }
+            
+            // Validate MIME type using getimagesize (more reliable and doesn't require finfo)
+            $imageInfo = @getimagesize($file['tmp_name']);
+            if ($imageInfo === false) {
+                return Response::validationError('Invalid image file. Please upload a valid image.');
+            }
+            
+            $detectedMimeType = $imageInfo['mime'];
+            if (!in_array($detectedMimeType, $allowedTypes)) {
                 return Response::validationError('Invalid image file type. Only JPEG, PNG, GIF, and WebP are allowed.');
             }
             
@@ -241,8 +267,8 @@ class AuthController {
                 return Response::validationError('Image size must be less than 5MB');
             }
             
-            // Create uploads directory if it doesn't exist
-            $uploadDir = __DIR__ . '/../public/uploads/profiles';
+            // Create uploads directory outside public folder
+            $uploadDir = __DIR__ . '/../uploads/profiles';
             if (!\is_dir($uploadDir)) {
                 \mkdir($uploadDir, 0755, true);
             }
@@ -256,14 +282,21 @@ class AuthController {
             if (\move_uploaded_file($file['tmp_name'], $uploadPath)) {
                 // Delete old profile image if exists
                 if (!empty($user['profile_image'])) {
-                    $oldImagePath = __DIR__ . '/../public/' . $user['profile_image'];
-                    if (\file_exists($oldImagePath) && \is_file($oldImagePath)) {
-                        \unlink($oldImagePath);
+                    // Try both old (public) and new (uploads) locations
+                    $oldPaths = [
+                        __DIR__ . '/../uploads/profiles/' . basename($user['profile_image']),
+                        __DIR__ . '/../public/' . $user['profile_image']
+                    ];
+                    foreach ($oldPaths as $oldImagePath) {
+                        if (\file_exists($oldImagePath) && \is_file($oldImagePath)) {
+                            \unlink($oldImagePath);
+                            break;
+                        }
                     }
                 }
                 
-                // Store relative path in database
-                $updateData['profile_image'] = 'uploads/profiles/' . $filename;
+                // Store just the filename in database (path will be handled by the API)
+                $updateData['profile_image'] = $filename;
             } else {
                 error_log("Failed to move uploaded file to: " . $uploadPath);
                 return Response::error('Failed to upload profile image');

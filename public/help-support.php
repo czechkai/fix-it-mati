@@ -264,7 +264,7 @@
   <!-- API Client -->
   <script src="/assets/api-client.js"></script>
   <!-- Dashboard JS -->
-  <script src="/assets/dashboard.js"></script>
+  <script src="/assets/dashboard.js?v=20"></script>
   <!-- Help Support JS -->
   <script src="/assets/help-support.js"></script>
 </body>

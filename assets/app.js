@@ -4,6 +4,72 @@
   const mobileDrawer = document.getElementById('mobileDrawer');
   const tabsNav = document.getElementById('tabsNav');
 
+  // Load profile image/initials on every page
+  function loadProfileDisplay() {
+    const user = sessionStorage.getItem('user');
+    if (!user) return;
+
+    try {
+      const userData = JSON.parse(user);
+      const profileName = document.getElementById('profileName');
+      const profileEmail = document.getElementById('profileEmail');
+      const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+      const profileBtn = document.getElementById('profileBtn');
+      
+      // Build display name
+      const firstName = (userData.first_name || '').trim();
+      const lastName = (userData.last_name || '').trim();
+      let displayName = `${firstName} ${lastName}`.trim();
+      
+      if (!displayName && userData.email) {
+        // Format email username
+        const username = userData.email.split('@')[0];
+        displayName = username.replace(/[._-]/g, ' ').split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
+      }
+      
+      if (profileName) profileName.textContent = displayName || userData.email;
+      if (profileEmail) profileEmail.textContent = userData.email;
+      
+      // Handle profile image or initials
+      if (userData.profile_image) {
+        // Display profile image - handle both file paths and base64
+        let imageSrc;
+        if (userData.profile_image.startsWith('data:')) {
+          imageSrc = userData.profile_image;
+        } else {
+          // Extract just the filename if full path is provided
+          const filename = userData.profile_image.includes('/') || userData.profile_image.includes('\\')
+            ? userData.profile_image.split(/[\\/]/).pop()
+            : userData.profile_image;
+          imageSrc = '/api/uploads/profiles/' + filename;
+        }
+        
+        if (profileAvatarLarge) {
+          profileAvatarLarge.innerHTML = `<img src="${imageSrc}" class="w-full h-full object-cover rounded-full" alt="Profile" />`;
+        }
+        if (profileBtn) {
+          profileBtn.innerHTML = `<img src="${imageSrc}" class="w-full h-full object-cover rounded-full" alt="Profile" />`;
+        }
+      } else {
+        // Display initials
+        const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        if (profileAvatarLarge) profileAvatarLarge.textContent = initials;
+        if (profileBtn) profileBtn.textContent = initials;
+      }
+    } catch (error) {
+      console.error('Error loading profile display:', error);
+    }
+  }
+
+  // Run profile loader when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadProfileDisplay);
+  } else {
+    loadProfileDisplay();
+  }
+
   function openDrawer(){
     if (!mobileDrawer) return;
     mobileDrawer.classList.remove('hidden');

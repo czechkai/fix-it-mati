@@ -53,15 +53,17 @@ class Announcement
     }
 
     /**
-     * Get all published announcements
+     * Get all published announcements (admin only)
      */
     public function getPublished(int $limit = 50): array
     {
         $sql = "SELECT a.*, 
-                       u.full_name as author_name
+                       CONCAT(u.first_name, ' ', u.last_name) as author_name,
+                       u.role as author_role
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 WHERE a.status = 'published'
+                AND u.role = 'admin'
                 ORDER BY a.created_at DESC
                 LIMIT :limit";
 
@@ -82,7 +84,7 @@ class Announcement
     public function getAll(int $limit = 100): array
     {
         $sql = "SELECT a.*, 
-                       u.full_name as author_name
+                       CONCAT(u.first_name, ' ', u.last_name) as author_name
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 ORDER BY a.created_at DESC
@@ -105,7 +107,7 @@ class Announcement
     public function find(string $id): ?array
     {
         $sql = "SELECT a.*, 
-                       u.full_name as author_name,
+                       CONCAT(u.first_name, ' ', u.last_name) as author_name,
                        u.email as author_email
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
@@ -122,16 +124,18 @@ class Announcement
     }
 
     /**
-     * Get announcements by category
+     * Get announcements by category (admin only)
      */
     public function getByCategory(string $category, string $status = 'published'): array
     {
         $sql = "SELECT a.*, 
-                       u.full_name as author_name
+                       CONCAT(u.first_name, ' ', u.last_name) as author_name,
+                       u.role as author_role
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 WHERE a.category = :category 
                 AND a.status = :status
+                AND u.role = 'admin'
                 ORDER BY a.created_at DESC";
 
         try {
@@ -229,7 +233,7 @@ class Announcement
     public function getComments(string $announcementId): array
     {
         $sql = "SELECT ac.*, 
-                       u.full_name as user_name
+                       CONCAT(u.first_name, ' ', u.last_name) as user_name
                 FROM announcement_comments ac
                 LEFT JOIN users u ON ac.user_id = u.id
                 WHERE ac.announcement_id = :announcement_id
@@ -269,15 +273,17 @@ class Announcement
     }
 
     /**
-     * Get active announcements (published and within date range)
+     * Get active announcements (published and within date range, admin only)
      */
     public function getActive(): array
     {
         $sql = "SELECT a.*, 
-                       u.full_name as author_name
+                       CONCAT(u.first_name, ' ', u.last_name) as author_name,
+                       u.role as author_role
                 FROM announcements a
                 LEFT JOIN users u ON a.created_by = u.id
                 WHERE a.status = 'published'
+                AND u.role = 'admin'
                 AND (a.start_date IS NULL OR a.start_date <= NOW())
                 AND (a.end_date IS NULL OR a.end_date >= NOW())
                 ORDER BY 
@@ -296,6 +302,44 @@ class Announcement
         } catch (\PDOException $e) {
             error_log("Error fetching active announcements: " . $e->getMessage());
             return [];
+        }
+    }
+
+    /**
+     * Get discussion ID linked to announcement
+     */
+    public function getDiscussionId(string $announcementId): ?string
+    {
+        $sql = "SELECT discussion_id FROM announcements WHERE id = :id";
+        
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(['id' => $announcementId]);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $result ? $result['discussion_id'] : null;
+        } catch (\PDOException $e) {
+            error_log("Error getting discussion ID: " . $e->getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Link announcement to discussion
+     */
+    public function linkToDiscussion(string $announcementId, string $discussionId): bool
+    {
+        $sql = "UPDATE announcements SET discussion_id = :discussion_id WHERE id = :id";
+        
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'discussion_id' => $discussionId,
+                'id' => $announcementId
+            ]);
+            return true;
+        } catch (\PDOException $e) {
+            error_log("Error linking to discussion: " . $e->getMessage());
+            return false;
         }
     }
 

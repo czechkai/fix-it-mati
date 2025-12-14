@@ -324,7 +324,7 @@
   <!-- API Client -->
   <script src="/assets/api-client.js"></script>
   <!-- Dashboard JS -->
-  <script src="/assets/dashboard.js"></script>
+  <script src="/assets/dashboard.js?v=20"></script>
   <!-- Edit Profile JS -->
   <script src="/assets/edit-profile.js"></script>
 </body>

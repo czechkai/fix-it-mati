@@ -69,6 +69,39 @@ try {
         ]);
     });
     
+    // Serve uploaded profile images (public access)
+    $router->get('/api/uploads/profiles/{filename}', function(Request $req, $params) {
+        $filename = $params['filename'] ?? '';
+        
+        // Sanitize filename to prevent directory traversal
+        $filename = basename($filename);
+        
+        // Construct the file path
+        $filePath = __DIR__ . '/../../uploads/profiles/' . $filename;
+        
+        // Check if file exists
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            http_response_code(404);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Image not found']);
+            exit;
+        }
+        
+        // Get MIME type using getimagesize (doesn't require finfo extension)
+        $imageInfo = @getimagesize($filePath);
+        $mimeType = $imageInfo ? $imageInfo['mime'] : 'application/octet-stream';
+        
+        // Set appropriate headers
+        header('Content-Type: ' . $mimeType);
+        header('Content-Length: ' . filesize($filePath));
+        header('Cache-Control: public, max-age=31536000'); // Cache for 1 year
+        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
+        
+        // Output the file
+        readfile($filePath);
+        exit;
+    });
+    
     // Public announcements (no auth required)
     $router->get('/api/announcements', 'AnnouncementController@getPublished');
     $router->get('/api/announcements/active', 'AnnouncementController@getActive');

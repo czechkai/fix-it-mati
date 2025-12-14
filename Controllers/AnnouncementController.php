@@ -310,6 +310,7 @@ class AnnouncementController
 
     /**
      * Add comment to announcement
+     * This creates a discussion post with the announcement and adds the user's comment
      */
     public function addComment(Request $request): Response
     {
@@ -322,33 +323,119 @@ class AnnouncementController
             ], 401);
         }
 
-        $announcementId = $request->param('announcement_id');
-        $comment = $request->param('comment');
+        $announcementId = $request->input('announcement_id');
+        $comment = $request->input('comment');
 
         if (!$announcementId || !$comment) {
+            // Log for debugging
+            error_log("Missing parameters - announcement_id: " . ($announcementId ?? 'null') . ", comment: " . ($comment ?? 'null'));
+            error_log("Request body: " . json_encode($request->all()));
+            
             return Response::json([
                 'success' => false,
-                'message' => 'Announcement ID and comment are required'
+                'message' => 'Announcement ID and comment are required',
+                'debug' => [
+                    'received' => [
+                        'announcement_id' => $announcementId,
+                        'comment' => $comment
+                    ]
+                ]
             ], 400);
         }
 
         try {
-            $result = $this->model->addComment($announcementId, $user['id'], $comment);
+            // Get the announcement
+            $announcement = $this->model->find($announcementId);
+            
+            if (!$announcement) {
+                return Response::json([
+                    'success' => false,
+                    'message' => 'Announcement not found'
+                ], 404);
+            }
 
-            if (!$result) {
+            // Check if discussion already exists for this announcement
+            $discussionModel = new \FixItMati\Models\Discussion();
+            $existingDiscussionId = $this->model->getDiscussionId($announcementId);
+            
+            if ($existingDiscussionId) {
+                // Add comment to existing discussion
+                $commentModel = new \FixItMati\Models\Discussion();
+                $commentResult = $commentModel->addComment([
+                    'discussion_id' => $existingDiscussionId,
+                    'user_id' => $user['id'],
+                    'content' => $comment
+                ]);
+                
+                if (!$commentResult) {
+                    throw new \Exception("Failed to add comment to discussion");
+                }
+                
+                return Response::json([
+                    'success' => true,
+                    'message' => 'Comment added to discussion',
+                    'data' => [
+                        'discussion_id' => $existingDiscussionId,
+                        'comment' => $commentResult
+                    ]
+                ], 201);
+            }
+            
+            // Map announcement category to discussion category
+            $categoryMap = [
+                'water' => 'Water Supply',
+                'water supply' => 'Water Supply',
+                'electricity' => 'Electricity',
+                'electric' => 'Electricity',
+                'billing' => 'Billing',
+                'general' => 'General'
+            ];
+            
+            $announcementCategory = strtolower($announcement['category']);
+            $discussionCategory = $categoryMap[$announcementCategory] ?? 'General';
+            
+            // Create new discussion from announcement with clean formatting
+            $discussionData = [
+                'user_id' => $user['id'],
+                'category' => $discussionCategory,
+                'title' => $announcement['title'],
+                'content' => $announcement['content'] . "\n\n---\n\n📢 *This discussion was started from an official announcement*"
+            ];
+            
+            $discussion = $discussionModel->create($discussionData);
+            
+            if (!$discussion) {
+                throw new \Exception("Failed to create discussion");
+            }
+            
+            // Link announcement to discussion
+            $this->model->linkToDiscussion($announcementId, $discussion['id']);
+            
+            // Add user's comment
+            $commentResult = $discussionModel->addComment([
+                'discussion_id' => $discussion['id'],
+                'user_id' => $user['id'],
+                'content' => $comment
+            ]);
+            
+            if (!$commentResult) {
                 throw new \Exception("Failed to add comment");
             }
 
             return Response::json([
                 'success' => true,
-                'message' => 'Comment added successfully',
-                'data' => $result
+                'message' => 'Discussion created with your comment',
+                'data' => [
+                    'discussion_id' => $discussion['id'],
+                    'discussion' => $discussion,
+                    'comment' => $commentResult
+                ]
             ], 201);
         } catch (\Exception $e) {
-            error_log("Error adding comment: " . $e->getMessage());
+            error_log("Error adding comment to announcement: " . $e->getMessage());
             return Response::json([
                 'success' => false,
-                'message' => 'Failed to add comment'
+                'message' => 'Failed to add comment: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -348,22 +348,35 @@ header {
     border: 1px solid #e2e8f0;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     overflow: hidden;
-    transition: all 0.3s;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    position: relative;
 }
 
 .announcement-card:hover {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+}
+
+.announcement-card:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
 .announcement-card.pinned {
-    border-color: #bfdbfe;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    ring: 1px solid #dbeafe;
+    border-color: #fca5a5;
+    background: linear-gradient(to bottom, #fef2f2, white);
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15);
+}
+
+.announcement-card.pinned:hover {
+    box-shadow: 0 8px 16px -4px rgba(239, 68, 68, 0.25);
+    border-color: #f87171;
 }
 
 .announcement-header {
     padding: 1.25rem;
-    cursor: pointer;
 }
 
 .announcement-header-content {
@@ -424,10 +437,11 @@ header {
     gap: 0.25rem;
     font-size: 0.625rem;
     font-weight: bold;
-    color: #64748b;
-    background-color: #f1f5f9;
+    color: #dc2626;
+    background-color: #fee2e2;
     padding: 0.125rem 0.5rem;
     border-radius: 9999px;
+    border: 1px solid #fecaca;
 }
 
 .time-badge {
@@ -441,9 +455,15 @@ header {
 
 .announcement-title {
     font-size: 1.125rem;
-    font-weight: bold;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+    transition: color 0.2s;
+}
+
+.announcement-card:hover .announcement-title {
+    color: #3b82f6;
 }
 
 .announcement-meta {
@@ -453,6 +473,18 @@ header {
     font-size: 0.75rem;
     color: #64748b;
     margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.announcement-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.meta-author {
+    font-weight: 500;
+    color: #475569;
 }
 
 .announcement-author {
@@ -463,6 +495,29 @@ header {
     color: #374151;
 }
 
+.expand-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.expand-btn:hover {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.expand-btn.expanded {
+    transform: rotate(180deg);
+    color: #3b82f6;
+}
+
 .chevron-icon {
     color: #cbd5e1;
     margin-top: 0.25rem;
@@ -470,7 +525,27 @@ header {
 
 /* Expanded Content */
 .announcement-body {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 1.25rem;
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+}
+
+.announcement-body.expanded {
+    max-height: 1000px;
     padding: 0 1.25rem 1.25rem;
+    transition: max-height 0.5s ease-in, padding 0.3s ease-in;
+}
+
+.announcement-text {
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: #475569;
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 0.5rem;
+    border-left: 3px solid #3b82f6;
 }
 
 .announcement-content-wrapper {
@@ -520,6 +595,53 @@ header {
 .discussion-info-text strong {
     font-weight: bold;
     color: #374151;
+}
+
+.announcement-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    background-color: white;
+}
+
+.action-btn.primary {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.action-btn.primary:hover {
+    background-color: #2563eb;
+    box-shadow: 0 4px 8px -2px rgba(59, 130, 246, 0.3);
+}
+
+.action-btn.secondary {
+    background-color: white;
+    color: #64748b;
+    border-color: #e2e8f0;
+}
+
+.action-btn.secondary:hover {
+    background-color: #f8fafc;
+    color: #3b82f6;
+    border-color: #bfdbfe;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
 .discuss-btn {
@@ -635,6 +757,59 @@ header {
     color: #64748b;
     text-transform: uppercase;
     margin-bottom: 0.25rem;
+}
+
+/* Comment Form Section */
+.comment-form-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.comment-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: #eff6ff;
+    border: 1px solid #dbeafe;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    color: #1e40af;
+}
+
+.comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.comment-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    resize: vertical;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.comment-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.comment-textarea::placeholder {
+    color: #94a3b8;
+}
+
+.comment-form-actions {
+    display: flex;
+    gap: 0.75rem;
 }
 
 .modal-reference {
