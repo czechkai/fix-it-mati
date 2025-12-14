@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Registration page for FixItMati
 session_start();
 
@@ -499,7 +499,7 @@ if (isset($_SESSION['user_id'])) {
       <div class="mt-4 text-center">
         <p class="text-xs text-slate-600">
           Already have an account?
-          <a href="login.php" class="font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+          <a href="/login.php" class="font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
             Sign In
           </a>
         </p>
@@ -732,7 +732,7 @@ if (isset($_SESSION['user_id'])) {
           
           // Redirect to login after 2 seconds
           setTimeout(() => {
-            window.location.href = 'login.php';
+            window.location.href = '/';
           }, 2000);
         } else {
           showError(result.message || 'Registration failed. Please try again.');
@@ -771,7 +771,7 @@ if (isset($_SESSION['user_id'])) {
     const token = sessionStorage.getItem('auth_token');
     if (token) {
       // User is already logged in, redirect to dashboard
-      window.location.href = 'user-dashboard.php';
+      window.location.href = '/';
     }
 
     // Phone number formatting

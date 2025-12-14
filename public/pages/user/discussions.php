@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Community Discussions Page for FixItMati
 ?>
 <!DOCTYPE html>
@@ -27,7 +27,7 @@
           <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-md text-slate-500 hover:bg-slate-100" aria-label="Toggle Menu">
             <i data-lucide="menu" class="w-6 h-6"></i>
           </button>
-          <a href="user-dashboard.php" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+          <a href="/user-dashboard.php" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
             <div class="bg-blue-600 p-1.5 rounded-lg">
               <i data-lucide="hammer" class="text-white w-5 h-5"></i>
             </div>
@@ -36,7 +36,7 @@
         </div>
         <!-- Right Actions -->
         <div class="flex items-center gap-3">
-          <a href="user-dashboard.php" class="p-2 text-slate-500 hover:bg-slate-100 rounded-full cursor-pointer transition-colors" title="Go to Dashboard">
+          <a href="/user-dashboard.php" class="p-2 text-slate-500 hover:bg-slate-100 rounded-full cursor-pointer transition-colors" title="Go to Dashboard">
             <i data-lucide="home" class="w-5 h-5"></i>
           </a>
           <div class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full cursor-pointer" id="notificationBtn">
@@ -96,7 +96,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-2">
-          <a href="user-dashboard.php" class="text-slate-500 hover:text-blue-600 transition-colors">
+          <a href="/user-dashboard.php" class="text-slate-500 hover:text-blue-600 transition-colors">
             <i data-lucide="arrow-left" class="w-5 h-5"></i>
           </a>
           <div>

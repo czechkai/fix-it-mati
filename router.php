@@ -2,14 +2,18 @@
 /**
  * Root Router for PHP Built-in Server
  * Allows running: php -S localhost:8000 router.php
+ * Also works with Apache when .htaccess is not available
  */
 
 // Get the requested URI
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = ltrim($uri, '/');
 
+// Remove any query strings
+$uri = strtok($uri, '?');
+
 // If it's an API request, route to public/api/index.php
-if (strpos($uri, 'api/') === 0) {
+if (strpos($uri, 'api/') === 0 || strpos($uri, 'api') === 0) {
     $_SERVER['SCRIPT_NAME'] = '/public/api/index.php';
     require __DIR__ . '/public/api/index.php';
     exit;
@@ -53,10 +57,31 @@ if (isset($pathMappings[$uri])) {
     }
 }
 
+// Check if requesting with public/ prefix (strip it and try mapping)
+if (strpos($uri, 'public/') === 0) {
+    $strippedUri = substr($uri, 7); // Remove 'public/'
+    
+    // Try to map the stripped URI
+    if (isset($pathMappings[$strippedUri])) {
+        $file = __DIR__ . '/' . $pathMappings[$strippedUri];
+        if (file_exists($file) && is_file($file)) {
+            require $file;
+            exit;
+        }
+    }
+    
+    // Try direct access to public path
+    $file = __DIR__ . '/' . $uri;
+    if (file_exists($file) && is_file($file)) {
+        require $file;
+        exit;
+    }
+}
+
 // Check if requesting a file in public/ directory structure
 if (strpos($uri, 'pages/') === 0 || strpos($uri, 'admin/') === 0) {
     $file = __DIR__ . '/public/' . $uri;
-    if (file_exists($file)) {
+    if (file_exists($file) && is_file($file)) {
         require $file;
         exit;
     }
@@ -96,6 +121,30 @@ if (strpos($uri, 'assets/') === 0) {
 // If empty URI or root, redirect to login
 if (empty($uri) || $uri === 'index.php') {
     header('Location: /login.php');
+    exit;
+}
+
+// If still not found and it's a .php file, return 404
+if (!empty($uri) && substr($uri, -4) === '.php') {
+    http_response_code(404);
+    echo "<!DOCTYPE html>
+<html>
+<head>
+    <title>404 - Page Not Found</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        h1 { color: #e74c3c; }
+        p { color: #7f8c8d; }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>404 - Page Not Found</h1>
+    <p>The requested page '{$uri}' was not found on this server.</p>
+    <p><a href='/login.php'>Return to Login</a></p>
+</body>
+</html>";
     exit;
 }
 

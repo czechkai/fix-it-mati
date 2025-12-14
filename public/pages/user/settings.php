@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Account Settings Page
 // User preferences, notifications, security settings with real-time database integration
 ?>
@@ -198,11 +198,11 @@
 
     // Navigation buttons
     document.getElementById('serviceAddressesBtn')?.addEventListener('click', () => {
-      window.location.href = 'service-addresses.php';
+      window.location.href = '/';
     });
     
     document.getElementById('linkedMetersBtn')?.addEventListener('click', () => {
-      window.location.href = 'linked-meters.php';
+      window.location.href = '/';
     });
 
     // Load profile data

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -89,7 +89,7 @@
             <div class="flex items-center justify-between">
                 <nav class="flex -mb-px items-center space-x-8">
                     <div class="flex items-center gap-2 py-4 border-b-2 border-blue-600">
-                        <a href="user-dashboard.php" class="text-slate-500 hover:text-blue-600 transition-colors" title="Back to Dashboard">
+                        <a href="/user-dashboard.php" class="text-slate-500 hover:text-blue-600 transition-colors" title="Back to Dashboard">
                             <i data-lucide="arrow-left" class="w-4 h-4"></i>
                         </a>
                         <h1 class="text-lg font-bold text-slate-800">Create Service Request</h1>
@@ -209,7 +209,7 @@
                 <div class="flex gap-3 pt-4 border-t border-slate-200">
                     <button 
                         type="button" 
-                        onclick="window.location.href='user-dashboard.php'"
+                        onclick="window.location.href='/'"
                         class="flex-1 px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors"
                     >
                         Cancel
@@ -239,7 +239,7 @@
                     <p class="text-sm text-slate-500 mb-6">Reference: <span id="requestRef" class="font-mono font-semibold"></span></p>
                     <div class="flex gap-3">
                         <button 
-                            onclick="window.location.href='user-dashboard.php'" 
+                            onclick="window.location.href='/'" 
                             class="flex-1 px-4 py-2 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50"
                         >
                             Go to Dashboard
@@ -328,7 +328,7 @@
         }
 
         function viewRequest() {
-            window.location.href = 'active-requests.php';
+            window.location.href = '/';
         }
     </script>
 
@@ -358,10 +358,10 @@
                 <button class="text-slate-500" data-close><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <nav class="flex-1 p-4 space-y-1">
-                <a href="user-dashboard.php" class="block px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">Dashboard</a>
-                <a href="active-requests.php" class="block px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">My Requests</a>
-                <a href="announcements.php" class="block px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">Announcements</a>
-                <a href="payments.php" class="block px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">Payments</a>
+                <a href="/user-dashboard.php" class="block px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">Dashboard</a>
+                <a href="/active-requests.php" class="block px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">My Requests</a>
+                <a href="/announcements.php" class="block px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">Announcements</a>
+                <a href="/payments.php" class="block px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">Payments</a>
                 <a href="#" class="block px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 rounded-md">Help Center</a>
             </nav>
         </div>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Login page for FixItMati
 // Don't start session or check login status - let JavaScript handle it
 ?>
@@ -201,7 +201,7 @@
               Password
               <span class="text-red-500">*</span>
             </label>
-            <a href="forgot-password.php" class="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">Forgot password?</a>
+            <a href="/forgot-password.php" class="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">Forgot password?</a>
           </div>
           <div class="relative group">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -273,7 +273,7 @@
       <div class="mt-6 text-center">
         <p class="text-xs text-slate-600">
           Don't have an account?
-          <a href="register.php" class="font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+          <a href="/register.php" class="font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
             Register as a New User
           </a>
         </p>

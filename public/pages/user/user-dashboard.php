@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Simple PHP template for FixItMati Dashboard
 // Splits markup, CSS, and JS for a standard web hosting environment
 ?>
@@ -119,7 +119,7 @@
             <i data-lucide="credit-card" class="w-4 h-4"></i> Payments
           </button>
         </nav>
-        <a href="create-request.php" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors my-2">
+        <a href="/create-request.php" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors my-2">
           <i data-lucide="plus" class="w-4 h-4"></i>
           New Request
         </a>
@@ -130,7 +130,7 @@
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- HERO CARDS -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <a href="active-requests.php" class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
+      <a href="/active-requests.php" class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
           <i data-lucide="clock" class="w-16 h-16"></i>
         </div>
@@ -144,7 +144,7 @@
         </div>
       </a>
 
-      <a href="payments.php" class="bg-gradient-to-br from-sky-400 to-blue-500 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
+      <a href="/payments.php" class="bg-gradient-to-br from-sky-400 to-blue-500 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
           <i data-lucide="credit-card" class="w-16 h-16"></i>
         </div>
@@ -158,7 +158,7 @@
         </div>
       </a>
 
-      <a href="announcements.php" class="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
+      <a href="/announcements.php" class="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
           <i data-lucide="megaphone" class="w-16 h-16"></i>
         </div>
@@ -172,7 +172,7 @@
         </div>
       </a>
 
-      <a href="service-history.php" class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
+      <a href="/service-history.php" class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-5 shadow-sm text-white relative overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
           <i data-lucide="check-circle-2" class="w-16 h-16"></i>
         </div>
@@ -208,11 +208,11 @@
 
           <div class="pt-8">
             <h3 class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">My Account</h3>
-            <a href="payment-history.php" class="group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:bg-slate-50 hover:text-slate-900">
+            <a href="/payment-history.php" class="group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:bg-slate-50 hover:text-slate-900">
               <span class="mr-3 text-slate-400 group-hover:text-slate-500"><i data-lucide="credit-card" class="w-4.5 h-4.5"></i></span>
               Payment History
             </a>
-            <a href="settings.php" class="group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:bg-slate-50 hover:text-slate-900">
+            <a href="/settings.php" class="group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:bg-slate-50 hover:text-slate-900">
               <span class="mr-3 text-slate-400 group-hover:text-slate-500"><i data-lucide="settings" class="w-4.5 h-4.5"></i></span>
               Settings
             </a>
@@ -354,7 +354,7 @@
           <div id="announcementsContent" class="divide-y divide-slate-100 hidden"></div>
 
           <div class="px-4 py-2 border-t border-slate-100 bg-slate-50">
-            <a href="announcements.php" class="text-xs font-medium text-blue-600 hover:text-blue-700">View all announcements &rarr;</a>
+            <a href="/announcements.php" class="text-xs font-medium text-blue-600 hover:text-blue-700">View all announcements &rarr;</a>
           </div>
         </div>
 
@@ -393,7 +393,7 @@
   </main>
 
   <!-- Floating Action Button (Mobile) -->
-  <a href="create-request.php" class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all hover:scale-110 z-40">
+  <a href="/create-request.php" class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all hover:scale-110 z-40">
     <i data-lucide="plus" class="w-6 h-6"></i>
   </a>
 

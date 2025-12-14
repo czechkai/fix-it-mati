@@ -1,0 +1,65 @@
+# Enable URL Rewriting
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Redirect www to non-www (optional, remove if not needed)
+    # RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+    # RewriteRule ^(.*)$ http://%1/$1 [R=301,L]
+    
+    # Handle API requests
+    RewriteRule ^api/(.*)$ public/api/index.php [L,QSA]
+    
+    # Handle auth page mappings
+    RewriteRule ^login\.php$ public/pages/auth/login.php [L]
+    RewriteRule ^register\.php$ public/pages/auth/register.php [L]
+    RewriteRule ^logout\.php$ public/pages/auth/logout.php [L]
+    
+    # Handle user page mappings
+    RewriteRule ^user-dashboard\.php$ public/pages/user/user-dashboard.php [L]
+    RewriteRule ^active-requests\.php$ public/pages/user/active-requests.php [L]
+    RewriteRule ^announcements\.php$ public/pages/user/announcements.php [L]
+    RewriteRule ^notifications\.php$ public/pages/user/notifications.php [L]
+    RewriteRule ^payments\.php$ public/pages/user/payments.php [L]
+    RewriteRule ^payment-history\.php$ public/pages/user/payment-history.php [L]
+    RewriteRule ^create-request\.php$ public/pages/user/create-request.php [L]
+    RewriteRule ^service-addresses\.php$ public/pages/user/service-addresses.php [L]
+    RewriteRule ^linked-meters\.php$ public/pages/user/linked-meters.php [L]
+    RewriteRule ^help-support\.php$ public/pages/user/help-support.php [L]
+    RewriteRule ^edit-profile\.php$ public/pages/user/edit-profile.php [L]
+    RewriteRule ^service-history\.php$ public/pages/user/service-history.php [L]
+    RewriteRule ^discussions\.php$ public/pages/user/discussions.php [L]
+    RewriteRule ^discussion-detail\.php$ public/pages/user/discussion-detail.php [L]
+    RewriteRule ^settings\.php$ public/pages/user/settings.php [L]
+    
+    # Handle admin page mappings
+    RewriteRule ^admin-dashboard\.php$ public/admin/dashboard.php [L]
+    RewriteRule ^admin/service-requests\.php$ public/admin/service-requests.php [L]
+    RewriteRule ^admin/billing\.php$ public/admin/billing.php [L]
+    RewriteRule ^admin/users\.php$ public/admin/users.php [L]
+    RewriteRule ^admin/technicians\.php$ public/admin/technicians.php [L]
+    RewriteRule ^admin/announcements\.php$ public/admin/announcements.php [L]
+    RewriteRule ^admin/analytics\.php$ public/admin/analytics.php [L]
+    
+    # Allow direct access to public directory
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^public/(.*)$ public/$1 [L]
+    
+    # Redirect root to login
+    RewriteRule ^$ login.php [L]
+    RewriteRule ^index\.php$ login.php [L]
+</IfModule>
+
+# Deny access to sensitive files
+<FilesMatch "\.(env|sql|config|bak|backup)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Set proper MIME types
+<IfModule mod_mime.c>
+    AddType text/css .css
+    AddType application/javascript .js
+    AddType application/json .json
+</IfModule>

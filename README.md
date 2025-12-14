@@ -21,10 +21,12 @@ Then open: http://localhost:8000/login.php
 git clone https://github.com/czechkai/fix-it-mati.git
 cd fix-it-mati
 cp .env.example .env
-php -S localhost:8000
+php -S localhost:8000 router.php
 ```
 
 Then open: http://localhost:8000/login.php
+
+> **Note:** Routing system updated December 2025 - all pages now use consistent URLs. See [QUICK_START.md](QUICK_START.md) for details.
 
 ## 🔑 Test Login
 
@@ -33,9 +35,15 @@ Then open: http://localhost:8000/login.php
 
 ## 📚 Documentation
 
+### Getting Started
+- **[QUICK_START.md](QUICK_START.md)** - ⭐ Quick start guide (start here!)
 - **[TEAM_CONNECTION_READY.md](TEAM_CONNECTION_READY.md)** - Complete team setup guide
-- **[API_WORKING.md](API_WORKING.md)** - API endpoints reference
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and fixes
+
+### Technical Documentation
+- **[docs/ROUTING.md](docs/ROUTING.md)** - Routing and path configuration
+- **[docs/PATH_FIX_SUMMARY.md](docs/PATH_FIX_SUMMARY.md)** - Recent routing fixes (Dec 2025)
+- **[API_WORKING.md](API_WORKING.md)** - API endpoints reference
 
 ## ✅ What's Included
 
