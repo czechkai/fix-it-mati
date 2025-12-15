@@ -241,7 +241,7 @@ class User
         $fields = [];
         $params = ['id' => $this->id];
 
-        $allowedFields = ['email', 'full_name', 'phone', 'address', 'role'];
+        $allowedFields = ['email', 'full_name', 'first_name', 'last_name', 'phone', 'address', 'role', 'account_number', 'profile_image'];
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
@@ -254,6 +254,12 @@ class User
         if (!empty($data['password'])) {
             $fields[] = "password_hash = :password_hash";
             $params['password_hash'] = password_hash($data['password'], PASSWORD_BCRYPT);
+        }
+        
+        // Handle password_hash update directly (for admin resets)
+        if (!empty($data['password_hash'])) {
+            $fields[] = "password_hash = :password_hash";
+            $params['password_hash'] = $data['password_hash'];
         }
 
         if (empty($fields)) {
@@ -524,5 +530,33 @@ class User
     private function generateSupportPin(): string
     {
         return str_pad((string)rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Get all citizens (for admin use)
+     */
+    public function getAllCitizens(): array {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT 
+                    id,
+                    email,
+                    CASE 
+                        WHEN first_name IS NOT NULL AND last_name IS NOT NULL THEN CONCAT(first_name, ' ', last_name)
+                        WHEN first_name IS NOT NULL THEN first_name
+                        WHEN last_name IS NOT NULL THEN last_name
+                        ELSE email
+                    END as full_name,
+                    phone,
+                    account_number,
+                    created_at
+                FROM users 
+                WHERE role = 'customer'
+                ORDER BY first_name ASC, last_name ASC, email ASC";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

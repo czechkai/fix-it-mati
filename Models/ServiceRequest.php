@@ -149,12 +149,15 @@ class ServiceRequest
                        u.email as customer_email,
                        COALESCE(
                            NULLIF(CONCAT(t.first_name, ' ', t.last_name), ' '),
-                           t.email
-                       ) as technician_name,
-                       t.id as assigned_technician_id
+                           t.email,
+                           tech.lead,
+                           tech.name
+                       ) as assigned_to_name,
+                       sr.assigned_technician_id as assigned_to
                 FROM service_requests sr
                 LEFT JOIN users u ON sr.user_id = u.id
                 LEFT JOIN users t ON sr.assigned_technician_id = t.id
+                LEFT JOIN technicians tech ON sr.assigned_technician_id = tech.id
                 WHERE 1=1";
 
         $params = [];

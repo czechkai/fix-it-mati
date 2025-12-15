@@ -1,0 +1,156 @@
+/* Technicians Admin Page Styles */
+
+.team-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.team-card:hover {
+  transform: translateY(-2px);
+}
+
+.team-card:active {
+  transform: translateY(0);
+}
+
+/* Animation classes */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in-backdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.drawer-slide-in {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+.drawer-backdrop-in {
+  animation: fade-in-backdrop 0.2s ease-out;
+}
+
+/* Status badge colors */
+.status-available {
+  background-color: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.status-busy {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.status-on-route {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+.status-off-duty {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+/* Department icons */
+.dept-water {
+  color: #3b82f6;
+}
+
+.dept-electric {
+  color: #f59e0b;
+}
+
+/* Filter button active state */
+.filter-btn.active {
+  background-color: #1e293b;
+  color: white;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Line clamp utility */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+/* Card selection state */
+.team-card.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Toast notifications */
+#toastContainer > div {
+  transition: all 0.3s ease-out;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  backdrop-filter: blur(4px);
+}
+
+/* Scrollbar styling for drawer */
+#drawerBody::-webkit-scrollbar {
+  width: 4px;
+}
+
+#drawerBody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#drawerBody::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+#drawerBody::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

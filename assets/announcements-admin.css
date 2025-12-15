@@ -1,0 +1,147 @@
+/* Admin Announcements Page Styles */
+
+/* Animation keyframes */
+@keyframes slide-in-from-top-5 {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Filter button animations */
+.filter-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.filter-btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Announcement card hover effects */
+#announcementsList > div {
+  position: relative;
+}
+
+#announcementsList > div::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+#announcementsList > div:hover::before {
+  transform: scaleY(1);
+}
+
+/* Action button styles */
+.group:hover button {
+  transform: translateY(0);
+}
+
+.group button {
+  transform: translateY(5px);
+  transition: all 0.2s ease;
+}
+
+/* Modal animations */
+.zoom-in {
+  animation: zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Toast notification styles */
+#toastContainer > div {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Badge pulse effect */
+#pendingBadge {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Stat cards gradient backgrounds */
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+/* Smooth scrolling */
+main {
+  scroll-behavior: smooth;
+}
+
+/* Loading skeleton (for future use) */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Custom focus styles */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  #announcementsList > div {
+    padding: 1rem;
+  }
+  
+  .group button {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

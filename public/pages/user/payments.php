@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/assets/style.css">
 </head>
+
 <body class="min-h-screen bg-slate-50 font-sans text-slate-800">
     <!-- HEADER -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
@@ -97,10 +99,10 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <div class="flex flex-col lg:flex-row gap-8">
-            
+
             <!-- LEFT COLUMN: Current Bills & Total -->
             <div class="flex-1 space-y-6">
-                
+
                 <!-- User Payment Information Card -->
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-lg text-white relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-6 opacity-10">
@@ -122,7 +124,7 @@
                                 <span class="bg-amber-400 text-amber-900 px-3 py-1 rounded-md text-xs font-bold" id="accountStatus">Loading...</span>
                             </div>
                         </div>
-                        
+
                         <div class="flex gap-3">
                             <button class="bg-white text-blue-700 hover:bg-blue-50 px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2" id="payAllBtn">
                                 Pay Bill Now
@@ -150,7 +152,7 @@
 
             <!-- RIGHT COLUMN: Methods & History -->
             <div class="w-full lg:w-96 space-y-6">
-                
+
                 <!-- Accepted Payment Methods Widget -->
                 <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
                     <h4 class="text-sm font-bold text-slate-800 mb-3">Accepted Payment Methods</h4>
@@ -158,8 +160,8 @@
                         <button class="h-10 flex-1 bg-blue-50 rounded border border-blue-100 flex items-center justify-center text-xs font-bold text-blue-800 cursor-pointer hover:bg-blue-100 transition-colors" id="gcashBtn">
                             GCash
                         </button>
-                        <button class="h-10 flex-1 bg-green-50 rounded border border-green-100 flex items-center justify-center text-xs font-bold text-green-800 cursor-pointer hover:bg-green-100 transition-colors" id="mayaBtn">
-                            Maya
+                        <button class="h-10 flex-1 bg-blue-600 rounded border border-blue-700 flex items-center justify-center text-xs font-bold text-white cursor-pointer hover:bg-blue-700 transition-colors" id="paypalBtn">
+                            PayPal
                         </button>
                         <button class="h-10 flex-1 bg-slate-50 rounded border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors" id="cardBtn">
                             Card
@@ -194,7 +196,9 @@
 
     <script src="assets/api-client.js?v=6"></script>
     <script src="assets/payments.js?v=3"></script>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+    </script>
 
     <!-- Payment Modal -->
     <div id="paymentModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" style="display: none;">
@@ -233,14 +237,14 @@
                         <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400"></i>
                     </button>
 
-                    <!-- Maya -->
-                    <button class="payment-option-btn w-full flex items-center gap-4 p-4 border-2 border-slate-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all" data-gateway="maya">
-                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span class="text-green-600 font-bold text-sm">M</span>
+                    <!-- PayPal -->
+                    <button class="payment-option-btn w-full flex items-center gap-4 p-4 border-2 border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all" data-gateway="paypal">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-blue-600 font-bold text-sm">P</span>
                         </div>
                         <div class="text-left flex-1">
-                            <div class="font-bold text-slate-800">Maya</div>
-                            <div class="text-xs text-slate-500">Pay via Maya (PayMaya)</div>
+                            <div class="font-bold text-slate-800">PayPal</div>
+                            <div class="text-xs text-slate-500">Pay via PayPal</div>
                         </div>
                         <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400"></i>
                     </button>
@@ -305,6 +309,9 @@
     <script src="/assets/api-client.js"></script>
     <script src="/assets/dashboard.js"></script>
     <script src="/assets/payments.js"></script>
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
+
 </html>

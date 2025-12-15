@@ -4,6 +4,7 @@ namespace FixItMati\DesignPatterns\Structural\Facade;
 
 use FixItMati\Models\ServiceRequest;
 use FixItMati\Models\User;
+use FixItMati\Models\TechnicianTeam;
 use FixItMati\DesignPatterns\Behavioral\State\StateFactory;
 use FixItMati\Services\NotificationService;
 
@@ -24,12 +25,14 @@ class ServiceRequestFacade
 {
     private ServiceRequest $requestModel;
     private User $userModel;
+    private TechnicianTeam $technicianModel;
     private NotificationService $notificationService;
 
     public function __construct()
     {
         $this->requestModel = new ServiceRequest();
         $this->userModel = new User();
+        $this->technicianModel = new TechnicianTeam();
         $this->notificationService = NotificationService::getInstance();
     }
 
@@ -194,21 +197,40 @@ class ServiceRequestFacade
             return ['success' => false, 'error' => 'Request not found'];
         }
 
-        // Validate technician exists and has correct role
+        // Validate technician - check if it's a user with technician role OR a team from technicians table
         $technician = $this->userModel->find($technicianId);
-        if (!$technician || $technician->role !== 'technician') {
-            return ['success' => false, 'error' => 'Invalid technician'];
+        $technicianName = null;
+        
+        if ($technician && ($technician->role === 'technician' || $technician->role === 'admin' || $technician->role === 'staff')) {
+            // Valid user with technician/admin/staff role
+            $technicianName = $technician->full_name ?? ($technician->first_name . ' ' . $technician->last_name);
+        } else {
+            // Check if it's a team ID from technicians table
+            $team = $this->technicianModel->find($technicianId);
+            if (!$team) {
+                return ['success' => false, 'error' => 'Invalid technician'];
+            }
+            $technicianName = $team['lead'] ?? $team['name'];
         }
 
         // Update assigned_technician_id
         $this->requestModel->update($requestId, ['assigned_technician_id' => $technicianId]);
 
-        // Change status to in_progress
+        // Get current status and determine next status
+        $currentStatus = $request['status'];
+        $nextStatus = 'assigned';
+        
+        // If status is pending, first move to reviewed, then to assigned
+        if ($currentStatus === 'pending') {
+            $this->requestModel->updateStatus($requestId, 'reviewed', $adminId, 'Request reviewed and approved');
+        }
+        
+        // Change status to assigned
         $updated = $this->requestModel->updateStatus(
             $requestId, 
-            'in_progress', 
+            $nextStatus, 
             $adminId, 
-            $notes ?? "Assigned to {$technician->full_name}"
+            $notes ?? "Assigned to {$technicianName}"
         );
 
         if (!$updated) {
@@ -217,12 +239,14 @@ class ServiceRequestFacade
 
         $updatedRequest = $this->requestModel->find($requestId);
 
-        // Trigger notification event
-        $this->notificationService->trigger('request.assigned', [
-            'request' => $updatedRequest,
-            'technician' => $technician->toArray(),
-            'admin_id' => $adminId
-        ]);
+        // Trigger notification event (only if it's a user, not a team)
+        if ($technician) {
+            $this->notificationService->trigger('request.assigned', [
+                'request' => $updatedRequest,
+                'technician' => $technician->toArray(),
+                'admin_id' => $adminId
+            ]);
+        }
 
         return [
             'success' => true,

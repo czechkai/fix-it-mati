@@ -53,42 +53,28 @@ function updateUserProfile() {
 // Load all technicians
 async function loadTechnicians() {
   try {
-    console.log('Loading technicians...');
-    // Try to fetch from API first
-    try {
-      const response = await ApiClient.get('/auth/me');
-      console.log('Current user:', response);
-      
-      // For now, add current admin user as available for assignment
-      if (response.success && response.user) {
-        const user = response.user;
-        technicians = [{
-          id: user.id,
-          first_name: user.first_name || 'Admin',
-          last_name: user.last_name || 'User',
-          email: user.email,
-          role: user.role,
-          status: 'Available'
-        }];
-        console.log('Loaded technicians:', technicians);
-        return;
-      }
-    } catch (e) {
-      console.error('Could not fetch user data:', e);
+    console.log('Loading technicians from technicians table...');
+    
+    // Load team leads from technicians table
+    const response = await ApiClient.get('/technicians/all');
+    
+    if (response.success && response.data && response.data.length > 0) {
+      technicians = response.data.map(team => ({
+        id: team.id,
+        name: team.lead || team.name,
+        first_name: (team.lead || team.name).split(' ')[0],
+        last_name: (team.lead || team.name).split(' ').slice(1).join(' '),
+        team: team.name,
+        department: team.department,
+        role: 'Team Lead',
+        status: team.status || 'Available'
+      }));
+      console.log(`Loaded ${technicians.length} team leads from technicians table:`, technicians);
+    } else {
+      console.warn('No teams found in technicians table');
+      technicians = [];
     }
     
-    // Fallback: Use hardcoded admin ID if API fails
-    technicians = [
-      { 
-        id: '2ee2cb19-1114-475e-9908-8c57aad4c82a', 
-        first_name: 'Admin', 
-        last_name: 'User',
-        email: 'admin@fixitmati.com',
-        role: 'admin',
-        status: 'Available' 
-      }
-    ];
-    console.log('Using fallback technicians:', technicians);
   } catch (error) {
     console.error('Error loading technicians:', error);
     technicians = [];
@@ -404,15 +390,22 @@ async function openDrawer(ticketId) {
   statusBadge.textContent = formatStatus(ticket.status);
   statusBadge.className = `text-xs font-bold px-2 py-1 rounded border ${getStatusBadge(ticket.status)}`;
   
-  // Load technicians dropdown
+  // Load technicians dropdown - Show all Field Technicians
   const techSelect = document.getElementById('technicianSelect');
-  techSelect.innerHTML = '<option value="">Select Technician...</option>' + 
-    technicians.map(t => {
-      const techName = t.name || `${t.first_name} ${t.last_name}`;
-      const status = t.status || 'Available';
-      const selected = ticket.assigned_to == t.id ? 'selected' : '';
-      return `<option value="${t.id}" ${selected}>${escapeHtml(techName)} (${status})</option>`;
-    }).join('');
+  if (technicians.length === 0) {
+    techSelect.innerHTML = '<option value="">No field technicians available</option>';
+    console.warn('No technicians loaded for dropdown');
+  } else {
+    techSelect.innerHTML = '<option value="">Select Field Technician...</option>' + 
+      technicians.map(t => {
+        const techName = t.name || `${t.first_name} ${t.last_name}`;
+        const roleInfo = t.role ? ` (${t.role})` : '';
+        const emailInfo = t.email ? ` - ${t.email}` : '';
+        const selected = ticket.assigned_to == t.id ? 'selected' : '';
+        return `<option value="${t.id}" ${selected}>${escapeHtml(techName)}${roleInfo}</option>`;
+      }).join('');
+    console.log(`Populated dropdown with ${technicians.length} technicians`);
+  }
   
   // Show/hide resolved button
   const resolvedBtn = document.getElementById('markResolvedBtn');
@@ -539,6 +532,13 @@ async function updateAssignment() {
     return;
   }
   
+  // Show loading state
+  const assignBtn = document.getElementById('assignBtn');
+  const originalBtnText = assignBtn.innerHTML;
+  assignBtn.disabled = true;
+  assignBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Updating...';
+  lucide.createIcons();
+  
   try {
     console.log('Calling API to assign technician...');
     console.log('Request ID:', selectedTicket.id);
@@ -570,6 +570,13 @@ async function updateAssignment() {
   } catch (error) {
     console.error('Error assigning technician:', error);
     showError(error.message || 'Failed to assign technician');
+  } finally {
+    // Restore button state
+    const assignBtn = document.getElementById('assignBtn');
+    if (assignBtn) {
+      assignBtn.disabled = false;
+      assignBtn.innerHTML = 'Update Assignment';
+    }
   }
 }
 
@@ -588,6 +595,13 @@ async function updateStatus() {
     markResolved();
     return;
   }
+  
+  // Show loading state
+  const statusBtn = document.getElementById('statusBtn');
+  const originalBtnText = statusBtn.innerHTML;
+  statusBtn.disabled = true;
+  statusBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Updating...';
+  lucide.createIcons();
   
   try {
     // Use the existing /api/requests/{id} PATCH endpoint
@@ -613,6 +627,13 @@ async function updateStatus() {
   } catch (error) {
     console.error('Error updating status:', error);
     showError(error.message || 'Failed to update status');
+  } finally {
+    // Restore button state
+    const statusBtn = document.getElementById('statusBtn');
+    if (statusBtn) {
+      statusBtn.disabled = false;
+      statusBtn.innerHTML = 'Update Status';
+    }
   }
 }
 
@@ -622,29 +643,45 @@ async function markResolved() {
   
   if (!confirm(`Mark ticket ${selectedTicket.ticket_number || 'SR-' + selectedTicket.id} as resolved?\n\nThis will close the ticket and notify the citizen.`)) return;
   
+  // Show loading state
+  const resolveBtn = document.getElementById('resolveBtn');
+  const originalBtnText = resolveBtn.innerHTML;
+  resolveBtn.disabled = true;
+  resolveBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Resolving...';
+  lucide.createIcons();
+  
   try {
-    // Use the existing /api/requests/{id}/complete endpoint
-    const response = await ApiClient.post(`/requests/${selectedTicket.id}/complete`, {
-      completion_notes: 'Marked as resolved by admin'
+    console.log('Marking request as resolved:', selectedTicket.id);
+    
+    // Use PATCH to update status to resolved - this will reflect on user's active-requests page
+    const response = await ApiClient.request(`/requests/${selectedTicket.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        status: 'resolved',
+        notes: 'Marked as resolved by admin'
+      })
     });
     
     if (response.success) {
-      // Store the ticket ID before refreshing
-      const ticketId = selectedTicket.id;
-      
-      showSuccess('? Ticket marked as resolved');
+      showSuccess('✓ Ticket marked as resolved');
       
       // Refresh data from database to get latest state
       await loadTickets();
       
-      setTimeout(() => {
-        console.log('Reopening drawer after marking resolved for ticket:', ticketId);
-        openDrawer(ticketId);
-      }, 100);
+      // Close drawer after successful resolution
+      closeDrawer();
     }
   } catch (error) {
     console.error('Error updating status:', error);
     showError(error.message || 'Failed to update status');
+  } finally {
+    // Restore button state
+    const resolveBtn = document.getElementById('resolveBtn');
+    if (resolveBtn) {
+      resolveBtn.disabled = false;
+      resolveBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Mark as Resolved';
+      lucide.createIcons();
+    }
   }
 }
 

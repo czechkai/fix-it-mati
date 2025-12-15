@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Comprehensive Seed Data Script
  * Creates realistic sample data for all tables
@@ -32,16 +33,16 @@ if (file_exists($envFile)) {
 
 try {
     $db = Database::getInstance()->getConnection();
-    
+
     echo "\n";
     echo "═══════════════════════════════════════════════════════\n";
     echo "         SEEDING DATABASE WITH SAMPLE DATA\n";
     echo "═══════════════════════════════════════════════════════\n\n";
-    
+
     // Check if data already exists
     $userCountStmt = $db->query("SELECT COUNT(*) FROM users");
     $userCount = $userCountStmt->fetchColumn();
-    
+
     if ($userCount > 4) {
         echo "⚠ Database already has {$userCount} users.\n";
         echo "Do you want to continue and add more data? (yes/no): ";
@@ -51,38 +52,38 @@ try {
             exit(0);
         }
     }
-    
+
     $paymentModel = new Payment();
     $announcementModel = new Announcement();
     $technicianModel = new Technician();
     $requestModel = new ServiceRequest();
-    
+
     // Get existing users for seeding
     $usersStmt = $db->query("SELECT id, role, full_name FROM users ORDER BY created_at LIMIT 10");
     $existingUsers = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     if (empty($existingUsers)) {
         echo "✗ No users found. Please create users first.\n";
         exit(1);
     }
-    
+
     $regularUsers = array_filter($existingUsers, fn($u) => in_array($u['role'], ['user', 'customer']));
     $adminUsers = array_filter($existingUsers, fn($u) => $u['role'] === 'admin');
-    
+
     if (empty($regularUsers)) {
         echo "✗ No regular users found.\n";
         exit(1);
     }
-    
+
     echo "Found " . count($regularUsers) . " regular users and " . count($adminUsers) . " admin users\n\n";
-    
+
     // ==================================================
     // 1. SEED TECHNICIANS
     // ==================================================
     echo "┌─ SEEDING TECHNICIANS\n";
-    
+
     $technicianCount = $db->query("SELECT COUNT(*) FROM technicians")->fetchColumn();
-    
+
     if ($technicianCount == 0) {
         $specializations = [
             ['Plumber', 'water'],
@@ -90,12 +91,12 @@ try {
             ['Plumber', 'water'],
             ['Electrician', 'electricity']
         ];
-        
+
         $techIds = [];
         foreach ($specializations as $i => $spec) {
             // Create technician user if needed
             $techUser = $existingUsers[$i % count($existingUsers)];
-            
+
             $tech = $technicianModel->create([
                 'user_id' => $techUser['id'],
                 'specialization' => $spec[0],
@@ -103,7 +104,7 @@ try {
                 'phone' => '09' . rand(100000000, 999999999),
                 'assigned_area' => ['Poblacion', 'Central', 'Dahican', 'Sainz'][rand(0, 3)]
             ]);
-            
+
             if ($tech) {
                 $techIds[] = $tech['id'];
                 echo "│  ✓ Created {$spec[0]}: {$techUser['full_name']}\n";
@@ -114,27 +115,27 @@ try {
         echo "│  ⚠ {$technicianCount} technicians already exist, skipping\n";
     }
     echo "└─\n\n";
-    
+
     // ==================================================
     // 2. SEED PAYMENTS
     // ==================================================
     echo "┌─ SEEDING PAYMENTS\n";
-    
+
     $paymentCount = $db->query("SELECT COUNT(*) FROM payments")->fetchColumn();
-    
+
     if ($paymentCount == 0) {
         $months = ['October 2024', 'November 2024', 'December 2024'];
         $paymentIds = [];
-        
+
         foreach ($regularUsers as $user) {
             foreach ($months as $i => $month) {
                 $waterAmount = rand(300, 600);
                 $electricityAmount = rand(600, 1200);
                 $totalAmount = $waterAmount + $electricityAmount;
-                
+
                 $dueDate = date('Y-m-d', strtotime("+{$i} month", strtotime('2024-10-25')));
                 $status = $i == 0 ? 'paid' : ($i == 1 ? 'overdue' : 'unpaid');
-                
+
                 $payment = $paymentModel->createPayment([
                     'user_id' => $user['id'],
                     'bill_month' => $month,
@@ -142,10 +143,10 @@ try {
                     'status' => $status,
                     'due_date' => $dueDate
                 ]);
-                
+
                 if ($payment) {
                     $paymentIds[] = $payment['id'];
-                    
+
                     // Add payment items
                     $paymentModel->addPaymentItems($payment['id'], [
                         [
@@ -159,19 +160,19 @@ try {
                             'category' => 'electricity'
                         ]
                     ]);
-                    
+
                     // Create transaction for paid bills
                     if ($status === 'paid') {
                         $db->prepare("INSERT INTO transactions (user_id, payment_id, amount, type, status, reference_number, created_at) 
                                      VALUES (?, ?, ?, 'payment', 'completed', ?, NOW() - INTERVAL '15 days')")
-                           ->execute([
-                               $user['id'],
-                               $payment['id'],
-                               $totalAmount,
-                               'TRX-' . strtoupper(substr(uniqid(), -8))
-                           ]);
+                            ->execute([
+                                $user['id'],
+                                $payment['id'],
+                                $totalAmount,
+                                'TRX-' . strtoupper(substr(uniqid(), -8))
+                            ]);
                     }
-                    
+
                     echo "│  ✓ {$user['full_name']}: {$month} - ₱{$totalAmount} ({$status})\n";
                 }
             }
@@ -181,17 +182,17 @@ try {
         echo "│  ⚠ {$paymentCount} payments already exist, skipping\n";
     }
     echo "└─\n\n";
-    
+
     // ==================================================
     // 3. SEED ANNOUNCEMENTS
     // ==================================================
     echo "┌─ SEEDING ANNOUNCEMENTS\n";
-    
+
     $announcementCount = $db->query("SELECT COUNT(*) FROM announcements")->fetchColumn();
-    
+
     if ($announcementCount == 0) {
         $adminUser = !empty($adminUsers) ? $adminUsers[0]['id'] : $regularUsers[0]['id'];
-        
+
         $announcements = [
             [
                 'title' => 'Scheduled Water Interruption - December 10-11',
@@ -205,7 +206,7 @@ try {
             ],
             [
                 'title' => 'New Online Payment System Available',
-                'content' => 'We are pleased to announce that our new online payment system is now available! You can now pay your water and electricity bills through GCash, Maya, or Credit/Debit Card. Visit our website to get started.',
+                'content' => 'We are pleased to announce that our new online payment system is now available! You can now pay your water and electricity bills through GCash, PayPal, or Credit/Debit Card. Visit our website to get started.',
                 'category' => 'general',
                 'type' => 'news',
                 'status' => 'published',
@@ -244,7 +245,7 @@ try {
                 'end_date' => null
             ]
         ];
-        
+
         foreach ($announcements as $ann) {
             $ann['created_by'] = $adminUser;
             $result = $announcementModel->create($ann);
@@ -257,14 +258,14 @@ try {
         echo "│  ⚠ {$announcementCount} announcements already exist, skipping\n";
     }
     echo "└─\n\n";
-    
+
     // ==================================================
     // 4. SEED SERVICE REQUESTS
     // ==================================================
     echo "┌─ SEEDING SERVICE REQUESTS\n";
-    
+
     $requestCount = $db->query("SELECT COUNT(*) FROM service_requests")->fetchColumn();
-    
+
     if ($requestCount < 5) {
         $requests = [
             [
@@ -308,19 +309,19 @@ try {
                 'status' => 'in_progress'
             ]
         ];
-        
+
         foreach ($requests as $req) {
             $user = $regularUsers[array_rand($regularUsers)];
             $req['user_id'] = $user['id'];
-            
+
             $result = $requestModel->create($req);
             if ($result) {
                 echo "│  ✓ {$req['title']} ({$req['status']})\n";
-                
+
                 // Add update for completed requests
                 if ($req['status'] === 'completed') {
                     $db->prepare("UPDATE service_requests SET completed_at = NOW() - INTERVAL '2 days' WHERE id = ?")
-                       ->execute([$result['id']]);
+                        ->execute([$result['id']]);
                 }
             }
         }
@@ -329,28 +330,27 @@ try {
         echo "│  ⚠ {$requestCount} requests already exist, skipping\n";
     }
     echo "└─\n\n";
-    
+
     // ==================================================
     // SUMMARY
     // ==================================================
     echo "═══════════════════════════════════════════════════════\n";
     echo "                 SEED COMPLETE!\n";
     echo "═══════════════════════════════════════════════════════\n\n";
-    
+
     // Final counts
     $counts = [];
     foreach (['users', 'service_requests', 'payments', 'payment_items', 'transactions', 'announcements', 'technicians'] as $table) {
         $stmt = $db->query("SELECT COUNT(*) FROM {$table}");
         $counts[$table] = $stmt->fetchColumn();
     }
-    
+
     echo "Database now contains:\n";
     foreach ($counts as $table => $count) {
         echo "  • " . str_pad($table, 25) . ": {$count} rows\n";
     }
-    
+
     echo "\n✓ You can now test the application with realistic data!\n\n";
-    
 } catch (Exception $e) {
     echo "\n✗ ERROR: " . $e->getMessage() . "\n";
     echo "Trace: " . $e->getTraceAsString() . "\n";
