@@ -111,7 +111,7 @@ class Payment
 
         try {
             $stmt = $this->db->prepare($sql);
-            
+
             foreach ($items as $item) {
                 $stmt->execute([
                     'payment_id' => $paymentId,
@@ -185,7 +185,6 @@ class Payment
                 'payment' => $payment,
                 'transaction' => $transaction
             ];
-
         } catch (\Exception $e) {
             $this->db->rollBack();
             error_log("Error processing payment: " . $e->getMessage());
@@ -335,6 +334,57 @@ class Payment
         } catch (\PDOException $e) {
             error_log("Error updating overdue payments: " . $e->getMessage());
             return 0;
+        }
+    }
+
+    /**
+     * Update payment status and additional data
+     * 
+     * @param string $paymentId Payment ID
+     * @param string $status New status (pending, paid, failed, cancelled)
+     * @param array $additionalData Additional data to update (payment_method, reference_number, etc.)
+     * @return bool Success status
+     */
+    public function updatePaymentStatus(string $paymentId, string $status, array $additionalData = []): bool
+    {
+        try {
+            // Build dynamic UPDATE query based on additional data
+            $fields = ['status = :status', 'updated_at = NOW()'];
+            $params = [
+                'payment_id' => $paymentId,
+                'status' => $status
+            ];
+
+            // Add optional fields
+            if (isset($additionalData['payment_method'])) {
+                $fields[] = 'payment_method = :payment_method';
+                $params['payment_method'] = $additionalData['payment_method'];
+            }
+
+            if (isset($additionalData['reference_number'])) {
+                $fields[] = 'reference_number = :reference_number';
+                $params['reference_number'] = $additionalData['reference_number'];
+            }
+
+            if (isset($additionalData['gateway_transaction_id'])) {
+                $fields[] = 'gateway_transaction_id = :gateway_transaction_id';
+                $params['gateway_transaction_id'] = $additionalData['gateway_transaction_id'];
+            }
+
+            if ($status === 'paid' && !isset($additionalData['paid_date'])) {
+                $fields[] = 'paid_date = NOW()';
+            }
+
+            $sql = "UPDATE payments SET " . implode(', ', $fields) . " WHERE id = :payment_id";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+
+            return $stmt->rowCount() > 0;
+        } catch (\PDOException $e) {
+            error_log("Error updating payment status: " . $e->getMessage());
+            error_log("Payment ID: $paymentId, Status: $status");
+            return false;
         }
     }
 }
