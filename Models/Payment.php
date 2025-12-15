@@ -450,6 +450,43 @@ class Payment
     }
 
     /**
+     * Get all payments/invoices for admin view
+     */
+    public function getAllPaymentsAdmin(): array
+    {
+        $sql = "SELECT 
+                    p.id,
+                    p.user_id,
+                    CASE 
+                        WHEN u.first_name IS NOT NULL AND u.last_name IS NOT NULL 
+                        THEN CONCAT(u.first_name, ' ', u.last_name)
+                        ELSE u.email
+                    END as user_name,
+                    u.email as user_email,
+                    p.bill_month,
+                    p.amount,
+                    p.status,
+                    p.due_date,
+                    p.paid_date,
+                    p.payment_method,
+                    p.reference_number,
+                    p.created_at,
+                    p.updated_at
+                FROM payments p
+                LEFT JOIN users u ON p.user_id = u.id
+                ORDER BY p.created_at DESC
+                LIMIT 100";
+
+        try {
+            $stmt = $this->db->query($sql);
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log("Error fetching all payments: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
      * Create invoice manually (admin function)
      */
     public function createInvoice(array $data): ?array

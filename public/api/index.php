@@ -114,6 +114,9 @@ try {
     // Note: Middleware applies to routes defined AFTER addMiddleware call
     $router->addMiddleware(new \FixItMati\Middleware\AuthMiddleware());
     
+    // Admin announcements endpoint (requires auth)
+    $router->get('/api/admin/announcements/all', 'AnnouncementController@getAll');
+    
     // Get current authenticated user
     $router->get('/api/auth/me', 'AuthController@me');
     
@@ -316,15 +319,34 @@ try {
     // Admin Billing & Payments
     $router->get('/api/admin/transactions', 'PaymentController@getAllTransactions');
     $router->get('/api/admin/billing/stats', 'PaymentController@getStats');
+    $router->get('/api/admin/billing/all-payments', 'PaymentController@getAllPayments');
     $router->post('/api/admin/billing/create-invoice', 'PaymentController@createInvoice');
     $router->post('/api/admin/transactions/{id}/approve', 'PaymentController@approveTransaction');
     $router->post('/api/admin/transactions/{id}/reject', 'PaymentController@rejectTransaction');
-    $router->get('/api/admin/users', 'PaymentController@getAllUsers');
     $router->get('/api/admin/transactions/export', 'PaymentController@exportTransactions');
+    
+    // Admin User Management
+    $router->get('/api/users/all', 'UserController@getAllUsers');
+    $router->post('/api/users/create', 'UserController@createUser');
+    $router->post('/api/users/{id}/verify', 'UserController@verifyUser');
+    $router->post('/api/users/{id}/suspend', 'UserController@suspendUser');
+    $router->post('/api/users/{id}/reset-password', 'UserController@resetPassword');
+    $router->delete('/api/users/{id}', 'UserController@deleteUser');
+    $router->get('/api/users/stats', 'UserController@getUserStats');
+    
+    // Admin Technician Team Management
+    $router->get('/api/technicians/all', 'TechnicianTeamController@getAllTeams');
+    $router->get('/api/technicians/{id}', 'TechnicianTeamController@getTeam');
+    $router->post('/api/technicians/create', 'TechnicianTeamController@createTeam');
+    $router->post('/api/technicians/{id}/status', 'TechnicianTeamController@updateStatus');
+    $router->post('/api/technicians/{id}/assign', 'TechnicianTeamController@assignTask');
+    $router->post('/api/technicians/{id}/complete', 'TechnicianTeamController@completeTask');
+    $router->put('/api/technicians/{id}', 'TechnicianTeamController@updateTeam');
+    $router->delete('/api/technicians/{id}', 'TechnicianTeamController@deleteTeam');
+    $router->get('/api/technicians/stats', 'TechnicianTeamController@getStats');
     
     // Other admin routes (to be implemented)
     // $router->post('/api/admin/requests/{id}/assign', 'AdminController@assignTechnician');
-    // $router->get('/api/admin/technicians', 'AdminController@getTechnicians');
     // $router->get('/api/admin/dashboard/stats', 'AdminController@getDashboardStats');
     
     // Dispatch request to appropriate handler

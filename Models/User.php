@@ -235,7 +235,7 @@ class User
         $fields = [];
         $params = ['id' => $this->id];
 
-        $allowedFields = ['email', 'full_name', 'phone', 'address', 'role'];
+        $allowedFields = ['email', 'full_name', 'first_name', 'last_name', 'phone', 'address', 'role', 'account_number', 'profile_image'];
 
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
@@ -248,6 +248,12 @@ class User
         if (!empty($data['password'])) {
             $fields[] = "password_hash = :password_hash";
             $params['password_hash'] = password_hash($data['password'], PASSWORD_BCRYPT);
+        }
+        
+        // Handle password_hash update directly (for admin resets)
+        if (!empty($data['password_hash'])) {
+            $fields[] = "password_hash = :password_hash";
+            $params['password_hash'] = $data['password_hash'];
         }
 
         if (empty($fields)) {

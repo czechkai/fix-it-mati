@@ -105,26 +105,65 @@
     }
   }
 
-  // Load Transactions
+  // Load Transactions (includes both payments/invoices and transactions)
   async function loadTransactions() {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/admin/transactions', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      
+      // Fetch both transactions and payments/invoices
+      const [transactionsResponse, paymentsResponse] = await Promise.all([
+        fetch('/api/admin/transactions', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch('/api/admin/billing/all-payments', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+      ]);
 
-      const data = await response.json();
+      const transactionsData = await transactionsResponse.json();
+      const paymentsData = await paymentsResponse.json();
 
-      if (data.success) {
-        state.transactions = data.data || [];
-        state.filteredTransactions = state.transactions;
-        renderTransactions();
-      } else {
-        showError('Failed to load transactions');
+      // Combine and process data
+      let allItems = [];
+      
+      // Add transactions
+      if (transactionsData.success) {
+        allItems = allItems.concat(transactionsData.data || []);
       }
+      
+      // Add payments/invoices (convert to transaction-like format)
+      if (paymentsData.success) {
+        const payments = paymentsData.data || [];
+        const formattedPayments = payments.map(payment => ({
+          id: payment.id,
+          reference_number: payment.id,
+          user_id: payment.user_id,
+          user_name: payment.user_name || 'Unknown User',
+          user_email: payment.user_email,
+          amount: payment.amount,
+          status: payment.status,
+          payment_method: payment.payment_method || 'Invoice',
+          payment_type: payment.bill_month || 'Invoice',
+          created_at: payment.created_at,
+          notes: `Due: ${payment.due_date || 'N/A'}`,
+          is_invoice: true
+        }));
+        allItems = allItems.concat(formattedPayments);
+      }
+      
+      // Sort by date
+      allItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      
+      state.transactions = allItems;
+      state.filteredTransactions = state.transactions;
+      renderTransactions();
+      
     } catch (error) {
       console.error('Error loading transactions:', error);
       showError('Error loading transactions');
@@ -135,7 +174,7 @@
   async function loadUsers() {
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch('/api/users/all', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -146,7 +185,10 @@
 
       if (data.success) {
         state.users = data.data || [];
+        console.log('Loaded users:', state.users.length);
         populateUserSelect();
+      } else {
+        console.error('Failed to load users:', data.message);
       }
     } catch (error) {
       console.error('Error loading users:', error);

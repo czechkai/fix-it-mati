@@ -147,6 +147,40 @@ class AnnouncementController
     }
 
     /**
+     * Get all announcements (admin only - includes drafts and archived)
+     */
+    public function getAll(Request $request): Response
+    {
+        $user = $request->user();
+
+        if (!$user || ($user['role'] !== 'admin' && $user['role'] !== 'staff')) {
+            return Response::json([
+                'success' => false,
+                'message' => 'Unauthorized. Admin or staff access required.'
+            ], 403);
+        }
+
+        try {
+            $limit = (int) $request->query('limit', 100);
+            $announcements = $this->model->getAll($limit);
+
+            return Response::json([
+                'success' => true,
+                'data' => [
+                    'announcements' => $announcements,
+                    'count' => count($announcements)
+                ]
+            ]);
+        } catch (\Exception $e) {
+            error_log("Error fetching all announcements: " . $e->getMessage());
+            return Response::json([
+                'success' => false,
+                'message' => 'Failed to fetch announcements'
+            ], 500);
+        }
+    }
+
+    /**
      * Create announcement (admin only)
      */
     public function create(Request $request): Response
@@ -163,7 +197,7 @@ class AnnouncementController
         // Validate required fields
         $required = ['title', 'content', 'category'];
         foreach ($required as $field) {
-            if (empty($request->param($field))) {
+            if (empty($request->input($field))) {
                 return Response::json([
                     'success' => false,
                     'message' => "Missing required field: {$field}"
@@ -173,14 +207,14 @@ class AnnouncementController
 
         try {
             $data = [
-                'title' => $request->param('title'),
-                'content' => $request->param('content'),
-                'category' => $request->param('category'),
-                'type' => $request->param('type', 'news'),
-                'status' => $request->param('status', 'draft'),
-                'affected_areas' => $request->param('affected_areas', []),
-                'start_date' => $request->param('start_date'),
-                'end_date' => $request->param('end_date'),
+                'title' => $request->input('title'),
+                'content' => $request->input('content'),
+                'category' => $request->input('category'),
+                'type' => $request->input('type', 'news'),
+                'status' => $request->input('status', 'draft'),
+                'affected_areas' => $request->input('affected_areas', []),
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
                 'created_by' => $user['id']
             ];
 
@@ -229,14 +263,14 @@ class AnnouncementController
 
         try {
             $data = array_filter([
-                'title' => $request->param('title'),
-                'content' => $request->param('content'),
-                'category' => $request->param('category'),
-                'type' => $request->param('type'),
-                'status' => $request->param('status'),
-                'affected_areas' => $request->param('affected_areas'),
-                'start_date' => $request->param('start_date'),
-                'end_date' => $request->param('end_date')
+                'title' => $request->input('title'),
+                'content' => $request->input('content'),
+                'category' => $request->input('category'),
+                'type' => $request->input('type'),
+                'status' => $request->input('status'),
+                'affected_areas' => $request->input('affected_areas'),
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date')
             ], fn($value) => $value !== null);
 
             $announcement = $this->model->update($id, $data);

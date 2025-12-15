@@ -105,12 +105,6 @@
             <span>Announcements</span>
           </div>
         </a>
-        <a href="/admin/analytics.php" class="nav-item w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
-          <div class="flex items-center gap-3">
-            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-            <span>Analytics</span>
-          </div>
-        </a>
       </nav>
 
       <div class="p-4 border-t border-slate-800">
@@ -216,8 +210,6 @@
         <?php include 'tabs/technicians-tab.php'; ?>
 
         <?php include 'tabs/users-tab.php'; ?>
-
-        <?php include 'tabs/analytics-tab.php'; ?>
 
       </main>
     </div>

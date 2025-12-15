@@ -397,6 +397,27 @@ class PaymentController
     }
 
     /**
+     * Get all payments/invoices (Admin only)
+     * GET /api/admin/billing/all-payments
+     */
+    public function getAllPayments(Request $request): Response
+    {
+        $user = $request->user();
+        
+        if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
+            return Response::error('Unauthorized access', 403);
+        }
+
+        try {
+            $payments = $this->paymentModel->getAllPaymentsAdmin();
+            return Response::success($payments);
+        } catch (\Exception $e) {
+            error_log("Error fetching all payments: " . $e->getMessage());
+            return Response::error('Failed to retrieve payments', 500);
+        }
+    }
+
+    /**
      * Create invoice manually (Admin only)
      * POST /api/admin/billing/create-invoice
      */
