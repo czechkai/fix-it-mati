@@ -7,13 +7,114 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Service Requests - Admin - FixItMati</title>
+  <!-- Check authentication and admin role -->
+  <script>
+    (function() {
+      const token = localStorage.getItem('auth_token');
+      const userData = localStorage.getItem('user');
+      
+      if (!token) {
+        window.location.replace('/login.php');
+        throw new Error('Not authenticated');
+      }
+      
+      // Check if user is admin or staff
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          if (user.role !== 'admin' && user.role !== 'staff') {
+            alert('Access denied. Admin privileges required.');
+            window.location.replace('/user-dashboard.php');
+            throw new Error('Insufficient permissions');
+          }
+        } catch (e) {
+          window.location.replace('/login.php');
+          throw new Error('Invalid user data');
+        }
+      }
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/assets/style.css">
   <link rel="stylesheet" href="/assets/service-requests-admin.css">
+  <style>
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in {
+      animation: fade-in 0.3s ease-out;
+    }
+    
+    /* Drawer animations */
+    @keyframes slide-in-right {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+    @keyframes fade-in-backdrop {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .drawer-slide-in {
+      animation: slide-in-right 0.3s ease-out;
+    }
+    .drawer-backdrop-in {
+      animation: fade-in-backdrop 0.2s ease-out;
+    }
+    
+    /* Smooth transitions for table rows */
+    tbody tr {
+      transition: all 0.15s ease;
+    }
+    tbody tr:hover {
+      transform: translateX(2px);
+    }
+    tbody tr:active {
+      transform: scale(0.995);
+    }
+    
+    /* Toast animations */
+    @keyframes slide-in-from-top-5 {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    
+    /* Hide scrollbar but keep functionality */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    /* Hide all scrollbars globally */
+    ::-webkit-scrollbar {
+      width: 0px;
+      height: 0px;
+    }
+    * {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    /* Specific scrollbar hiding for main containers */
+    body, html {
+      overflow-x: hidden;
+    }
+    main {
+      overflow-x: hidden;
+    }
+  </style>
 </head>
-<body>
+<body class="min-h-screen bg-slate-100 font-sans text-slate-800">
 
-  <div class="min-h-screen bg-slate-100 font-sans text-slate-800 flex overflow-hidden">
+  <div class="flex min-h-screen">
     
     <!-- SIDEBAR -->
     <aside class="w-64 bg-slate-900 text-slate-300 flex-shrink-0 hidden lg:flex flex-col">
@@ -27,33 +128,49 @@
         </span>
       </div>
 
-      <nav class="flex-1 px-4 py-6 space-y-1">
-        <a href="/admin-dashboard.php" class="nav-item w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
-          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-          <span>Overview</span>
+      <nav class="flex-1 px-4 py-6 space-y-1" id="sidebarNav">
+        <a href="/admin-dashboard.php" class="nav-item w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+          <div class="flex items-center gap-3">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+            <span>Overview</span>
+          </div>
         </a>
-        <a href="/admin/service-requests.php" class="nav-item w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium bg-blue-600 text-white shadow-md transition-colors">
+        <a href="/admin/service-requests.php" class="nav-item active w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors bg-blue-600 text-white shadow-md">
           <div class="flex items-center gap-3">
             <i data-lucide="ticket" class="w-5 h-5"></i>
             <span>Service Requests</span>
           </div>
           <span id="pendingBadge" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
         </a>
-        <a href="/admin/users.php" class="nav-item w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
-          <i data-lucide="users" class="w-5 h-5"></i>
-          <span>Citizen Users</span>
+        <a href="/admin/billing.php" class="nav-item w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+          <div class="flex items-center gap-3">
+            <i data-lucide="credit-card" class="w-5 h-5"></i>
+            <span>Billing & Payments</span>
+          </div>
         </a>
-        <a href="/admin/technicians.php" class="nav-item w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
-          <i data-lucide="hammer" class="w-5 h-5"></i>
-          <span>Technicians</span>
+        <a href="/admin/users.php" class="nav-item w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+          <div class="flex items-center gap-3">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            <span>Citizen Users</span>
+          </div>
         </a>
-        <a href="/admin/announcements.php" class="nav-item w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
-          <i data-lucide="megaphone" class="w-5 h-5"></i>
-          <span>Announcements</span>
+        <a href="/admin/technicians.php" class="nav-item w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+          <div class="flex items-center gap-3">
+            <i data-lucide="hammer" class="w-5 h-5"></i>
+            <span>Technicians</span>
+          </div>
         </a>
-        <a href="/admin/analytics.php" class="nav-item w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors">
-          <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-          <span>Analytics</span>
+        <a href="/admin/announcements.php" class="nav-item w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+          <div class="flex items-center gap-3">
+            <i data-lucide="megaphone" class="w-5 h-5"></i>
+            <span>Announcements</span>
+          </div>
+        </a>
+        <a href="/admin/analytics.php" class="nav-item w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+          <div class="flex items-center gap-3">
+            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+            <span>Analytics</span>
+          </div>
         </a>
       </nav>
 
@@ -87,17 +204,78 @@
           </div>
         </div>
         <div class="flex items-center gap-4">
-          <button class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full">
-            <i data-lucide="bell" class="w-5 h-5"></i>
-            <span class="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
-          </button>
-          <div class="h-8 w-px bg-slate-200 mx-1"></div>
-          <div class="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-1.5 rounded-lg transition-colors">
-            <div class="text-right hidden sm:block">
-              <p class="text-sm font-bold text-slate-800" id="adminName">Admin User</p>
-              <p class="text-xs text-slate-500" id="adminRole">City Engineering Office</p>
+          <!-- Notification Button with Dropdown -->
+          <div class="relative">
+            <button class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors" id="notificationBtn">
+              <i data-lucide="bell" class="w-5 h-5"></i>
+              <span id="notificationDot" class="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
+            </button>
+            <!-- Notification Dropdown -->
+            <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-slate-200 z-50">
+              <div class="p-4 border-b border-slate-100">
+                <h3 class="font-bold text-slate-800 text-sm">Notifications</h3>
+              </div>
+              <div class="max-h-96 overflow-y-auto">
+                <div class="p-4 hover:bg-slate-50 cursor-pointer border-b border-slate-50">
+                  <div class="flex gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <i data-lucide="ticket" class="w-4 h-4 text-blue-600"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm text-slate-800 font-medium">New Service Request</p>
+                      <p class="text-xs text-slate-500 mt-0.5">Water leak reported at Barangay Centro</p>
+                      <p class="text-xs text-slate-400 mt-1">2 minutes ago</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="p-4 text-center text-sm text-slate-500">
+                  <p>No new notifications</p>
+                </div>
+              </div>
+              <div class="p-3 border-t border-slate-100 text-center">
+                <button class="text-xs font-medium text-blue-600 hover:text-blue-700">View All</button>
+              </div>
             </div>
-            <div class="h-9 w-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold" id="adminAvatar">AD</div>
+          </div>
+          
+          <div class="h-8 w-px bg-slate-200 mx-1"></div>
+          
+          <!-- Profile Dropdown -->
+          <div class="relative">
+            <div class="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-1.5 rounded-lg transition-colors" id="profileDropdownBtn">
+              <div class="text-right hidden sm:block">
+                <p class="text-sm font-bold text-slate-800" id="adminName">Admin User</p>
+                <p class="text-xs text-slate-500" id="adminRole">City Engineering Office</p>
+              </div>
+              <div class="h-9 w-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold" id="adminAvatar">AD</div>
+            </div>
+            <!-- Profile Dropdown Menu -->
+            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 z-50">
+              <div class="p-3 border-b border-slate-100">
+                <p class="text-sm font-bold text-slate-800" id="dropdownName">Admin User</p>
+                <p class="text-xs text-slate-500" id="dropdownRole">System Administrator</p>
+              </div>
+              <div class="py-2">
+                <a href="/admin/profile.php" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                  <i data-lucide="user" class="w-4 h-4"></i>
+                  <span>View Profile</span>
+                </a>
+                <a href="/admin/settings.php" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                  <i data-lucide="settings" class="w-4 h-4"></i>
+                  <span>Settings</span>
+                </a>
+                <a href="/admin/help.php" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                  <i data-lucide="help-circle" class="w-4 h-4"></i>
+                  <span>Help & Support</span>
+                </a>
+              </div>
+              <div class="py-2 border-t border-slate-100">
+                <button id="logoutBtnHeader" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
+                  <i data-lucide="log-out" class="w-4 h-4"></i>
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -177,82 +355,89 @@
       </main>
 
       <!-- SLIDE-OUT DRAWER -->
-      <div id="ticketDrawer" class="hidden">
-        <div id="drawerBackdrop" class="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity"></div>
+      <div id="ticketDrawer" class="hidden fixed inset-0 flex justify-end" style="z-index: 9999;">
+        <div id="drawerBackdrop" class="absolute inset-0 bg-slate-900/20 backdrop-blur-sm drawer-backdrop-in cursor-pointer"></div>
         
-        <div id="drawerPanel" class="absolute right-0 top-0 w-full sm:w-[480px] bg-white shadow-2xl border-l border-slate-200 flex flex-col h-full drawer-slide-in">
+        <div id="drawerPanel" class="relative w-full sm:w-[480px] bg-white shadow-2xl border-l border-slate-200 flex flex-col h-full drawer-slide-in overflow-hidden">
           
-          <div class="h-16 px-6 border-b border-slate-100 flex items-center justify-between bg-slate-50 flex-shrink-0">
+          <!-- Drawer Header -->
+          <div class="h-16 px-6 border-b border-slate-200 flex items-center justify-between bg-white flex-shrink-0">
             <div class="flex items-center gap-3">
-              <span id="drawerTicketId" class="font-mono font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded text-sm"></span>
-              <span id="drawerStatusBadge" class="text-xs font-bold px-2 py-0.5 rounded border"></span>
+              <span id="drawerTicketId" class="font-mono font-bold text-slate-600 text-sm"></span>
+              <span id="drawerStatusBadge" class="text-xs font-bold px-2 py-1 rounded border"></span>
             </div>
-            <button id="closeDrawer" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-200 rounded-full transition-colors">
+            <button id="closeDrawer" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded transition-colors">
               <i data-lucide="x" class="w-5 h-5"></i>
             </button>
           </div>
 
           <div class="flex-1 overflow-y-auto p-6 space-y-6">
             
+            <!-- Issue Details -->
             <div>
               <h2 id="drawerIssueTitle" class="text-xl font-bold text-slate-800 mb-2"></h2>
               <div id="drawerDescription" class="bg-slate-50 border border-slate-100 p-4 rounded-lg text-sm text-slate-700 leading-relaxed"></div>
             </div>
 
+            <!-- Request Information -->
             <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-1 col-span-2">
+                <label class="text-xs font-bold text-slate-500 uppercase">
+                  Category
+                </label>
+                <p id="drawerCategory" class="text-sm font-semibold text-slate-800 bg-slate-100 px-3 py-2 rounded-lg inline-block"></p>
+              </div>
               <div class="space-y-1">
-                <label class="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
-                  <i data-lucide="user" class="w-3 h-3"></i> Reported By
+                <label class="text-xs font-bold text-slate-500 uppercase">
+                  Reported By
                 </label>
                 <p id="drawerCitizen" class="text-sm font-medium text-slate-800"></p>
               </div>
               <div class="space-y-1">
-                <label class="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
-                  <i data-lucide="clock" class="w-3 h-3"></i> Date Reported
+                <label class="text-xs font-bold text-slate-500 uppercase">
+                  Date Reported
                 </label>
                 <p id="drawerDate" class="text-sm font-medium text-slate-800"></p>
               </div>
               <div class="space-y-1 col-span-2">
-                <label class="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
-                  <i data-lucide="map-pin" class="w-3 h-3"></i> Location
+                <label class="text-xs font-bold text-slate-500 uppercase">
+                  Location
                 </label>
-                <div class="flex items-center gap-2">
-                  <p id="drawerLocation" class="text-sm font-medium text-slate-800"></p>
-                  <button class="text-blue-600 text-xs hover:underline">(View Map)</button>
-                </div>
+                <p id="drawerLocation" class="text-sm font-medium text-slate-800"></p>
               </div>
             </div>
 
+            <!-- Management Section -->
             <div class="border-t border-slate-100 pt-6">
-              <h3 class="text-sm font-bold text-slate-800 mb-3">Assign Technician</h3>
-              <div class="space-y-3">
-                <div class="relative">
-                  <i data-lucide="hammer" class="absolute left-3 top-3 text-slate-400 w-4 h-4"></i>
-                  <select id="technicianSelect" class="w-full appearance-none border border-slate-200 rounded-lg p-3 pl-10 text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                    <option value="">Select Team...</option>
+              <h3 class="text-sm font-bold text-slate-800 mb-4">Manage Request</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">
+                    Assign Technician
+                  </label>
+                  <select id="technicianSelect" class="w-full border border-slate-200 rounded-lg p-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <option value="">Select Technician...</option>
                   </select>
                 </div>
-                <div class="flex gap-2">
-                  <button id="updateAssignmentBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm transition-colors">
+                
+                <div class="space-y-2">
+                  <button id="updateAssignmentBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-sm transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="user-check" class="w-4 h-4"></i>
                     Update Assignment
                   </button>
-                  <button id="markResolvedBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm transition-colors">
-                    Mark Resolved
+                  
+                  <button id="markResolvedBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-sm transition-colors">
+                    Mark as Resolved
                   </button>
                 </div>
               </div>
             </div>
 
+            <!-- Internal Notes -->
             <div class="border-t border-slate-100 pt-6">
               <h3 class="text-sm font-bold text-slate-800 mb-3">Internal Notes</h3>
               <div id="notesContainer" class="space-y-3">
-                <div class="flex gap-3 text-sm">
-                  <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold flex-shrink-0 text-xs">AD</div>
-                  <div class="bg-slate-50 p-3 rounded-r-lg rounded-bl-lg">
-                    <p class="text-slate-700">Verified the report. Notified Water District to prioritize.</p>
-                    <span class="text-[10px] text-slate-400 mt-1 block">1 hour ago</span>
-                  </div>
-                </div>
+                <p class="text-sm text-slate-500 italic">No notes yet.</p>
               </div>
               <div class="mt-4 relative">
                 <input type="text" id="newNoteInput" placeholder="Add a note..." class="w-full border border-slate-200 rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:border-blue-500" />
@@ -269,7 +454,30 @@
     </div>
   </div>
 
+  <!-- Debug: Check if scripts are loading -->
+  <script>
+    console.log('=== Scripts Section Start ===');
+    console.log('Document ready state:', document.readyState);
+  </script>
+  
+  <!-- API Client -->
   <script src="/assets/api-client.js"></script>
+  <script>console.log('API Client loaded, ApiClient available:', typeof ApiClient !== 'undefined');</script>
+  
+  <!-- Service Requests Admin JS -->
   <script src="/assets/service-requests-admin.js"></script>
+  <script>console.log('Service Requests Admin JS loaded');</script>
+  
+  <!-- Initialize Lucide Icons -->
+  <script>
+    console.log('Lucide available:', typeof lucide !== 'undefined');
+    // Initialize icons after page load
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+      console.log('Lucide icons initialized');
+    } else {
+      console.error('Lucide library not loaded!');
+    }
+  </script>
 </body>
 </html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Requests API</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 {
+            color: #4ec9b0;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #2d2d2d;
+            border-radius: 5px;
+        }
+        .json {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .info { color: #9cdcfe; }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Requests API Test</h1>
+    
+    <div class="section">
+        <button onclick="testAPI()">Test GET /api/requests</button>
+        <button onclick="clearResults()">Clear</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        async function testAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="section info">Loading...</div>';
+            
+            try {
+                console.log('Fetching /api/requests...');
+                const response = await fetch('/api/requests', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                // Display results
+                let html = '';
+                
+                // Overall response
+                html += `
+                    <div class="section">
+                        <h2 class="success">✓ API Response (Status: ${response.status})</h2>
+                        <div class="json">${JSON.stringify(data, null, 2)}</div>
+                    </div>
+                `;
+                
+                // Extract tickets
+                let tickets = [];
+                if (data.data && data.data.requests) {
+                    tickets = data.data.requests;
+                } else if (data.requests) {
+                    tickets = data.requests;
+                } else if (Array.isArray(data)) {
+                    tickets = data;
+                }
+                
+                html += `
+                    <div class="section">
+                        <h2 class="info">📊 Tickets Found: ${tickets.length}</h2>
+                        ${tickets.length > 0 ? `
+                            <div class="json">${JSON.stringify(tickets.slice(0, 5).map(t => ({
+                                id: t.id,
+                                id_type: typeof t.id,
+                                ticket_number: t.ticket_number,
+                                issue_type: t.issue_type,
+                                status: t.status,
+                                priority: t.priority
+                            })), null, 2)}</div>
+                            <p style="margin-top: 10px;">Showing first 5 of ${tickets.length} tickets</p>
+                            <p><strong>All Ticket IDs:</strong> ${tickets.map(t => `${t.id} (${typeof t.id})`).join(', ')}</p>
+                        ` : '<p class="error">No tickets found</p>'}
+                    </div>
+                `;
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = `
+                    <div class="section error">
+                        <h2>❌ Error</h2>
+                        <p>${error.message}</p>
+                        <div class="json">${error.stack}</div>
+                    </div>
+                `;
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Auto-run on load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Test page loaded');
+            testAPI();
+        });
+    </script>
+</body>
+</html>
