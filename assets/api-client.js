@@ -461,6 +461,39 @@ const AuthAPI = {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   },
+
+  /**
+   * Send verification code to email
+   * @param {object} data - { email }
+   * @returns {Promise<object>} Result with email confirmation
+   */
+  async sendVerificationCode(data) {
+    return ApiClient.post('/auth/send-verification-code', data);
+  },
+
+  /**
+   * Verify email with code
+   * @param {object} data - { email, code }
+   * @returns {Promise<object>} Result with verification status
+   */
+  async verifyCode(data) {
+    return ApiClient.post('/auth/verify-code', data);
+  },
+
+  /**
+   * Verify code and register account
+   * @param {object} data - Full registration data with verification_code
+   * @returns {Promise<object>} Auth token and user info
+   */
+  async verifyAndRegister(data) {
+    const result = await ApiClient.post('/auth/verify-and-register', data);
+    // API returns {success: true, data: {user, token}, message}
+    if (result.success && result.data && result.data.token) {
+      localStorage.setItem('auth_token', result.data.token);
+      localStorage.setItem('user', JSON.stringify(result.data.user));
+    }
+    return result;
+  },
 };
 ApiClient.auth = AuthAPI;
 window.AuthAPI = AuthAPI;

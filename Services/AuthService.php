@@ -49,6 +49,7 @@ class AuthService {
         $errors = $this->validateRegistration($data);
         
         if (!empty($errors)) {
+            error_log("Registration validation failed: " . json_encode($errors));
             return [
                 'success' => false,
                 'errors' => $errors
@@ -57,6 +58,7 @@ class AuthService {
         
         // Check if email already exists
         if (User::findByEmail($data['email'])) {
+            error_log("Registration failed: Email already exists - " . $data['email']);
             return [
                 'success' => false,
                 'errors' => ['email' => 'Email already registered']
@@ -64,9 +66,20 @@ class AuthService {
         }
         
         try {
+            error_log("Creating user with data: " . json_encode([
+                'email' => $data['email'],
+                'firstName' => $data['firstName'] ?? null,
+                'lastName' => $data['lastName'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'street' => $data['street'] ?? null,
+                'barangay' => $data['barangay'] ?? null
+            ]));
+            
             // Create user
             $user = new User();
             $user->create($data);
+            
+            error_log("User created successfully: " . $data['email']);
             
             return [
                 'success' => true,
@@ -76,6 +89,7 @@ class AuthService {
             ];
             
         } catch (Exception $e) {
+            error_log("Registration exception: " . $e->getMessage());
             return [
                 'success' => false,
                 'errors' => ['general' => 'Registration failed: ' . $e->getMessage()]
@@ -293,30 +307,30 @@ class AuthService {
     private function validateRegistration(array $data): array {
         $errors = [];
         
-        if (empty($data['email'])) {
+        // Support both camelCase (from frontend) and snake_case (from backend)
+        $firstName = $data['firstName'] ?? $data['first_name'] ?? null;
+        $lastName = $data['lastName'] ?? $data['last_name'] ?? null;
+        $password = $data['password'] ?? null;
+        $email = $data['email'] ?? null;
+        
+        if (empty($email)) {
             $errors['email'] = 'Email is required';
-        } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Invalid email format';
         }
         
-        if (empty($data['first_name'])) {
-            $errors['first_name'] = 'First name is required';
+        if (empty($firstName)) {
+            $errors['firstName'] = 'First name is required';
         }
         
-        if (empty($data['last_name'])) {
-            $errors['last_name'] = 'Last name is required';
+        if (empty($lastName)) {
+            $errors['lastName'] = 'Last name is required';
         }
         
-        if (empty($data['password'])) {
+        if (empty($password)) {
             $errors['password'] = 'Password is required';
-        } elseif (strlen($data['password']) < 6) {
-            $errors['password'] = 'Password must be at least 6 characters';
-        }
-        
-        if (!empty($data['password']) && empty($data['password_confirmation'])) {
-            $errors['password_confirmation'] = 'Password confirmation is required';
-        } elseif (!empty($data['password']) && $data['password'] !== $data['password_confirmation']) {
-            $errors['password_confirmation'] = 'Passwords do not match';
+        } elseif (strlen($password) < 8) {
+            $errors['password'] = 'Password must be at least 8 characters';
         }
         
         return $errors;
@@ -462,6 +476,115 @@ class AuthService {
                 'success' => false,
                 'message' => 'Failed to update profile: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Send verification code via email
+     */
+    public function sendVerificationEmail(string $email, string $code): bool {
+        try {
+            // Get mail configuration
+            $config = require __DIR__ . '/../config/mail.php';
+            
+            $subject = 'Email Verification Code - FixItMati';
+            $message = "
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background-color: #0b5ed7; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+                        .content { padding: 20px; background-color: #f8f9fa; }
+                        .code { font-size: 32px; font-weight: bold; text-align: center; color: #0b5ed7; padding: 20px; background-color: white; border-radius: 5px; margin: 20px 0; }
+                        .footer { padding: 10px; text-align: center; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h1>FixItMati</h1>
+                        </div>
+                        <div class='content'>
+                            <h2>Email Verification</h2>
+                            <p>Thank you for registering with FixItMati! Your verification code is:</p>
+                            <div class='code'>$code</div>
+                            <p>This code will expire in 15 minutes.</p>
+                            <p>If you didn't request this code, please ignore this email.</p>
+                        </div>
+                        <div class='footer'>
+                            <p>&copy; 2024 FixItMati. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            ";
+
+            // For now, we'll use PHP's mail function as fallback
+            // In production, use PHPMailer or similar
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type: text/html; charset=UTF-8" . "\r\n";
+            $headers .= "From: noreply@fixitmati.local" . "\r\n";
+
+            // Try to send via PHPMailer if available
+            if (class_exists('\PHPMailer\PHPMailer\PHPMailer')) {
+                return $this->sendViaPhpMailer($email, $subject, $message);
+            }
+
+            // Fallback to mail function
+            return mail($email, $subject, $message, $headers);
+
+        } catch (Exception $e) {
+            error_log("Error sending verification email: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send email via PHPMailer (if available)
+     * @noinspection PhpUndefinedClassInspection
+     */
+    private function sendViaPhpMailer(string $email, string $subject, string $message): bool {
+        try {
+            // Check if PHPMailer is installed
+            if (!class_exists('\PHPMailer\PHPMailer\PHPMailer')) {
+                return false; // Fall back to mail()
+            }
+
+            $config = require __DIR__ . '/../config/mail.php';
+            
+            // @noinspection PhpUndefinedClassInspection
+            $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
+            // Configure SMTP if settings exist
+            if (isset($config['smtp'])) {
+                $mail->isSMTP();
+                $mail->Host = $config['smtp']['host'] ?? 'smtp.mailtrap.io';
+                $mail->Port = $config['smtp']['port'] ?? 587;
+                $mail->SMTPAuth = true;
+                $mail->Username = $config['smtp']['username'] ?? '';
+                $mail->Password = $config['smtp']['password'] ?? '';
+                $mail->SMTPSecure = $config['smtp']['encryption'] ?? 'tls';
+                // Disable SSL verification for systems with certificate issues
+                $mail->SMTPOptions = array(
+                    'ssl' => array(
+                        'verify_peer' => false,
+                        'verify_peer_name' => false,
+                        'allow_self_signed' => true
+                    )
+                );
+            }
+
+            $mail->setFrom($config['from_email'] ?? 'noreply@fixitmati.local', 'FixItMati');
+            $mail->addAddress($email);
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $message;
+
+            return $mail->send();
+        } catch (Exception $e) {
+            error_log("PHPMailer error: " . $e->getMessage());
+            return false;
         }
     }
 }

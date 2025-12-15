@@ -16,6 +16,7 @@ if (isset($_SESSION['user_id'])) {
   <title>Create Account - FixItMati</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <style>
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
@@ -84,28 +85,31 @@ if (isset($_SESSION['user_id'])) {
     .form-step.active {
       display: block;
     }
-    /* Ensure consistent height for both steps */
-    #step1, #step2 {
-      min-height: 380px;
+    /* Smooth transition for error messages */
+    .error-msg {
+      transition: all 0.2s ease-in-out;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+    .error-msg.show {
+      max-height: 24px; /* Adjust based on font size */
+      opacity: 1;
+      margin-top: 4px;
     }
   </style>
 </head>
 <body class="min-h-screen flex bg-white font-sans text-slate-800">
   
-  <!-- LEFT SIDE: BRANDING & INFO -->
-  <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 relative overflow-hidden flex-col justify-between p-8 text-white h-screen">
+  <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 relative overflow-hidden flex-col justify-between p-12 text-white h-screen">
     
-    <!-- Background Decorative Circles -->
     <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
       <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-cyan-400/20 blur-3xl animate-pulse-glow"></div>
       <div class="absolute top-1/3 right-0 w-80 h-80 rounded-full bg-blue-500/10 blur-3xl animate-float"></div>
       <div class="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-indigo-400/15 blur-3xl"></div>
-      
-      <!-- Grid Pattern Overlay -->
       <div class="absolute inset-0 opacity-[0.02]" style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 30px 30px;"></div>
     </div>
 
-    <!-- Top Branding -->
     <div class="relative z-10 flex items-center gap-3 group">
       <div class="glass-effect p-3 rounded-2xl shadow-lg transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl">
         <i data-lucide="hammer" class="w-7 h-7"></i>
@@ -113,9 +117,8 @@ if (isset($_SESSION['user_id'])) {
       <span class="text-2xl font-bold tracking-tight">FixItMati</span>
     </div>
 
-    <!-- Central Message -->
     <div class="relative z-10 max-w-lg -mt-8">
-      <div class="inline-block mb-3">
+      <div class="inline-block mb-4">
         <span class="px-4 py-1.5 bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-full text-xs font-semibold text-blue-200 uppercase tracking-wider">
           Join Mati City Today
         </span>
@@ -128,7 +131,7 @@ if (isset($_SESSION['user_id'])) {
         Get instant access to all public utility services. Track requests, pay bills securely, and stay connected with your local government.
       </p>
       
-      <div class="space-y-5">
+      <div class="space-y-6">
         <div class="feature-card flex items-start gap-4 p-4 rounded-xl glass-effect">
           <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg">
             <i data-lucide="rocket" class="w-5 h-5 text-white"></i>
@@ -147,19 +150,9 @@ if (isset($_SESSION['user_id'])) {
             <p class="text-blue-200/80 text-sm">Your data is encrypted and protected</p>
           </div>
         </div>
-        <div class="feature-card flex items-start gap-4 p-4 rounded-xl glass-effect">
-          <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center shadow-lg">
-            <i data-lucide="users" class="w-5 h-5 text-white"></i>
-          </div>
-          <div>
-            <h3 class="font-semibold text-white mb-1">Community Access</h3>
-            <p class="text-blue-200/80 text-sm">Connect with 50,000+ verified citizens</p>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Footer -->
     <div class="relative z-10">
       <div class="flex items-center gap-2 mb-3 text-blue-300/70">
         <i data-lucide="shield" class="w-4 h-4"></i>
@@ -171,759 +164,726 @@ if (isset($_SESSION['user_id'])) {
     </div>
   </div>
 
-  <!-- RIGHT SIDE: REGISTRATION FORM -->
-  <div class="w-full lg:w-1/2 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 lg:bg-white h-screen overflow-y-auto">
-    <div class="flex flex-col justify-center items-center min-h-full p-4 sm:p-8">
-      <div class="w-full max-w-md bg-white p-6 sm:p-10 rounded-3xl shadow-xl border border-slate-100 lg:border-none lg:shadow-none lg:p-0 my-8">
+  <div class="w-full lg:w-1/2 bg-white h-screen overflow-y-auto">
+    <div class="flex flex-col justify-center items-center min-h-full p-6 lg:p-12">
+      <div class="w-full max-w-lg bg-white p-6 sm:p-10 rounded-3xl lg:p-0 my-4">
       
-      <!-- Mobile Logo (Visible only on small screens) -->
-      <div class="lg:hidden flex justify-center mb-6">
+      <div class="lg:hidden flex justify-center mb-8">
         <div class="flex items-center gap-3 group">
-          <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-3 rounded-xl shadow-lg transform transition-transform group-hover:scale-105">
+          <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-3 rounded-xl shadow-lg">
             <i data-lucide="hammer" class="text-white w-6 h-6"></i>
           </div>
-          <span class="text-2xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent">FixItMati</span>
+          <span class="text-2xl font-bold text-slate-800">FixItMati</span>
         </div>
       </div>
 
-      <div class="mb-6">
-        <h2 class="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Create Account</h2>
-        <p class="text-slate-500 text-sm">Join Mati City's digital platform.</p>
+      <div class="mb-10 text-center lg:text-left">
+        <h2 class="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Create Account</h2>
+        <p class="text-slate-500 text-base">Join Mati City's digital platform.</p>
       </div>
 
-      <!-- Step Indicator -->
-      <div class="flex items-center justify-center gap-2 mb-6">
-        <div class="flex items-center gap-1.5">
-          <div id="step1Indicator" class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold transition-all duration-300">1</div>
-          <span id="step1Label" class="text-xs font-semibold text-blue-600 transition-all duration-300">Personal</span>
+      <div class="flex items-center justify-center lg:justify-start gap-4 mb-10">
+        <div class="flex items-center gap-2">
+          <div id="step1Indicator" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shadow-sm transition-all duration-300">1</div>
+          <span id="step1Label" class="text-sm font-semibold text-blue-600 transition-all duration-300">Personal</span>
         </div>
-        <div class="w-10 h-0.5 bg-slate-200 transition-all duration-300" id="stepConnector"></div>
-        <div class="flex items-center gap-1.5">
-          <div id="step2Indicator" class="w-7 h-7 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold transition-all duration-300">2</div>
-          <span id="step2Label" class="text-xs font-medium text-slate-400 transition-all duration-300">Security</span>
+        <div class="w-12 h-0.5 bg-slate-100 transition-all duration-300" id="stepConnector1"></div>
+        <div class="flex items-center gap-2">
+          <div id="step2Indicator" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-sm font-bold transition-all duration-300">2</div>
+          <span id="step2Label" class="text-sm font-medium text-slate-400 transition-all duration-300">Security</span>
+        </div>
+        <div class="w-12 h-0.5 bg-slate-100 transition-all duration-300" id="stepConnector2"></div>
+        <div class="flex items-center gap-2">
+          <div id="step3Indicator" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-sm font-bold transition-all duration-300">3</div>
+          <span id="step3Label" class="text-sm font-medium text-slate-400 transition-all duration-300">Verify</span>
         </div>
       </div>
 
-      <!-- Error Message -->
-      <div id="errorMessage" class="hidden mb-4 bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-xs flex items-center gap-2 animate-fade-in">
-        <i data-lucide="alert-circle" class="w-3.5 h-3.5 flex-shrink-0"></i>
+      <div id="errorMessage" class="hidden mb-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm flex items-center gap-3 animate-fade-in shadow-sm">
+        <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
         <span id="errorText"></span>
       </div>
-
-      <!-- Success Message -->
-      <div id="successMessage" class="hidden mb-4 bg-green-50 border border-green-200 text-green-600 px-3 py-2 rounded-lg text-xs flex items-center gap-2 animate-fade-in">
-        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 flex-shrink-0"></i>
+      <div id="successMessage" class="hidden mb-6 bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-xl text-sm flex items-center gap-3 animate-fade-in shadow-sm">
+        <i data-lucide="check-circle-2" class="w-4 h-4 flex-shrink-0"></i>
         <span id="successText"></span>
       </div>
 
-      <form id="registerForm" class="space-y-4" novalidate>
+      <form id="registerForm" class="block" novalidate>
         
-        <!-- STEP 1: Personal Information -->
-        <div id="step1" class="form-step active space-y-3.5">
-        
-        <!-- First Name -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-800 ml-1 flex items-center gap-1.5">
-            First Name
-            <span class="text-red-500">*</span>
-          </label>
-          <div class="relative group">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i data-lucide="user" class="h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"></i>
+        <div id="step1" class="form-step active">
+            <div class="space-y-6">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">First Name <span class="text-red-500">*</span></label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <i data-lucide="user" class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                            </div>
+                            <input type="text" id="firstName" name="firstName" class="block w-full pl-11 pr-4 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200" placeholder="Juan" />
+                        </div>
+                        <p id="firstNameError" class="error-msg text-xs text-red-600 ml-1"></p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">Last Name <span class="text-red-500">*</span></label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <i data-lucide="user" class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                            </div>
+                            <input type="text" id="lastName" name="lastName" class="block w-full pl-11 pr-4 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200" placeholder="Dela Cruz" />
+                        </div>
+                        <p id="lastNameError" class="error-msg text-xs text-red-600 ml-1"></p>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">Phone Number <span class="text-red-500">*</span></label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <i data-lucide="phone" class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                        </div>
+                        <input type="tel" id="phone" name="phone" maxlength="16" class="block w-full pl-11 pr-4 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200" placeholder="+63 912 345 6789" />
+                    </div>
+                    <p id="phoneError" class="error-msg text-xs text-red-600 ml-1"></p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">Street Address <span class="text-red-500">*</span></label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <i data-lucide="map-pin" class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                        </div>
+                        <input type="text" id="street" name="street" class="block w-full pl-11 pr-4 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200" placeholder="e.g., 123 Main Street" />
+                    </div>
+                    <p id="streetError" class="error-msg text-xs text-red-600 ml-1"></p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">Barangay <span class="text-red-500">*</span></label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <i data-lucide="map" class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                            </div>
+                            <select id="barangay" name="barangay" class="block w-full pl-11 pr-4 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 cursor-pointer appearance-none">
+                                <option value="">Select Barangay</option>
+                                <option value="Badas">Badas</option>
+                                <option value="Bobon">Bobon</option>
+                                <option value="Buso">Buso</option>
+                                <option value="Cabuaya">Cabuaya</option>
+                                <option value="Central (Pob.)">Central (Pob.)</option>
+                                <option value="Culian">Culian</option>
+                                <option value="Dahican">Dahican</option>
+                                <option value="Danao">Danao</option>
+                                <option value="Dawan">Dawan</option>
+                                <option value="Don Enrique Lopez">Don Enrique Lopez</option>
+                                <option value="Don Martin Marundan">Don Martin Marundan</option>
+                                <option value="Don Salvador Lopez, Sr.">Don Salvador Lopez, Sr.</option>
+                                <option value="Langka">Langka</option>
+                                <option value="Lawigan">Lawigan</option>
+                                <option value="Libudon">Libudon</option>
+                                <option value="Luban">Luban</option>
+                                <option value="Macambol">Macambol</option>
+                                <option value="Mamali">Mamali</option>
+                                <option value="Matiao">Matiao</option>
+                                <option value="Mayo">Mayo</option>
+                                <option value="Sainz">Sainz</option>
+                                <option value="Sanghay">Sanghay</option>
+                                <option value="Tagabakid">Tagabakid</option>
+                                <option value="Tagbinonga">Tagbinonga</option>
+                                <option value="Taguibo">Taguibo</option>
+                                <option value="Tamisan">Tamisan</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400"></i>
+                            </div>
+                        </div>
+                        <p id="barangayError" class="error-msg text-xs text-red-600 ml-1"></p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">City</label>
+                        <div class="relative group">
+                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <i data-lucide="building-2" class="h-5 w-5 text-slate-400"></i>
+                            </div>
+                            <input type="text" id="city" name="city" class="block w-full pl-11 pr-4 py-3 border-2 border-slate-100 rounded-xl text-sm bg-slate-50 text-slate-500 font-medium cursor-not-allowed" value="City of Mati" disabled />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="button" id="nextBtn" class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl shadow-lg shadow-blue-500/20 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all duration-200 transform hover:-translate-y-0.5">
+                        <span>Continue</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
-            <input
-              type="text"
-              id="firstName"
-              name="firstName"
-              class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
-              placeholder="Juan"
-            />
-          </div>
-          <p id="firstNameError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
-            <i data-lucide="alert-circle" class="w-3 h-3"></i>
-            <span id="firstNameErrorText"></span>
-          </p>
         </div>
 
-        <!-- Last Name -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-800 ml-1 flex items-center gap-1.5">
-            Last Name
-            <span class="text-red-500">*</span>
-          </label>
-          <div class="relative group">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i data-lucide="user" class="h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"></i>
+        <div id="step2" class="form-step">
+            <div class="space-y-6">
+                
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">Password <span class="text-red-500">*</span></label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                        </div>
+                        <input type="password" id="password" name="password" class="block w-full pl-11 pr-10 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200" placeholder="••••••••" />
+                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors">
+                            <i data-lucide="eye" id="eyeIcon" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <p id="passwordError" class="error-msg text-xs text-red-600 ml-1"></p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">Confirm Password <span class="text-red-500">*</span></label>
+                    <div class="relative group">
+                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                        </div>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="block w-full pl-11 pr-10 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200" placeholder="••••••••" />
+                        <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors">
+                            <i data-lucide="eye" id="eyeIconConfirm" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                     <p id="matchStatus" class="hidden text-xs text-red-600 ml-1 mt-1 flex items-center gap-1">
+                        <i data-lucide="alert-circle" id="matchIcon" class="w-3 h-3"></i>
+                        <span id="matchText">Passwords do not match</span>
+                    </p>
+                    <p id="confirmPasswordError" class="error-msg text-xs text-red-600 ml-1"></p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">Email Address <span class="text-red-500">*</span></label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <i data-lucide="mail" class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                        </div>
+                        <input type="email" id="email" name="email" class="block w-full pl-11 pr-3 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200" placeholder="juan@example.com" />
+                    </div>
+                    <p class="text-xs text-slate-500 ml-1">We'll send a verification code to this email</p>
+                    <p id="emailError" class="error-msg text-xs text-red-600 ml-1"></p>
+                </div>
+
+                <div class="flex items-start pt-2">
+                    <div class="flex items-center h-5">
+                        <input id="terms" name="terms" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer" />
+                    </div>
+                    <label for="terms" class="ml-3 block text-sm text-slate-600 cursor-pointer select-none">
+                        I agree to the <button type="button" id="termsBtn" class="text-blue-600 hover:text-blue-800 font-semibold hover:underline">Terms</button> and <button type="button" id="privacyBtn" class="text-blue-600 hover:text-blue-800 font-semibold hover:underline">Privacy Policy</button>
+                    </label>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="button" id="backBtn" class="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 border-2 border-slate-100 rounded-xl text-sm font-semibold text-slate-600 bg-white hover:bg-slate-50 hover:border-slate-200 transition-all">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span>Back</span>
+                    </button>
+                    <button type="submit" id="submitBtn" class="flex-[2] flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl shadow-lg shadow-blue-500/20 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all transform hover:-translate-y-0.5">
+                        <span id="btnText">Create Account</span>
+                        <i data-lucide="user-plus" id="userPlusIcon" class="w-4 h-4"></i>
+                        <div id="spinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </button>
+                </div>
             </div>
-            <input
-              type="text"
-              id="lastName"
-              name="lastName"
-              class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
-              placeholder="Dela Cruz"
-            />
-          </div>
-          <p id="lastNameError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
-            <i data-lucide="alert-circle" class="w-3 h-3"></i>
-            <span id="lastNameErrorText"></span>
-          </p>
         </div>
 
-        <!-- Email Field -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-800 ml-1 flex items-center gap-1.5">
-            Email Address
-            <span class="text-red-500">*</span>
-          </label>
-          <div class="relative group">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i data-lucide="mail" class="h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"></i>
-            </div>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
-              placeholder="juan@example.com"
-            />
-          </div>
-          <p id="emailError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
-            <i data-lucide="alert-circle" class="w-3 h-3"></i>
-            <span id="emailErrorText"></span>
-          </p>
+        <div id="step3" class="form-step">
+           <div class="space-y-6">
+               <div class="space-y-3 text-center">
+                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i data-lucide="mail-check" class="w-8 h-8 text-blue-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900">Check your email</h3>
+                    <p class="text-sm text-slate-500">We sent a verification code to <br><span id="displayEmail" class="font-semibold text-blue-600"></span></p>
+               </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 ml-1 block text-center">Verification Code</label>
+                    <div class="relative max-w-xs mx-auto">
+                        <input type="text" id="verificationCode" name="verificationCode" maxlength="11" class="block w-full py-4 px-4 border-2 border-slate-100 rounded-xl text-2xl tracking-[0.5em] font-mono text-center text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all" placeholder="000000" />
+                    </div>
+                    <p id="verificationCodeError" class="error-msg text-xs text-red-600 text-center"></p>
+                </div>
+
+                <div class="flex items-center justify-center gap-2">
+                    <span class="text-sm text-slate-500">Didn't receive code?</span>
+                    <button type="button" id="resendCodeBtn" class="text-sm font-semibold text-blue-600 hover:text-blue-800 disabled:text-slate-400 transition-colors" disabled>
+                        <span id="resendText">Resend Code</span>
+                        <span id="resendTimer" class="text-slate-500 ml-1"></span>
+                    </button>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="button" id="backBtn3" class="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 border-2 border-slate-100 rounded-xl text-sm font-semibold text-slate-600 bg-white hover:bg-slate-50 hover:border-slate-200 transition-all">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span>Back</span>
+                    </button>
+                    <button type="submit" id="verifyBtn" class="flex-[2] flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl shadow-lg shadow-green-500/20 text-sm font-bold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500/30 transition-all transform hover:-translate-y-0.5">
+                        <span id="verifyBtnText">Verify & Create</span>
+                        <i data-lucide="check-circle" id="verifyIcon" class="w-4 h-4"></i>
+                    </button>
+                </div>
+           </div>
         </div>
-
-        <!-- Phone Number -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-800 ml-1 flex items-center gap-1.5">
-            Phone Number
-            <span class="text-red-500">*</span>
-          </label>
-          <div class="relative group">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i data-lucide="phone" class="h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"></i>
-            </div>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
-              placeholder="+63 912 345 6789"
-            />
-          </div>
-          <p id="phoneError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
-            <i data-lucide="alert-circle" class="w-3 h-3"></i>
-            <span id="phoneErrorText"></span>
-          </p>
-        </div>
-
-        <!-- Address -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-800 ml-1 flex items-center gap-1.5">
-            Address
-            <span class="text-red-500">*</span>
-          </label>
-          <div class="relative group">
-            <div class="absolute top-2.5 left-0 pl-3 flex items-start pointer-events-none">
-              <i data-lucide="map-pin" class="h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"></i>
-            </div>
-            <textarea
-              id="address"
-              name="address"
-              rows="2"
-              class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300 resize-none"
-              placeholder="Barangay, Street, Mati City"
-            ></textarea>
-          </div>
-          <p id="addressError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
-            <i data-lucide="alert-circle" class="w-3 h-3"></i>
-            <span id="addressErrorText"></span>
-          </p>
-        </div>
-
-        <!-- Next Button -->
-        <button
-          type="button"
-          id="nextBtn"
-          class="w-full flex items-center justify-center gap-2 py-3 px-6 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/50 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <span>Continue</span>
-          <i data-lucide="arrow-right" class="w-4 h-4"></i>
-        </button>
-
-        </div>
-
-        <!-- STEP 2: Security & Account Type -->
-        <div id="step2" class="form-step space-y-3.5">
-
-        <!-- Password Field -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-800 ml-1 flex items-center gap-1.5">
-            Password
-            <span class="text-red-500">*</span>
-          </label>
-          <div class="relative group">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i data-lucide="lock" class="h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"></i>
-            </div>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              class="block w-full pl-10 pr-10 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              id="togglePassword"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 focus:outline-none transition-colors"
-            >
-              <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
-            </button>
-          </div>
-          <p class="text-[10px] text-slate-500 ml-1">At least 8 characters</p>
-          <p id="passwordError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
-            <i data-lucide="alert-circle" class="w-3 h-3"></i>
-            <span id="passwordErrorText"></span>
-          </p>
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-800 ml-1 flex items-center gap-1.5">
-            Confirm Password
-            <span class="text-red-500">*</span>
-          </label>
-          <div class="relative group">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i data-lucide="lock" class="h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"></i>
-            </div>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              class="block w-full pl-10 pr-10 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300"
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              id="toggleConfirmPassword"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 focus:outline-none transition-colors"
-            >
-              <i data-lucide="eye" id="eyeIconConfirm" class="w-4 h-4"></i>
-            </button>
-          </div>
-          <p id="confirmPasswordError" class="hidden text-xs text-red-600 ml-1 flex items-center gap-1">
-            <i data-lucide="alert-circle" class="w-3 h-3"></i>
-            <span id="confirmPasswordErrorText"></span>
-          </p>
-        </div>
-
-        <!-- Account Type -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-800 ml-1 flex items-center gap-1.5">
-            I am registering as
-            <span class="text-red-500">*</span>
-          </label>
-          <div class="relative group">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i data-lucide="briefcase" class="h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"></i>
-            </div>
-            <select
-              id="role"
-              name="role"
-              class="block w-full pl-10 pr-3 py-2.5 border-2 border-slate-200 rounded-xl text-sm leading-5 bg-white text-slate-700 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-slate-300 cursor-pointer"
-            >
-              <option value="customer">Citizen / Resident</option>
-              <option value="technician">Technician / Service Provider</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Terms and Conditions -->
-        <div class="flex items-start pt-1">
-          <input
-            id="terms"
-            name="terms"
-            type="checkbox"
-            class="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer mt-0.5"
-          />
-          <label for="terms" class="ml-2 block text-xs text-slate-600 cursor-pointer select-none">
-            I agree to the <a href="#" class="text-blue-600 hover:text-blue-700 font-semibold hover:underline">Terms</a> and <a href="#" class="text-blue-600 hover:text-blue-700 font-semibold hover:underline">Privacy Policy</a>
-          </label>
-        </div>
-
-        <!-- Buttons Row -->
-        <div class="flex gap-2.5">
-          <button
-            type="button"
-            id="backBtn"
-            class="flex-1 flex items-center justify-center gap-1.5 py-3 px-3 border-2 border-slate-200 rounded-xl shadow-sm text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-4 focus:ring-slate-200 transition-all duration-200"
-          >
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-            <span>Back</span>
-          </button>
-          <button
-            type="submit"
-            id="submitBtn"
-            class="flex-[2] flex items-center justify-center gap-1.5 py-3 px-3 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/50 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <span id="btnText">Create Account</span>
-            <i data-lucide="user-plus" id="userPlusIcon" class="w-4 h-4"></i>
-            <div id="spinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-          </button>
-        </div>
-
-        </div>
-
-        <!-- Divider -->
-        <div class="relative my-5">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t-2 border-slate-100"></div>
-          </div>
-          <div class="relative flex justify-center text-xs">
-            <span class="px-3 bg-white text-slate-400 font-medium">Or sign up with</span>
-          </div>
-        </div>
-
-        <!-- Social Registration -->
-        <button
-          type="button"
-          class="w-full flex items-center justify-center gap-2.5 py-3 px-4 border-2 border-slate-200 rounded-xl shadow-sm bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 transform hover:scale-[1.01]"
-        >
-          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="h-4 w-4" />
-          Sign up with Google
-        </button>
 
       </form>
-
-      <!-- Trust Badges -->
-      <div class="mt-6 pt-6 border-t border-slate-100">
-        <div class="flex items-center justify-center gap-4 text-[10px] text-slate-400">
-          <div class="flex flex-col items-center gap-1">
-            <i data-lucide="shield-check" class="w-4 h-4"></i>
-            <span>SSL Secured</span>
-          </div>
-          <div class="flex flex-col items-center gap-1">
-            <i data-lucide="lock" class="w-4 h-4"></i>
-            <span>Encrypted</span>
-          </div>
-          <div class="flex flex-col items-center gap-1">
-            <i data-lucide="check-circle" class="w-4 h-4"></i>
-            <span>Verified</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-4 text-center">
-        <p class="text-xs text-slate-600">
-          Already have an account?
-          <a href="/login.php" class="font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
-            Sign In
-          </a>
+      
+      <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+        <p class="text-sm text-slate-500">
+          Already have an account? 
+          <a href="/" class="font-semibold text-blue-600 hover:text-blue-700 hover:underline">Sign in</a>
         </p>
       </div>
-      
+
+    </div>
+  </div>
+  
+  <div id="termsModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold text-slate-800" id="modalTitle">Terms of Service</h3>
+        <button id="closeModal" class="text-slate-400 hover:text-slate-600 transition-colors">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto custom-scrollbar">
+        <div id="termsContent" class="space-y-4 text-sm text-slate-600">
+          <p><strong>Last updated: January 2025</strong></p>
+          <p>Please read these Terms of Service carefully before using the FixItMati platform.</p>
+          <p>1. By accessing the website, you are agreeing to be bound by these terms of service...</p>
+        </div>
+        <div id="privacyContent" class="hidden space-y-4 text-sm text-slate-600">
+          <p><strong>Last updated: January 2025</strong></p>
+          <p>Your privacy is important to us. It is FixItMati's policy to respect your privacy...</p>
+        </div>
+      </div>
+      <div class="p-6 border-t border-slate-100 flex justify-end">
+        <button id="closeModalBtn" class="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors">Close</button>
       </div>
     </div>
   </div>
 
-  <script src="/assets/api-client.js"></script>
   <script>
     // Initialize Lucide icons
     lucide.createIcons();
 
-    // Get form elements
-    const registerForm = document.getElementById('registerForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const btnText = document.getElementById('btnText');
-    const userPlusIcon = document.getElementById('userPlusIcon');
-    const spinner = document.getElementById('spinner');
-    const errorMessage = document.getElementById('errorMessage');
-    const errorText = document.getElementById('errorText');
-    const successMessage = document.getElementById('successMessage');
-    const successText = document.getElementById('successText');
-    const togglePassword = document.getElementById('togglePassword');
-    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    // API Configuration
+    const API_BASE_URL = 'http://localhost/fixit_mati/backend/api'; 
+    
+    // --- 1. SMART PHONE FORMATTING LOGIC ---
+    const phoneInput = document.getElementById('phone');
+
+    phoneInput.addEventListener('focus', function(e) {
+        if (this.value === '') {
+            this.value = '+63 ';
+        }
+    });
+
+    phoneInput.addEventListener('blur', function(e) {
+        if (this.value === '+63 ') {
+            this.value = '';
+        }
+    });
+
+    phoneInput.addEventListener('input', function(e) {
+        // Remove all non-numeric characters
+        let numbers = this.value.replace(/\D/g, '');
+        
+        // Handle if user pastes or types "09" or "639"
+        if (numbers.startsWith('63')) {
+            numbers = numbers.substring(2);
+        } else if (numbers.startsWith('0')) {
+            numbers = numbers.substring(1);
+        }
+        
+        // Limit to 10 digits (mobile number length without +63)
+        numbers = numbers.substring(0, 10);
+        
+        // Format the output
+        let formatted = '+63 ';
+        if (numbers.length > 0) {
+            formatted += numbers.substring(0, 3);
+        }
+        if (numbers.length >= 4) {
+            formatted += ' ' + numbers.substring(3, 6);
+        }
+        if (numbers.length >= 7) {
+            formatted += ' ' + numbers.substring(6, 10);
+        }
+        
+        this.value = formatted;
+        
+        // Validation check
+        if (numbers.length === 10) {
+            clearFieldError('phone');
+        }
+    });
+
+    // --- 2. REAL-TIME PASSWORD DETECTION LOGIC ---
     const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirmPassword');
-    const eyeIcon = document.getElementById('eyeIcon');
-    const eyeIconConfirm = document.getElementById('eyeIconConfirm');
+    const confirmInput = document.getElementById('confirmPassword');
+    const matchStatus = document.getElementById('matchStatus');
+    const matchIcon = document.getElementById('matchIcon');
+    const matchText = document.getElementById('matchText');
 
-    // Step navigation
-    const step1 = document.getElementById('step1');
-    const step2 = document.getElementById('step2');
-    const step1Indicator = document.getElementById('step1Indicator');
-    const step2Indicator = document.getElementById('step2Indicator');
-    const step1Label = document.getElementById('step1Label');
-    const step2Label = document.getElementById('step2Label');
-    const stepConnector = document.getElementById('stepConnector');
-    const nextBtn = document.getElementById('nextBtn');
-    const backBtn = document.getElementById('backBtn');
+    passwordInput.addEventListener('input', function() {
+        const val = this.value;
+        const requirements = [];
+        
+        if (val.length < 8) requirements.push("8+ chars");
+        if (!/\d/.test(val)) requirements.push("one number");
+        if (!/[!@#$%^&*]/.test(val)) requirements.push("one symbol");
 
-    let currentStep = 1;
+        if (requirements.length > 0 && val.length > 0) {
+            showFieldError('password', 'Missing: ' + requirements.join(', '));
+        } else {
+            clearFieldError('password');
+        }
+        
+        // Also check match if confirm field is filled
+        if (confirmInput.value) checkMatch();
+    });
 
-    // Field error handling
+    confirmInput.addEventListener('input', checkMatch);
+
+    function checkMatch() {
+        if (confirmInput.value === '') {
+            matchStatus.classList.add('hidden');
+            return;
+        }
+        
+        matchStatus.classList.remove('hidden');
+        if (passwordInput.value === confirmInput.value) {
+            matchIcon.setAttribute('data-lucide', 'check-circle');
+            matchIcon.classList.replace('text-red-500', 'text-green-500');
+            matchStatus.classList.replace('text-red-600', 'text-green-600');
+            matchText.textContent = 'Passwords match';
+        } else {
+            matchIcon.setAttribute('data-lucide', 'alert-circle');
+            matchIcon.classList.replace('text-green-500', 'text-red-500');
+            matchStatus.classList.replace('text-green-600', 'text-red-600');
+            matchText.textContent = 'Passwords do not match';
+        }
+        lucide.createIcons();
+    }
+
+    // --- GENERIC HELPER FUNCTIONS ---
     function showFieldError(fieldId, message) {
-      const errorEl = document.getElementById(fieldId + 'Error');
-      const errorTextEl = document.getElementById(fieldId + 'ErrorText');
-      if (errorEl && errorTextEl) {
-        errorTextEl.textContent = message;
-        errorEl.classList.remove('hidden');
-      }
+        const errorEl = document.getElementById(fieldId + 'Error');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+            const inputEl = document.getElementById(fieldId);
+            if(inputEl) inputEl.classList.add('border-red-300', 'bg-red-50');
+        }
     }
 
     function clearFieldError(fieldId) {
-      const errorEl = document.getElementById(fieldId + 'Error');
-      if (errorEl) {
-        errorEl.classList.add('hidden');
-      }
-    }
-
-    function clearAllFieldErrors() {
-      ['firstName', 'lastName', 'email', 'phone', 'address', 'password', 'confirmPassword'].forEach(field => {
-        clearFieldError(field);
-      });
-    }
-
-    // Add input event listeners to clear field errors
-    ['firstName', 'lastName', 'email', 'phone', 'address', 'password', 'confirmPassword'].forEach(fieldId => {
-      const field = document.getElementById(fieldId);
-      if (field) {
-        field.addEventListener('focus', () => {
-          clearFieldError(fieldId);
-        });
-      }
-    });
-
-    // Navigate to step 2
-    nextBtn.addEventListener('click', () => {
-      // Clear all field errors
-      clearAllFieldErrors();
-      
-      // Validate step 1 fields
-      const firstName = document.getElementById('firstName').value.trim();
-      const lastName = document.getElementById('lastName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const address = document.getElementById('address').value.trim();
-
-      let hasErrors = false;
-
-      if (!firstName) {
-        showFieldError('firstName', 'First name is required');
-        hasErrors = true;
-      }
-      
-      if (!lastName) {
-        showFieldError('lastName', 'Last name is required');
-        hasErrors = true;
-      }
-      
-      if (!email) {
-        showFieldError('email', 'Email is required');
-        hasErrors = true;
-      } else {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-          showFieldError('email', 'Please enter a valid email address');
-          hasErrors = true;
+        const errorEl = document.getElementById(fieldId + 'Error');
+        if (errorEl) {
+            errorEl.classList.remove('show');
+            errorEl.textContent = ''; // clear text so it doesn't linger
+            const inputEl = document.getElementById(fieldId);
+            if(inputEl) inputEl.classList.remove('border-red-300', 'bg-red-50');
         }
-      }
-      
-      if (!phone) {
-        showFieldError('phone', 'Phone number is required');
-        hasErrors = true;
-      }
-      
-      if (!address) {
-        showFieldError('address', 'Address is required');
-        hasErrors = true;
-      }
-
-      if (hasErrors) {
-        return;
-      }
-
-      hideMessages();
-      currentStep = 2;
-      step1.classList.remove('active');
-      step2.classList.add('active');
-
-      // Update indicators
-      step1Indicator.classList.remove('bg-blue-600', 'text-white');
-      step1Indicator.classList.add('bg-green-500', 'text-white');
-      step1Indicator.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
-      step1Label.classList.remove('text-blue-600');
-      step1Label.classList.add('text-green-600');
-
-      step2Indicator.classList.remove('bg-slate-200', 'text-slate-400');
-      step2Indicator.classList.add('bg-blue-600', 'text-white');
-      step2Label.classList.remove('text-slate-400');
-      step2Label.classList.add('text-blue-600', 'font-semibold');
-
-      stepConnector.classList.remove('bg-slate-200');
-      stepConnector.classList.add('bg-green-500');
-
-      lucide.createIcons();
-
-      // No scroll needed - form fits in viewport
-    });
-
-    // Navigate back to step 1
-    backBtn.addEventListener('click', () => {
-      hideMessages();
-      currentStep = 1;
-      step2.classList.remove('active');
-      step1.classList.add('active');
-
-      // Update indicators
-      step1Indicator.classList.remove('bg-green-500');
-      step1Indicator.classList.add('bg-blue-600', 'text-white');
-      step1Indicator.textContent = '1';
-      step1Label.classList.remove('text-green-600');
-      step1Label.classList.add('text-blue-600');
-
-      step2Indicator.classList.remove('bg-blue-600', 'text-white');
-      step2Indicator.classList.add('bg-slate-200', 'text-slate-400');
-      step2Label.classList.remove('text-blue-600', 'font-semibold');
-      step2Label.classList.add('text-slate-400');
-
-      stepConnector.classList.remove('bg-green-500');
-      stepConnector.classList.add('bg-slate-200');
-
-      lucide.createIcons();
-
-      // No scroll needed - form fits in viewport
-    });
-
-    // Password visibility toggles
-    togglePassword.addEventListener('click', () => {
-      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      passwordInput.setAttribute('type', type);
-      eyeIcon.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
-      lucide.createIcons();
-    });
-
-    toggleConfirmPassword.addEventListener('click', () => {
-      const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      confirmPasswordInput.setAttribute('type', type);
-      eyeIconConfirm.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
-      lucide.createIcons();
-    });
-
-    // Show error message
-    function showError(message) {
-      errorText.textContent = message;
-      errorMessage.classList.remove('hidden');
-      successMessage.classList.add('hidden');
-      lucide.createIcons();
-      errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-
-    // Show success message
+    
     function showSuccess(message) {
-      successText.textContent = message;
-      successMessage.classList.remove('hidden');
-      errorMessage.classList.add('hidden');
-      lucide.createIcons();
-      successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const successMsg = document.getElementById('successMessage');
+        const successText = document.getElementById('successText');
+        if (successMsg && successText) {
+            successText.textContent = message;
+            successMsg.classList.remove('hidden');
+        }
+    }
+    
+    function showError(message) {
+        const errorMsg = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        if (errorMsg && errorText) {
+            errorText.textContent = message;
+            errorMsg.classList.remove('hidden');
+        }
     }
 
-    // Hide messages
-    function hideMessages() {
-      errorMessage.classList.add('hidden');
-      successMessage.classList.add('hidden');
+    // --- NAVIGATION & SUBMISSION LOGIC ---
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+    const nextBtn = document.getElementById('nextBtn');
+    const backBtn = document.getElementById('backBtn');
+    const backBtn3 = document.getElementById('backBtn3');
+    const submitBtn = document.getElementById('submitBtn');
+    const verifyBtn = document.getElementById('verifyBtn');
+
+    // Steps
+    nextBtn.addEventListener('click', () => {
+        // Validate Step 1
+        const required = ['firstName', 'lastName', 'phone', 'street', 'barangay'];
+        let valid = true;
+        required.forEach(id => {
+            if(!document.getElementById(id).value.trim()) {
+                showFieldError(id, 'Required');
+                valid = false;
+            } else {
+                if(id === 'phone' && document.getElementById(id).value.length < 15) { // +63 9XX XXX XXXX
+                     showFieldError(id, 'Invalid format');
+                     valid = false;
+                } else {
+                    clearFieldError(id);
+                }
+            }
+        });
+
+        if(valid) {
+            step1.classList.remove('active');
+            step2.classList.add('active');
+            updateStepIndicator(2);
+        }
+    });
+
+    backBtn.addEventListener('click', () => {
+        step2.classList.remove('active');
+        step1.classList.add('active');
+        updateStepIndicator(1);
+    });
+    
+    backBtn3.addEventListener('click', () => {
+        step3.classList.remove('active');
+        step2.classList.add('active');
+        updateStepIndicator(2);
+    });
+
+    function updateStepIndicator(step) {
+        // Simplified Logic for indicators
+        const s1 = document.getElementById('step1Indicator');
+        const s2 = document.getElementById('step2Indicator');
+        const s3 = document.getElementById('step3Indicator');
+        
+        if (step >= 2) {
+            s1.classList.replace('bg-blue-600', 'bg-green-500');
+            s1.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+            s2.classList.replace('bg-slate-100', 'bg-blue-600');
+            s2.classList.replace('text-slate-400', 'text-white');
+            document.getElementById('step2Label').classList.replace('text-slate-400', 'text-blue-600');
+            document.getElementById('stepConnector1').classList.replace('bg-slate-100', 'bg-green-500');
+        } else {
+            // Revert logic if going back (simplified for brevity)
+             s1.classList.replace('bg-green-500', 'bg-blue-600');
+             s1.textContent = '1';
+             s2.classList.replace('bg-blue-600', 'bg-slate-100');
+             s2.classList.replace('text-white', 'text-slate-400');
+        }
+        if (step === 3) {
+             s2.classList.replace('bg-blue-600', 'bg-green-500');
+             s2.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+             s3.classList.replace('bg-slate-100', 'bg-blue-600');
+             s3.classList.replace('text-slate-400', 'text-white');
+             document.getElementById('step3Label').classList.replace('text-slate-400', 'text-blue-600');
+             document.getElementById('stepConnector2').classList.replace('bg-slate-100', 'bg-green-500');
+        }
+        lucide.createIcons();
     }
 
-    // Set loading state
-    function setLoading(loading) {
-      if (loading) {
+    // Create Account Click - Send Verification Code via Email
+    submitBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        
+        const pwd = passwordInput.value;
+        const cfm = confirmInput.value;
+        const em = document.getElementById('email').value.trim();
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        
+        let valid = true;
+        if(pwd.length < 8) { showFieldError('password', 'Password too short'); valid = false; }
+        if(!/\d/.test(pwd) || !/[!@#$%^&*]/.test(pwd)) { showFieldError('password', 'Missing number or symbol'); valid = false; }
+        if(pwd !== cfm) { showFieldError('confirmPassword', 'Mismatch'); valid = false; }
+        if(!em) { showFieldError('email', 'Required'); valid = false; }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if(!emailRegex.test(em)) { showFieldError('email', 'Invalid email'); valid = false; }
+        if(!document.getElementById('terms').checked) { alert('Accept terms'); valid = false; }
+        
+        if(!valid) return;
+        
+        // Show loading state
         submitBtn.disabled = true;
-        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
-        btnText.classList.add('hidden');
-        userPlusIcon.classList.add('hidden');
-        spinner.classList.remove('hidden');
-      } else {
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
-        btnText.classList.remove('hidden');
-        userPlusIcon.classList.remove('hidden');
-        spinner.classList.add('hidden');
-      }
-    }
-
-    // Validate form
-    function validateForm() {
-      clearAllFieldErrors();
-      const password = passwordInput.value;
-      const confirmPassword = confirmPasswordInput.value;
-      const terms = document.getElementById('terms');
-
-      let hasErrors = false;
-
-      // Check password length
-      if (!password) {
-        showFieldError('password', 'Password is required');
-        hasErrors = true;
-      } else if (password.length < 8) {
-        showFieldError('password', 'Password must be at least 8 characters');
-        hasErrors = true;
-      }
-
-      // Check passwords match
-      if (!confirmPassword) {
-        showFieldError('confirmPassword', 'Please confirm your password');
-        hasErrors = true;
-      } else if (password !== confirmPassword) {
-        showFieldError('confirmPassword', 'Passwords do not match');
-        hasErrors = true;
-      }
-
-      // Check terms acceptance
-      if (!terms.checked) {
-        showError('You must agree to the Terms of Service and Privacy Policy.');
-        hasErrors = true;
-      }
-
-      return !hasErrors;
-    }
-
-    // Handle form submission
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hideMessages();
-
-      // Validate form
-      if (!validateForm()) {
-        return;
-      }
-
-      setLoading(true);
-
-      const formData = {
-        first_name: document.getElementById('firstName').value,
-        last_name: document.getElementById('lastName').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
-        address: document.getElementById('address').value,
-        password: document.getElementById('password').value,
-        password_confirmation: document.getElementById('confirmPassword').value,
-        role: document.getElementById('role').value
-      };
-
-      try {
-        // Call registration API
-        const result = await ApiClient.auth.register(formData);
-
-        if (result.success) {
-          showSuccess('Account created successfully! Redirecting to login...');
-          
-          // Redirect to login after 2 seconds
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 2000);
-        } else {
-          // Handle field-level errors
-          if (result.errors) {
-            const fieldMap = {
-              'first_name': 'firstName',
-              'last_name': 'lastName',
-              'email': 'email',
-              'phone': 'phone',
-              'address': 'address',
-              'password': 'password'
-            };
-            
-            Object.entries(result.errors).forEach(([field, message]) => {
-              const fieldId = fieldMap[field] || field;
-              showFieldError(fieldId, Array.isArray(message) ? message[0] : message);
+        document.getElementById('btnText').textContent = 'Sending Code...';
+        document.getElementById('userPlusIcon').classList.add('hidden');
+        document.getElementById('spinner').classList.remove('hidden');
+        
+        try {
+            // Send verification code to email via backend API
+            const response = await axios.post('/api/auth/send-verification-code', {
+                email: em,
+                firstName: firstName,
+                lastName: lastName
+            }, {
+                withCredentials: true
             });
-          } else {
-            showError(result.message || 'Registration failed. Please try again.');
-          }
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Registration error:', error);
-        console.error('Error details:', error.response);
-        
-        let hasFieldErrors = false;
-        
-        // Detailed error handling
-        if (error.response) {
-          const status = error.response.status;
-          
-          if (error.response.errors) {
-            // Field validation errors from server
-            const fieldMap = {
-              'first_name': 'firstName',
-              'last_name': 'lastName',
-              'email': 'email',
-              'phone': 'phone',
-              'address': 'address',
-              'password': 'password'
-            };
             
-            Object.entries(error.response.errors).forEach(([field, message]) => {
-              const fieldId = fieldMap[field] || field;
-              const errorMsg = Array.isArray(message) ? message[0] : message;
-              showFieldError(fieldId, errorMsg);
-              hasFieldErrors = true;
-            });
-          } else if (status === 409 || status === 422) {
-            // Conflict - email already exists or validation error
-            showFieldError('email', 'Email is already registered. Please use a different email or login.');
-          } else if (status === 400) {
-            // Bad request
-            showError('Invalid information provided. Please check all fields and try again.');
-          } else if (status === 429) {
-            // Too many requests
-            showError('Too many registration attempts. Please try again later.');
-          } else if (status === 500 || status === 502 || status === 503) {
-            // Server error
-            showError('Server error. Please try again later.');
-          } else if (!hasFieldErrors && error.response.message) {
-            showError(error.response.message);
-          } else {
-            showError('Registration failed. Please try again.');
-          }
-        } else if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
-          // Network timeout or connection error
-          showError('Connection timeout. Please check your internet connection and try again.');
-        } else if (!navigator.onLine) {
-          // No internet connection
-          showError('No internet connection. Please check your network and try again.');
-        } else {
-          // Unknown error
-          showError('An unexpected error occurred. Please try again.');
+            if(response.data.success) {
+                // Move to Step 3
+                step2.classList.remove('active');
+                step3.classList.add('active');
+                document.getElementById('displayEmail').textContent = em;
+                updateStepIndicator(3);
+                
+                // Store email for verification
+                sessionStorage.setItem('verifyEmail', em);
+                
+                showSuccess('Verification code sent! Check your email');
+            } else {
+                showFieldError('email', response.data.message || 'Failed to send code');
+            }
+        } catch(err) {
+            console.error('Error:', err);
+            showFieldError('email', 'Error sending code. Try again');
+        } finally {
+            // Reset button state
+            submitBtn.disabled = false;
+            document.getElementById('btnText').textContent = 'Create Account';
+            document.getElementById('userPlusIcon').classList.remove('hidden');
+            document.getElementById('spinner').classList.add('hidden');
         }
-        
-        setLoading(false);
-      }
     });
 
-    // Check if already logged in
-    const token = sessionStorage.getItem('auth_token');
-    if (token) {
-      // User is already logged in, redirect to dashboard
-      window.location.href = '/';
-    }
+    // Verification - Verify Code and Create Account
+    verifyBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const rawCode = document.getElementById('verificationCode').value;
+        const code = rawCode.replace(/\s/g, ''); // Remove ALL spaces (not just trim)
+        const codeError = document.getElementById('verificationCodeError');
+        
+        if(!code || code.length !== 6) {
+            codeError.textContent = "Enter 6-digit code";
+            codeError.classList.add('show');
+            return;
+        }
+        
+        // Validate it's all digits
+        if(!/^\d{6}$/.test(code)) {
+            codeError.textContent = "Code must be 6 digits";
+            codeError.classList.add('show');
+            return;
+        }
+        
+        // Show loading state
+        verifyBtn.disabled = true;
+        const originalText = verifyBtn.textContent;
+        verifyBtn.innerHTML = '<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>';
+        codeError.classList.remove('show');
+        
+        try {
+            // Verify code and create account
+            const email = sessionStorage.getItem('verifyEmail');
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const street = document.getElementById('street').value.trim();
+            const barangay = document.getElementById('barangay').value.trim();
+            const password = passwordInput.value;
+            
+            console.log('Sending verification with:', {
+                email, firstName, lastName, code, 
+                codeLength: code.length,
+                codeType: typeof code
+            });
+            
+            const response = await axios.post('/api/auth/verify-and-register', {
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                phone: phone,
+                street: street,
+                barangay: barangay,
+                password: password,
+                verification_code: code
+            }, {
+                withCredentials: true
+            });
+            
+            if(response.data.success) {
+                // Store auth token if provided
+                if(response.data.token) {
+                    sessionStorage.setItem('auth_token', response.data.token);
+                }
+                
 
-    // Phone number formatting
-    const phoneInput = document.getElementById('phone');
-    phoneInput.addEventListener('input', (e) => {
-      let value = e.target.value.replace(/\D/g, '');
-      if (value.startsWith('63')) {
-        value = value.substring(2);
-      }
-      if (value.length > 10) {
-        value = value.substring(0, 10);
-      }
-      if (value.length > 0) {
-        e.target.value = '+63 ' + value.match(/.{1,3}/g)?.join(' ') || value;
-      }
+                // Redirect to dashboard or login
+                const redirectUrl = response.data.redirect || '/public/pages/user/user-dashboard.php';
+                setTimeout(() => window.location.href = redirectUrl, 1500);
+            } else {
+                // Check for detailed validation errors
+                let errorMsg = response.data.message || 'Registration failed';
+                if(response.data.errors && typeof response.data.errors === 'object') {
+                    const errorMessages = Object.values(response.data.errors);
+                    if(errorMessages.length > 0) {
+                        errorMsg = errorMessages[0]; // Show first error
+                        console.error('Validation errors:', response.data.errors);
+                    }
+                }
+                codeError.textContent = errorMsg;
+                codeError.classList.add('show');
+            }
+        } catch(err) {
+            console.error('Verification error details:', err.response?.data || err);
+            console.error('Full error response:', {
+                status: err.response?.status,
+                statusText: err.response?.statusText,
+                data: err.response?.data
+            });
+            let errorMsg = 'Error verifying code. Try again';
+            
+            // Check for detailed validation errors in catch
+            if(err.response?.data?.errors && typeof err.response.data.errors === 'object') {
+                const errorMessages = Object.values(err.response.data.errors);
+                if(errorMessages.length > 0) {
+                    errorMsg = errorMessages[0];
+                    console.error('Validation errors:', err.response.data.errors);
+                }
+            } else if(err.response?.data?.message) {
+                errorMsg = err.response.data.message;
+            }
+            
+            codeError.textContent = errorMsg;
+            codeError.classList.add('show');
+        } finally {
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = originalText;
+        }
     });
+
+    // Toggle Password Visibility
+    document.getElementById('togglePassword').addEventListener('click', () => {
+        passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+    });
+    document.getElementById('toggleConfirmPassword').addEventListener('click', () => {
+        confirmInput.type = confirmInput.type === 'password' ? 'text' : 'password';
+    });
+
+    // Modal Logic
+    const termsModal = document.getElementById('termsModal');
+    document.getElementById('termsBtn').addEventListener('click', () => {
+        document.getElementById('modalTitle').textContent = 'Terms of Service';
+        document.getElementById('termsContent').classList.remove('hidden');
+        document.getElementById('privacyContent').classList.add('hidden');
+        termsModal.classList.remove('hidden');
+    });
+    document.getElementById('privacyBtn').addEventListener('click', () => {
+        document.getElementById('modalTitle').textContent = 'Privacy Policy';
+        document.getElementById('termsContent').classList.add('hidden');
+        document.getElementById('privacyContent').classList.remove('hidden');
+        termsModal.classList.remove('hidden');
+    });
+    document.getElementById('closeModal').addEventListener('click', () => termsModal.classList.add('hidden'));
+    document.getElementById('closeModalBtn').addEventListener('click', () => termsModal.classList.add('hidden'));
+
   </script>
 </body>
 </html>
