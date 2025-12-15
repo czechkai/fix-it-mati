@@ -25,12 +25,15 @@ class ServiceRequest
      */
     public function create(array $data): ?array
     {
+        // Generate ticket number if not provided (matches actual schema column name)
+        $ticketNumber = $data['ticket_number'] ?? $this->generateTicketNumber();
+
         $sql = "INSERT INTO service_requests (
             user_id, category, title, description,
-            location, priority, status
+            location, priority, status, ticket_number
         ) VALUES (
             :user_id, :category, :title, :description,
-            :location, :priority, :status
+            :location, :priority, :status, :ticket_number
         ) RETURNING *";
 
         try {
@@ -42,7 +45,8 @@ class ServiceRequest
                 'description' => $data['description'],
                 'location' => $data['location'],
                 'priority' => $data['priority'] ?? 'normal',
-                'status' => 'pending'
+                'status' => 'pending',
+                'ticket_number' => $ticketNumber
             ]);
 
             $request = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -63,6 +67,28 @@ class ServiceRequest
             error_log("Error creating service request: " . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * Generate a unique ticket number
+     */
+    private function generateTicketNumber(): string
+    {
+        // Generate ticket number format: TKT-YYYYMMDD-XXXX
+        // Example: TKT-20251215-0001
+        $date = date('Ymd');
+
+        try {
+            // Count requests created today
+            $stmt = $this->db->query("SELECT COUNT(*) as count FROM service_requests WHERE DATE(created_at) = CURRENT_DATE");
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $counter = ($result['count'] ?? 0) + 1;
+        } catch (\PDOException $e) {
+            // Fallback to random number if query fails
+            $counter = rand(1, 9999);
+        }
+
+        return 'TKT-' . $date . '-' . str_pad($counter, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -206,13 +232,13 @@ class ServiceRequest
 
         try {
             $stmt = $this->db->prepare($sql);
-            
+
             // Bind parameters with proper types
             foreach ($params as $key => $value) {
                 $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
                 $stmt->bindValue(":$key", $value, $type);
             }
-            
+
             $stmt->execute();
             $requests = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -263,7 +289,7 @@ class ServiceRequest
 
         // Update status
         $sql = "UPDATE service_requests SET status = :status WHERE id = :id";
-        
+
         try {
             $stmt = $this->db->prepare($sql);
             $result = $stmt->execute([
@@ -293,11 +319,27 @@ class ServiceRequest
      */
     public function update(string $id, array $data): bool
     {
-        $allowedFields = ['category', 'issue_type', 'title', 'description', 'location', 
-                          'contact_phone', 'preferred_contact', 'priority', 'assigned_technician_id', 
-                          'status', 'admin_notes', 'estimated_completion', 'rating', 'feedback', 
-                          'rated_at', 'resolution', 'technician_notes', 'resolved_at', 
-                          'resolved_by'];
+        $allowedFields = [
+            'category',
+            'issue_type',
+            'title',
+            'description',
+            'location',
+            'contact_phone',
+            'preferred_contact',
+            'priority',
+            'assigned_technician_id',
+            'status',
+            'admin_notes',
+            'estimated_completion',
+            'rating',
+            'feedback',
+            'rated_at',
+            'resolution',
+            'technician_notes',
+            'resolved_at',
+            'resolved_by'
+        ];
 
         $updates = [];
         $params = ['id' => $id];
@@ -381,11 +423,11 @@ class ServiceRequest
     private function generateTrackingNumber(): string
     {
         $year = date('Y');
-        
+
         // Get count of requests this year
         $sql = "SELECT COUNT(*) as count FROM service_requests 
                 WHERE EXTRACT(YEAR FROM created_at) = :year";
-        
+
         try {
             $stmt = $this->db->prepare($sql);
             $stmt->execute(['year' => $year]);

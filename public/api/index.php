@@ -6,7 +6,10 @@
  * Implements RESTful API routing
  */
 
-// Enable error reporting for development
+// Start output buffering to prevent any accidental output
+ob_start();
+
+// Enable error reporting for development but don't display
 error_reporting(E_ALL);
 ini_set('display_errors', '0'); // Don't display errors as HTML
 ini_set('log_errors', '1'); // Log errors instead
@@ -26,6 +29,7 @@ header('Access-Control-Allow-Credentials: true');
 // Handle preflight requests
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
+    ob_end_clean();
     exit;
 }
 
@@ -68,16 +72,11 @@ try {
     $router->post('/api/auth/login', 'AuthController@login');
     $router->post('/api/auth/logout', 'AuthController@logout');
     $router->post('/api/auth/refresh', 'AuthController@refresh');
-<<<<<<< HEAD
-    
+
     // Email verification endpoints
     $router->post('/api/auth/send-verification-code', 'AuthController@sendVerificationCode');
     $router->post('/api/auth/verify-code', 'AuthController@verifyCode');
     $router->post('/api/auth/verify-and-register', 'AuthController@verifyAndRegister');
-    
-=======
-
->>>>>>> fb9c6aa8980f814eaf4aa2cf6a4bee81958f6229
     // Health check
     $router->get('/api/health', function () {
         return Response::success([
@@ -131,10 +130,10 @@ try {
     // ============================================
     // Note: Middleware applies to routes defined AFTER addMiddleware call
     $router->addMiddleware(new \FixItMati\Middleware\AuthMiddleware());
-    
+
     // Admin announcements endpoint (requires auth)
     $router->get('/api/admin/announcements/all', 'AnnouncementController@getAll');
-    
+
     // Get current authenticated user
     $router->get('/api/auth/me', 'AuthController@me');
 
@@ -342,7 +341,7 @@ try {
     // ============================================
     // ADMIN ROUTES (Protected + Role Check)
     // ============================================
-    
+
     // Admin Billing & Payments
     $router->get('/api/admin/transactions', 'PaymentController@getAllTransactions');
     $router->get('/api/admin/billing/stats', 'PaymentController@getStats');
@@ -351,7 +350,7 @@ try {
     $router->post('/api/admin/transactions/{id}/approve', 'PaymentController@approveTransaction');
     $router->post('/api/admin/transactions/{id}/reject', 'PaymentController@rejectTransaction');
     $router->get('/api/admin/transactions/export', 'PaymentController@exportTransactions');
-    
+
     // Admin User Management
     $router->get('/api/users/all', 'UserController@getAllUsers');
     $router->post('/api/users/create', 'UserController@createUser');
@@ -360,7 +359,7 @@ try {
     $router->post('/api/users/{id}/reset-password', 'UserController@resetPassword');
     $router->delete('/api/users/{id}', 'UserController@deleteUser');
     $router->get('/api/users/stats', 'UserController@getUserStats');
-    
+
     // Admin Technician Team Management
     $router->get('/api/technicians/all', 'TechnicianTeamController@getAllTeams');
     $router->get('/api/technicians/{id}', 'TechnicianTeamController@getTeam');
@@ -371,17 +370,24 @@ try {
     $router->put('/api/technicians/{id}', 'TechnicianTeamController@updateTeam');
     $router->delete('/api/technicians/{id}', 'TechnicianTeamController@deleteTeam');
     $router->get('/api/technicians/stats', 'TechnicianTeamController@getStats');
-    
+
     // Other admin routes (to be implemented)
     // $router->post('/api/admin/requests/{id}/assign', 'AdminController@assignTechnician');
     // $router->get('/api/admin/dashboard/stats', 'AdminController@getDashboardStats');
 
     // Dispatch request to appropriate handler
     $response = $router->dispatch($request);
+
+    // Clear any accidental output before sending JSON
+    ob_end_clean();
+
     $response->send();
 } catch (Exception $e) {
     // Handle any uncaught exceptions
     error_log($e->getMessage());
+
+    // Clear any output
+    ob_end_clean();
 
     $response = Response::serverError(
         $_ENV['APP_ENV'] === 'development' ? $e->getMessage() : 'An error occurred'

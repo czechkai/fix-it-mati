@@ -4,6 +4,7 @@
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,43 +13,77 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     .animate-fade-in {
         animation: fadeIn 0.3s ease-out;
     }
+
     @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
+
     .animate-spin {
         animation: spin 1s linear infinite;
     }
+
     @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
+
+        0%,
+        100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-20px);
+        }
     }
+
     .animate-float {
         animation: float 6s ease-in-out infinite;
     }
+
     @keyframes pulse-glow {
-        0%, 100% { opacity: 0.1; }
-        50% { opacity: 0.15; }
+
+        0%,
+        100% {
+            opacity: 0.1;
+        }
+
+        50% {
+            opacity: 0.15;
+        }
     }
+
     .animate-pulse-glow {
         animation: pulse-glow 4s ease-in-out infinite;
     }
+
     .glass-effect {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
+
     input:focus {
         transform: translateY(-1px);
     }
+
     .feature-card {
         transition: all 0.3s ease;
     }
+
     .feature-card:hover {
         transform: translateX(8px);
     }
@@ -57,17 +92,22 @@
 
 <body class="min-h-screen flex bg-white font-sans text-slate-800 overflow-hidden">
 
-    <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 relative overflow-hidden flex-col justify-between p-12 text-white h-screen">
+    <div
+        class="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 relative overflow-hidden flex-col justify-between p-12 text-white h-screen">
 
         <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-            <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-cyan-400/20 blur-3xl animate-pulse-glow"></div>
+            <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-cyan-400/20 blur-3xl animate-pulse-glow">
+            </div>
             <div class="absolute top-1/3 right-0 w-80 h-80 rounded-full bg-blue-500/10 blur-3xl animate-float"></div>
             <div class="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-indigo-400/15 blur-3xl"></div>
-            <div class="absolute inset-0 opacity-[0.02]" style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 30px 30px;"></div>
+            <div class="absolute inset-0 opacity-[0.02]"
+                style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 30px 30px;">
+            </div>
         </div>
 
         <div class="relative z-10 flex items-center gap-3 group">
-            <div class="glass-effect p-3 rounded-2xl shadow-lg transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl">
+            <div
+                class="glass-effect p-3 rounded-2xl shadow-lg transform transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl">
                 <i data-lucide="hammer" class="w-7 h-7"></i>
             </div>
             <span class="text-2xl font-bold tracking-tight">FixItMati</span>
@@ -76,15 +116,18 @@
         <div class="relative z-10 max-w-lg -mt-8">
             <h1 class="text-5xl font-extrabold mb-6 leading-tight tracking-tight">
                 Streamlining Public Services for a
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300">Better Mati City</span>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300">Better Mati
+                    City</span>
             </h1>
             <p class="text-blue-100/90 text-lg leading-relaxed mb-10 font-light">
-                Submit requests, track utility repairs, and manage your monthly bills—all in one centralized platform designed for efficiency.
+                Submit requests, track utility repairs, and manage your monthly bills—all in one centralized platform
+                designed for efficiency.
             </p>
 
             <div class="space-y-6">
                 <div class="feature-card flex items-start gap-4 p-4 rounded-xl glass-effect">
-                    <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center shadow-lg">
+                    <div
+                        class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center shadow-lg">
                         <i data-lucide="activity" class="w-5 h-5 text-white"></i>
                     </div>
                     <div>
@@ -93,7 +136,8 @@
                     </div>
                 </div>
                 <div class="feature-card flex items-start gap-4 p-4 rounded-xl glass-effect">
-                    <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg">
+                    <div
+                        class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg">
                         <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
                     </div>
                     <div>
@@ -117,7 +161,7 @@
 
     <div class="w-full lg:w-1/2 bg-white h-screen overflow-y-auto">
         <div class="flex flex-col justify-center items-center min-h-full p-6 lg:p-12">
-            
+
             <div class="w-full max-w-lg bg-white p-6 sm:p-10 rounded-3xl lg:p-0 my-4">
 
                 <div class="lg:hidden flex justify-center mb-8">
@@ -134,26 +178,32 @@
                     <p class="text-slate-500 text-base">Please enter your credentials to access your account.</p>
                 </div>
 
-                <div id="errorMessage" class="hidden mb-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm flex items-center gap-3 animate-fade-in shadow-sm">
+                <div id="errorMessage"
+                    class="hidden mb-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm flex items-center gap-3 animate-fade-in shadow-sm">
                     <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
                     <span id="errorText"></span>
                 </div>
-                <div id="successMessage" class="hidden mb-6 bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-xl text-sm flex items-center gap-3 animate-fade-in shadow-sm">
+                <div id="successMessage"
+                    class="hidden mb-6 bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-xl text-sm flex items-center gap-3 animate-fade-in shadow-sm">
                     <i data-lucide="check-circle-2" class="w-4 h-4 flex-shrink-0"></i>
                     <span id="successText"></span>
                 </div>
 
                 <form id="loginForm" class="block" novalidate>
-                    
+
                     <div class="space-y-6">
-                        
+
                         <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">Email Address <span class="text-red-500">*</span></label>
+                            <label class="text-sm font-medium text-slate-700 ml-1 flex items-center gap-1">Email Address
+                                <span class="text-red-500">*</span></label>
                             <div class="relative group">
                                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                    <i data-lucide="mail" class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                                    <i data-lucide="mail"
+                                        class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
                                 </div>
-                                <input type="email" id="email" name="email" class="block w-full pl-11 pr-4 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200" placeholder="citizen@mati.gov.ph" />
+                                <input type="email" id="email" name="email"
+                                    class="block w-full pl-11 pr-4 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200"
+                                    placeholder="citizen@mati.gov.ph" />
                             </div>
                             <p id="emailError" class="hidden text-xs text-red-600 ml-1 mt-1 flex items-center gap-1">
                                 <i data-lucide="alert-circle" class="w-3 h-3"></i>
@@ -163,15 +213,22 @@
 
                         <div class="space-y-2">
                             <div class="flex justify-between items-center ml-1">
-                                <label class="text-sm font-medium text-slate-700 flex items-center gap-1">Password <span class="text-red-500">*</span></label>
-                                <a href="/forgot-password.php" class="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors">Forgot password?</a>
+                                <label class="text-sm font-medium text-slate-700 flex items-center gap-1">Password <span
+                                        class="text-red-500">*</span></label>
+                                <a href="/forgot-password.php"
+                                    class="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors">Forgot
+                                    password?</a>
                             </div>
                             <div class="relative group">
                                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                    <i data-lucide="lock" class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                                    <i data-lucide="lock"
+                                        class="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
                                 </div>
-                                <input type="password" id="password" name="password" class="block w-full pl-11 pr-10 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200" placeholder="••••••••" />
-                                <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 focus:outline-none transition-colors">
+                                <input type="password" id="password" name="password"
+                                    class="block w-full pl-11 pr-10 py-3 border-2 border-slate-100 rounded-xl text-sm bg-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200"
+                                    placeholder="••••••••" />
+                                <button type="button" id="togglePassword"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 focus:outline-none transition-colors">
                                     <i data-lucide="eye" id="eyeIcon" class="w-5 h-5"></i>
                                 </button>
                             </div>
@@ -182,16 +239,21 @@
                         </div>
 
                         <div class="flex items-center pt-1">
-                            <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer" />
-                            <label for="remember" class="ml-2.5 block text-sm text-slate-600 cursor-pointer select-none">
+                            <input id="remember" name="remember" type="checkbox"
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-pointer" />
+                            <label for="remember"
+                                class="ml-2.5 block text-sm text-slate-600 cursor-pointer select-none">
                                 Keep me signed in for 30 days
                             </label>
                         </div>
 
-                        <button type="submit" id="submitBtn" class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl shadow-lg shadow-blue-500/20 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all duration-200 transform hover:-translate-y-0.5">
+                        <button type="submit" id="submitBtn"
+                            class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl shadow-lg shadow-blue-500/20 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all duration-200 transform hover:-translate-y-0.5">
                             <span id="btnText">Sign In</span>
                             <i data-lucide="arrow-right" id="arrowIcon" class="w-4 h-4"></i>
-                            <div id="spinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            <div id="spinner"
+                                class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin">
+                            </div>
                         </button>
 
                         <div class="relative py-2">
@@ -203,8 +265,10 @@
                             </div>
                         </div>
 
-                        <button type="button" class="w-full flex items-center justify-center gap-3 py-3.5 px-6 border-2 border-slate-100 rounded-xl bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-200 transition-all duration-200 transform hover:-translate-y-0.5">
-                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="h-5 w-5" />
+                        <button type="button"
+                            class="w-full flex items-center justify-center gap-3 py-3.5 px-6 border-2 border-slate-100 rounded-xl bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-200 transition-all duration-200 transform hover:-translate-y-0.5">
+                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google"
+                                class="h-5 w-5" />
                             <span>Sign in with Google</span>
                         </button>
 
@@ -213,8 +277,9 @@
 
                 <div class="mt-8 pt-6 border-t border-slate-100 text-center">
                     <p class="text-sm text-slate-500">
-                        Don't have an account? 
-                        <a href="/register.php" class="font-semibold text-blue-600 hover:text-blue-700 hover:underline">Register now</a>
+                        Don't have an account?
+                        <a href="/register.php"
+                            class="font-semibold text-blue-600 hover:text-blue-700 hover:underline">Register now</a>
                     </p>
                 </div>
 
@@ -225,7 +290,7 @@
     <script src="/assets/api-client.js?v=6"></script>
     <script>
     console.log('=== Login Page Script Execution Started ===');
-    
+
     // Initialize Lucide icons
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
@@ -449,4 +514,5 @@
     }
     </script>
 </body>
+
 </html>
