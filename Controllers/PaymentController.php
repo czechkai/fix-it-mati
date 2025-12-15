@@ -346,4 +346,243 @@ class PaymentController
         
         return $configs[$gateway] ?? [];
     }
+
+    // ============================================
+    // ADMIN BILLING ENDPOINTS
+    // ============================================
+
+    /**
+     * Get all transactions (Admin only)
+     * GET /api/admin/transactions
+     */
+    public function getAllTransactions(Request $request): Response
+    {
+        $user = $request->user();
+        
+        if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
+            return Response::error('Unauthorized access', 403);
+        }
+
+        try {
+            $status = $request->query('status');
+            $transactions = $this->paymentModel->getAllTransactions($status);
+
+            return Response::success($transactions);
+        } catch (\Exception $e) {
+            error_log("Error fetching all transactions: " . $e->getMessage());
+            return Response::error('Failed to retrieve transactions', 500);
+        }
+    }
+
+    /**
+     * Get billing statistics (Admin only)
+     * GET /api/admin/billing/stats
+     */
+    public function getStats(Request $request): Response
+    {
+        $user = $request->user();
+        
+        if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
+            return Response::error('Unauthorized access', 403);
+        }
+
+        try {
+            $stats = $this->paymentModel->getBillingStats();
+
+            return Response::success($stats);
+        } catch (\Exception $e) {
+            error_log("Error fetching billing stats: " . $e->getMessage());
+            return Response::error('Failed to retrieve statistics', 500);
+        }
+    }
+
+    /**
+     * Create invoice manually (Admin only)
+     * POST /api/admin/billing/create-invoice
+     */
+    public function createInvoice(Request $request): Response
+    {
+        $user = $request->user();
+        
+        if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
+            return Response::error('Unauthorized access', 403);
+        }
+
+        try {
+            $data = [
+                'user_id' => $request->input('user_id'),
+                'bill_type' => $request->input('bill_type'),
+                'amount' => (float) $request->input('amount'),
+                'due_date' => $request->input('due_date'),
+                'description' => $request->input('description'),
+                'status' => 'unpaid',
+                'created_by' => $user['id']
+            ];
+
+            // Validate required fields
+            if (empty($data['user_id'])) {
+                return Response::error('User ID is required', 400);
+            }
+            if (empty($data['bill_type'])) {
+                return Response::error('Bill type is required', 400);
+            }
+            if (empty($data['amount']) || $data['amount'] <= 0) {
+                return Response::error('Valid amount is required', 400);
+            }
+            if (empty($data['due_date'])) {
+                return Response::error('Due date is required', 400);
+            }
+
+            $invoice = $this->paymentModel->createInvoice($data);
+
+            if ($invoice) {
+                return Response::success([
+                    'message' => 'Invoice created successfully and user has been notified',
+                    'invoice' => $invoice
+                ]);
+            } else {
+                return Response::error('Failed to create invoice', 500);
+            }
+        } catch (\Exception $e) {
+            error_log("Error creating invoice: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return Response::error('Failed to create invoice: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Approve transaction (Admin only)
+     * POST /api/admin/transactions/{id}/approve
+     */
+    public function approveTransaction(Request $request, array $params): Response
+    {
+        $user = $request->user();
+        
+        if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
+            return Response::error('Unauthorized access', 403);
+        }
+
+        try {
+            $transactionId = $params['id'] ?? null;
+            
+            if (!$transactionId) {
+                return Response::error('Transaction ID required', 400);
+            }
+
+            $result = $this->paymentModel->approveTransaction($transactionId, $user['id']);
+
+            if ($result) {
+                // TODO: Send notification to user
+                return Response::success(['message' => 'Transaction approved successfully']);
+            } else {
+                return Response::error('Failed to approve transaction', 500);
+            }
+        } catch (\Exception $e) {
+            error_log("Error approving transaction: " . $e->getMessage());
+            return Response::error('Failed to approve transaction', 500);
+        }
+    }
+
+    /**
+     * Reject transaction (Admin only)
+     * POST /api/admin/transactions/{id}/reject
+     */
+    public function rejectTransaction(Request $request, array $params): Response
+    {
+        $user = $request->user();
+        
+        if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
+            return Response::error('Unauthorized access', 403);
+        }
+
+        try {
+            $transactionId = $params['id'] ?? null;
+            $reason = $request->param('reason') ?? 'Transaction rejected by admin';
+            
+            if (!$transactionId) {
+                return Response::error('Transaction ID required', 400);
+            }
+
+            $result = $this->paymentModel->rejectTransaction($transactionId, $user['id'], $reason);
+
+            if ($result) {
+                // TODO: Send notification to user
+                return Response::success(['message' => 'Transaction rejected successfully']);
+            } else {
+                return Response::error('Failed to reject transaction', 500);
+            }
+        } catch (\Exception $e) {
+            error_log("Error rejecting transaction: " . $e->getMessage());
+            return Response::error('Failed to reject transaction', 500);
+        }
+    }
+
+    /**
+     * Get all users for invoice creation (Admin only)
+     * GET /api/admin/users
+     */
+    public function getAllUsers(Request $request): Response
+    {
+        $user = $request->user();
+        
+        if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
+            return Response::error('Unauthorized access', 403);
+        }
+
+        try {
+            require_once __DIR__ . '/../Models/User.php';
+            $userModel = new \FixItMati\Models\User();
+            $users = $userModel->getAllCitizens();
+
+            return Response::success($users);
+        } catch (\Exception $e) {
+            error_log("Error fetching users: " . $e->getMessage());
+            return Response::error('Failed to retrieve users', 500);
+        }
+    }
+
+    /**
+     * Export transactions as CSV (Admin only)
+     * GET /api/admin/transactions/export
+     */
+    public function exportTransactions(Request $request): Response
+    {
+        $user = $request->user();
+        
+        if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
+            return Response::error('Unauthorized access', 403);
+        }
+
+        try {
+            $transactions = $this->paymentModel->getAllTransactions();
+
+            // Generate CSV
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="transactions-' . date('Y-m-d') . '.csv"');
+            
+            $output = fopen('php://output', 'w');
+            
+            // Add headers
+            fputcsv($output, ['Transaction ID', 'User', 'Type', 'Amount', 'Method', 'Status', 'Date']);
+            
+            // Add data
+            foreach ($transactions as $transaction) {
+                fputcsv($output, [
+                    $transaction['reference_number'] ?? $transaction['id'],
+                    $transaction['user_name'] ?? 'Unknown',
+                    $transaction['payment_type'] ?? 'General',
+                    $transaction['amount'],
+                    $transaction['payment_method'] ?? 'N/A',
+                    $transaction['status'],
+                    $transaction['created_at']
+                ]);
+            }
+            
+            fclose($output);
+            exit;
+        } catch (\Exception $e) {
+            error_log("Error exporting transactions: " . $e->getMessage());
+            return Response::error('Failed to export transactions', 500);
+        }
+    }
 }

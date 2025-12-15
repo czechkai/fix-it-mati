@@ -492,4 +492,32 @@ class User {
     private function generateSupportPin(): string {
         return str_pad((string)rand(1000, 9999), 4, '0', STR_PAD_LEFT);
     }
+
+    /**
+     * Get all citizens (for admin use)
+     */
+    public function getAllCitizens(): array {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT 
+                    id,
+                    email,
+                    CASE 
+                        WHEN first_name IS NOT NULL AND last_name IS NOT NULL THEN CONCAT(first_name, ' ', last_name)
+                        WHEN first_name IS NOT NULL THEN first_name
+                        WHEN last_name IS NOT NULL THEN last_name
+                        ELSE email
+                    END as full_name,
+                    phone,
+                    account_number,
+                    created_at
+                FROM users 
+                WHERE role = 'customer'
+                ORDER BY first_name ASC, last_name ASC, email ASC";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

@@ -312,7 +312,17 @@ try {
     // ============================================
     // ADMIN ROUTES (Protected + Role Check)
     // ============================================
-    // Will be implemented in next phase
+    
+    // Admin Billing & Payments
+    $router->get('/api/admin/transactions', 'PaymentController@getAllTransactions');
+    $router->get('/api/admin/billing/stats', 'PaymentController@getStats');
+    $router->post('/api/admin/billing/create-invoice', 'PaymentController@createInvoice');
+    $router->post('/api/admin/transactions/{id}/approve', 'PaymentController@approveTransaction');
+    $router->post('/api/admin/transactions/{id}/reject', 'PaymentController@rejectTransaction');
+    $router->get('/api/admin/users', 'PaymentController@getAllUsers');
+    $router->get('/api/admin/transactions/export', 'PaymentController@exportTransactions');
+    
+    // Other admin routes (to be implemented)
     // $router->post('/api/admin/requests/{id}/assign', 'AdminController@assignTechnician');
     // $router->get('/api/admin/technicians', 'AdminController@getTechnicians');
     // $router->get('/api/admin/dashboard/stats', 'AdminController@getDashboardStats');

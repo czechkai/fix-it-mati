@@ -1,0 +1,325 @@
+/**
+ * Admin Billing & Payments Styles
+ * Additional custom styles for the billing management page
+ */
+
+/* Toast Animation Keyframes */
+@keyframes slide-in-from-top-5 {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Filter Button Transitions */
+.filter-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.filter-btn:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+/* Transaction Row Hover Effects */
+tbody tr {
+  position: relative;
+}
+
+tbody tr::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+
+tbody tr:hover::after {
+  transform: scaleY(1);
+}
+
+/* Status Badge Pulse Animation for Pending */
+.bg-amber-100 {
+  animation: pulse-amber 2s infinite;
+}
+
+@keyframes pulse-amber {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Modal and Drawer Backdrop Blur */
+.drawer-backdrop-in,
+.modal-backdrop-in {
+  backdrop-filter: blur(4px);
+}
+
+/* Smooth Form Input Focus */
+input:focus,
+select:focus,
+textarea:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Stats Card Hover Effect */
+.grid > div {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.grid > div:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Revenue Card Gradient Animation */
+.bg-gradient-to-br {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Loading Spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Button Press Effect */
+button:active {
+  transform: scale(0.97);
+}
+
+/* Table Zebra Striping on Hover */
+tbody tr:nth-child(even):hover {
+  background-color: rgba(248, 250, 252, 0.8);
+}
+
+/* Notification Dot Pulse */
+#notificationDot {
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Drawer Slide Animation Enhancement */
+.drawer-slide-in {
+  box-shadow: -10px 0 50px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom Scrollbar for Drawer (optional enhancement) */
+#drawerContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+#drawerContent::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+#drawerContent::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+#drawerContent::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Mobile Responsive Enhancements */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+  }
+
+  tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  tbody td:last-child {
+    border-bottom: none;
+  }
+
+  tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #64748b;
+  }
+}
+
+/* Search Input Enhancement */
+#searchInput {
+  transition: all 0.3s ease;
+}
+
+#searchInput:focus {
+  width: 110%;
+  max-width: 600px;
+}
+
+/* Export Button Icon Rotation on Hover */
+#exportBtn:hover i {
+  animation: bounce-down 0.6s ease;
+}
+
+@keyframes bounce-down {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+/* Create Invoice Button Glow */
+#createInvoiceBtn {
+  position: relative;
+  overflow: hidden;
+}
+
+#createInvoiceBtn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -50%;
+  }
+  100% {
+    left: 150%;
+  }
+}
+
+/* Status Badge Icons */
+.bg-green-100::before {
+  content: '✓';
+  margin-right: 4px;
+}
+
+.bg-amber-100::before {
+  content: '⏱';
+  margin-right: 4px;
+}
+
+.bg-red-100::before {
+  content: '✗';
+  margin-right: 4px;
+}
+
+/* Progress Bar Animation */
+#pendingProgress {
+  transition: width 0.5s ease;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+/* Form Label Enhancement */
+label {
+  transition: color 0.2s ease;
+}
+
+input:focus + label,
+select:focus + label,
+textarea:focus + label {
+  color: #2563eb;
+}
+
+/* Action Button Hover Glow */
+.approve-btn:hover,
+.reject-btn:hover,
+.download-receipt-btn:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Empty State Animation */
+tbody tr td i[data-lucide="inbox"] {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
