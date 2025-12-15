@@ -532,6 +532,13 @@ async function updateAssignment() {
     return;
   }
   
+  // Show loading state
+  const assignBtn = document.getElementById('assignBtn');
+  const originalBtnText = assignBtn.innerHTML;
+  assignBtn.disabled = true;
+  assignBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Updating...';
+  lucide.createIcons();
+  
   try {
     console.log('Calling API to assign technician...');
     console.log('Request ID:', selectedTicket.id);
@@ -563,6 +570,13 @@ async function updateAssignment() {
   } catch (error) {
     console.error('Error assigning technician:', error);
     showError(error.message || 'Failed to assign technician');
+  } finally {
+    // Restore button state
+    const assignBtn = document.getElementById('assignBtn');
+    if (assignBtn) {
+      assignBtn.disabled = false;
+      assignBtn.innerHTML = 'Update Assignment';
+    }
   }
 }
 
@@ -581,6 +595,13 @@ async function updateStatus() {
     markResolved();
     return;
   }
+  
+  // Show loading state
+  const statusBtn = document.getElementById('statusBtn');
+  const originalBtnText = statusBtn.innerHTML;
+  statusBtn.disabled = true;
+  statusBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Updating...';
+  lucide.createIcons();
   
   try {
     // Use the existing /api/requests/{id} PATCH endpoint
@@ -606,6 +627,13 @@ async function updateStatus() {
   } catch (error) {
     console.error('Error updating status:', error);
     showError(error.message || 'Failed to update status');
+  } finally {
+    // Restore button state
+    const statusBtn = document.getElementById('statusBtn');
+    if (statusBtn) {
+      statusBtn.disabled = false;
+      statusBtn.innerHTML = 'Update Status';
+    }
   }
 }
 
@@ -614,6 +642,13 @@ async function markResolved() {
   if (!selectedTicket) return;
   
   if (!confirm(`Mark ticket ${selectedTicket.ticket_number || 'SR-' + selectedTicket.id} as resolved?\n\nThis will close the ticket and notify the citizen.`)) return;
+  
+  // Show loading state
+  const resolveBtn = document.getElementById('resolveBtn');
+  const originalBtnText = resolveBtn.innerHTML;
+  resolveBtn.disabled = true;
+  resolveBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Resolving...';
+  lucide.createIcons();
   
   try {
     console.log('Marking request as resolved:', selectedTicket.id);
@@ -639,6 +674,14 @@ async function markResolved() {
   } catch (error) {
     console.error('Error updating status:', error);
     showError(error.message || 'Failed to update status');
+  } finally {
+    // Restore button state
+    const resolveBtn = document.getElementById('resolveBtn');
+    if (resolveBtn) {
+      resolveBtn.disabled = false;
+      resolveBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Mark as Resolved';
+      lucide.createIcons();
+    }
   }
 }
 
