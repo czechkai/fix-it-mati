@@ -68,16 +68,11 @@ try {
     $router->post('/api/auth/login', 'AuthController@login');
     $router->post('/api/auth/logout', 'AuthController@logout');
     $router->post('/api/auth/refresh', 'AuthController@refresh');
-<<<<<<< HEAD
     
     // Email verification endpoints
     $router->post('/api/auth/send-verification-code', 'AuthController@sendVerificationCode');
     $router->post('/api/auth/verify-code', 'AuthController@verifyCode');
     $router->post('/api/auth/verify-and-register', 'AuthController@verifyAndRegister');
-    
-=======
-
->>>>>>> fb9c6aa8980f814eaf4aa2cf6a4bee81958f6229
     // Health check
     $router->get('/api/health', function () {
         return Response::success([
