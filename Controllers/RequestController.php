@@ -82,11 +82,11 @@ class RequestController
         $user = $request->user();
         $id = $request->param('id');
 
-        if (!$id || !is_numeric($id)) {
+        if (!$id) {
             return Response::error('Invalid request ID', 400);
         }
 
-        $result = $this->facade->getRequestDetails((int)$id, $user['id'], $user['role']);
+        $result = $this->facade->getRequestDetails($id, $user['id'], $user['role']);
 
         if (!$result['success']) {
             if ($result['error'] === 'Request not found') {
@@ -108,7 +108,7 @@ class RequestController
         $id = $request->param('id');
         $data = $request->all();
 
-        if (!$id || !is_numeric($id)) {
+        if (!$id) {
             return Response::error('Invalid request ID', 400);
         }
 
@@ -118,20 +118,20 @@ class RequestController
         }
 
         // Get current request
-        $result = $this->facade->getRequestDetails((int)$id, $user['id'], $user['role']);
+        $result = $this->facade->getRequestDetails($id, $user['id'], $user['role']);
         if (!$result['success']) {
             return Response::notFound('Request not found');
         }
 
         // Update using model directly (simple updates don't need facade)
         $requestModel = new \FixItMati\Models\ServiceRequest();
-        $updated = $requestModel->update((int)$id, $data);
+        $updated = $requestModel->update($id, $data);
 
         if (!$updated) {
             return Response::error('Failed to update request', 400);
         }
 
-        $updatedRequest = $requestModel->find((int)$id);
+        $updatedRequest = $requestModel->find($id);
         return Response::success(['request' => $updatedRequest], 'Request updated successfully');
     }
 
@@ -145,7 +145,7 @@ class RequestController
         $id = $request->param('id');
         $data = $request->all();
 
-        if (!$id || !is_numeric($id)) {
+        if (!$id) {
             return Response::error('Invalid request ID', 400);
         }
 
@@ -176,7 +176,7 @@ class RequestController
         $id = $request->param('id');
         $data = $request->all();
 
-        if (!$id || !is_numeric($id)) {
+        if (!$id) {
             return Response::error('Invalid request ID', 400);
         }
 
@@ -192,8 +192,8 @@ class RequestController
         $notes = $data['notes'] ?? null;
 
         $result = $this->facade->assignTechnician(
-            (int)$id, 
-            (int)$data['technician_id'], 
+            $id, 
+            $data['technician_id'], 
             $user['id'], 
             $notes
         );
@@ -215,7 +215,7 @@ class RequestController
         $id = $request->param('id');
         $data = $request->all();
 
-        if (!$id || !is_numeric($id)) {
+        if (!$id) {
             return Response::error('Invalid request ID', 400);
         }
 
@@ -245,7 +245,7 @@ class RequestController
         $id = $request->param('id');
         $data = $request->all();
 
-        if (!$id || !is_numeric($id)) {
+        if (!$id) {
             return Response::error('Invalid request ID', 400);
         }
 
@@ -256,7 +256,7 @@ class RequestController
 
         $notes = $data['notes'] ?? null;
 
-        $result = $this->facade->completeRequest((int)$id, $user['id'], $notes);
+        $result = $this->facade->completeRequest($id, $user['id'], $notes);
 
         if (!$result['success']) {
             return Response::error($result['error'], 400);
@@ -275,13 +275,13 @@ class RequestController
         $id = $request->param('id');
         $data = $request->all();
 
-        if (!$id || !is_numeric($id)) {
+        if (!$id) {
             return Response::error('Invalid request ID', 400);
         }
 
         $reason = $data['reason'] ?? null;
 
-        $result = $this->facade->cancelRequest((int)$id, $user['id'], $user['role'], $reason);
+        $result = $this->facade->cancelRequest($id, $user['id'], $user['role'], $reason);
 
         if (!$result['success']) {
             if ($result['error'] === 'Request not found') {

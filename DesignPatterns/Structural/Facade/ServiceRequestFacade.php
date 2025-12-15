@@ -200,13 +200,13 @@ class ServiceRequestFacade
             return ['success' => false, 'error' => 'Invalid technician'];
         }
 
-        // Update assigned_to
-        $this->requestModel->update($requestId, ['assigned_to' => $technicianId]);
+        // Update assigned_technician_id
+        $this->requestModel->update($requestId, ['assigned_technician_id' => $technicianId]);
 
-        // Change status to assigned
+        // Change status to in_progress
         $updated = $this->requestModel->updateStatus(
             $requestId, 
-            'assigned', 
+            'in_progress', 
             $adminId, 
             $notes ?? "Assigned to {$technician->full_name}"
         );
@@ -243,7 +243,7 @@ class ServiceRequestFacade
         }
 
         // Verify technician is assigned
-        if ($request['assigned_to'] != $technicianId) {
+        if ($request['assigned_technician_id'] != $technicianId) {
             return ['success' => false, 'error' => 'You are not assigned to this request'];
         }
 
@@ -285,10 +285,10 @@ class ServiceRequestFacade
             return ['success' => false, 'error' => 'Request not found'];
         }
 
-        // Change status to completed
+        // Change status to resolved
         $updated = $this->requestModel->updateStatus(
             $requestId, 
-            'completed', 
+            'resolved', 
             $userId, 
             $notes ?? 'Work completed'
         );

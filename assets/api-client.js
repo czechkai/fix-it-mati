@@ -622,7 +622,7 @@ const UIHelpers = {
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
     });
-  }
+  },
 
   /**
    * Show a confirmation modal (Promise-based)

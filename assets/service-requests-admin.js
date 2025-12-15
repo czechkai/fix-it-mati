@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Service Requests Admin Page - Real-time Database Integration
  */
 
@@ -10,52 +10,9 @@ let selectedTicket = null;
 let technicians = [];
 let currentUser = null;
 
-<<<<<<< Updated upstream
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', async () => {
-  // Check authentication
-  const token = localStorage.getItem('auth_token');
-  const userData = localStorage.getItem('user');
-  
-  if (!token) {
-    window.location.replace('/login.php');
-    return;
-  }
-  
-  if (userData) {
-    try {
-      const user = JSON.parse(userData);
-      if (user.role !== 'admin' && user.role !== 'staff') {
-        UIHelpers.showError('Access denied. Admin privileges required.');
-        window.location.replace('/user-dashboard.php');
-        return;
-      }
-    } catch (e) {
-      window.location.replace('/login.php');
-      return;
-    }
-  }
-  
-  await loadCurrentUser();
-  await loadTechnicians();
-  await loadTickets();
-  setupEventListeners();
-  
-  // Auto-refresh every 30 seconds
-  setInterval(() => {
-    loadTickets();
-  }, 30000);
-  
-  // Initialize Lucide icons
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-  }
-});
-=======
 // =============================================================================
 // FUNCTION DEFINITIONS - All functions defined here before DOMContentLoaded
 // =============================================================================
->>>>>>> Stashed changes
 
 // Load current user
 async function loadCurrentUser() {
@@ -96,14 +53,42 @@ function updateUserProfile() {
 // Load all technicians
 async function loadTechnicians() {
   try {
-    // Note: In a full implementation, create a dedicated endpoint
-    // For now, we'll populate dropdown with placeholder data
-    // The actual assignment will use the technician_id
+    console.log('Loading technicians...');
+    // Try to fetch from API first
+    try {
+      const response = await ApiClient.get('/auth/me');
+      console.log('Current user:', response);
+      
+      // For now, add current admin user as available for assignment
+      if (response.success && response.user) {
+        const user = response.user;
+        technicians = [{
+          id: user.id,
+          first_name: user.first_name || 'Admin',
+          last_name: user.last_name || 'User',
+          email: user.email,
+          role: user.role,
+          status: 'Available'
+        }];
+        console.log('Loaded technicians:', technicians);
+        return;
+      }
+    } catch (e) {
+      console.error('Could not fetch user data:', e);
+    }
+    
+    // Fallback: Use hardcoded admin ID if API fails
     technicians = [
-      { id: 1, first_name: 'Water', last_name: 'Team', specialization: 'Water Supply', status: 'Available' },
-      { id: 2, first_name: 'Electric', last_name: 'Team', specialization: 'Electrical', status: 'Available' },
-      { id: 3, first_name: 'Maintenance', last_name: 'Team', specialization: 'General', status: 'Available' }
+      { 
+        id: '2ee2cb19-1114-475e-9908-8c57aad4c82a', 
+        first_name: 'Admin', 
+        last_name: 'User',
+        email: 'admin@fixitmati.com',
+        role: 'admin',
+        status: 'Available' 
+      }
     ];
+    console.log('Using fallback technicians:', technicians);
   } catch (error) {
     console.error('Error loading technicians:', error);
     technicians = [];
@@ -133,11 +118,6 @@ async function loadTickets() {
   `;
   
   try {
-<<<<<<< Updated upstream
-    const response = await ApiClient.get('/service-requests/admin');
-    if (response.success) {
-      allTickets = response.data || [];
-=======
     console.log('Fetching from /api/requests...');
     
     // Use the existing /api/requests endpoint
@@ -154,23 +134,22 @@ async function loadTickets() {
       // Extract the requests array
       if (data.requests && Array.isArray(data.requests)) {
         allTickets = data.requests;
-        console.log(`âœ“ Loaded ${allTickets.length} service requests`);
+        console.log(`✓ Loaded ${allTickets.length} service requests`);
       } else if (Array.isArray(data)) {
         // Fallback: data might be the array directly
         allTickets = data;
-        console.log(`âœ“ Loaded ${allTickets.length} service requests (direct array)`);
+        console.log(`✓ Loaded ${allTickets.length} service requests (direct array)`);
       } else {
         console.error('Expected requests array not found in data:', data);
         allTickets = [];
       }
       
->>>>>>> Stashed changes
       filterTickets();
       updatePendingCount();
     } else if (response && response.requests && Array.isArray(response.requests)) {
       // Fallback: requests might be at top level
       allTickets = response.requests;
-      console.log(`âœ“ Loaded ${allTickets.length} service requests (top level)`);
+      console.log(`✓ Loaded ${allTickets.length} service requests (top level)`);
       filterTickets();
       updatePendingCount();
     } else {
@@ -219,7 +198,12 @@ function filterTickets() {
   if (currentFilter === 'All') {
     filteredTickets = [...allTickets];
   } else {
-    filteredTickets = allTickets.filter(t => t.status === currentFilter);
+    // Convert filter to lowercase and handle different status formats
+    const filterLower = currentFilter.toLowerCase().replace(' ', '_');
+    filteredTickets = allTickets.filter(t => {
+      const statusLower = (t.status || '').toLowerCase().replace(' ', '_');
+      return statusLower === filterLower;
+    });
   }
   
   console.log(`Filtered tickets: ${filteredTickets.length}`);
@@ -289,7 +273,7 @@ function renderTickets() {
             </div>
             <div>
               <div class="font-bold text-slate-800">${issueType}</div>
-              <div class="text-xs text-slate-500 mt-0.5">${address} â€¢ ${timeAgo}</div>
+              <div class="text-xs text-slate-500 mt-0.5">${address} • ${timeAgo}</div>
             </div>
           </div>
         </td>
@@ -308,7 +292,7 @@ function renderTickets() {
         </td>
         <td class="px-6 py-4">
           <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusBadge(ticket.status)}">
-            ${ticket.status}
+            ${formatStatus(ticket.status)}
           </span>
         </td>
         <td class="px-6 py-4 text-right">
@@ -358,7 +342,7 @@ function attachRowClickHandlers() {
 
 // Update pending count badge
 function updatePendingCount() {
-  const pendingCount = allTickets.filter(t => t.status === 'Pending').length;
+  const pendingCount = allTickets.filter(t => (t.status || '').toLowerCase() === 'pending').length;
   const badge = document.getElementById('pendingBadge');
   if (badge) {
     badge.textContent = pendingCount;
@@ -379,13 +363,13 @@ async function openDrawer(ticketId) {
   let ticket = allTickets.find(t => t.id == ticketId); // Use == for loose comparison
   
   if (!ticket) {
-    console.error('❌ Ticket not found with ID:', ticketId);
+    console.error('? Ticket not found with ID:', ticketId);
     console.error('Attempted to find in tickets:', allTickets.map(t => ({ id: t.id, type: typeof t.id })));
     showToast('Ticket not found. Please refresh the page.', 'error');
     return;
   }
   
-  console.log('✓ Ticket found:', ticket);
+  console.log('? Ticket found:', ticket);
   
   selectedTicket = ticket;
   
@@ -396,20 +380,28 @@ async function openDrawer(ticketId) {
   }
   
   // Update drawer content
-  document.getElementById('drawerTicketId').textContent = ticket.ticket_number || 'SR-' + ticket.id;
-  document.getElementById('drawerIssueTitle').textContent = ticket.issue_type || 'Service Request';
+  document.getElementById('drawerTicketId').textContent = ticket.ticket_number || ticket.tracking_number || 'SR-' + ticket.id;
+  document.getElementById('drawerIssueTitle').textContent = ticket.issue_type || ticket.title || 'Service Request';
   document.getElementById('drawerDescription').textContent = ticket.description || 'No description provided';
   
-  // Display category (request_type from database: water, electricity, etc)
-  const category = ticket.request_type || 'General';
-  document.getElementById('drawerCategory').textContent = category.charAt(0).toUpperCase() + category.slice(1);
+  // Display category from database (water or electricity only)
+  const category = ticket.category || ticket.request_type || 'water';
+  const categoryDisplay = category.toLowerCase() === 'water' ? 'Water' : 
+                          category.toLowerCase() === 'electricity' ? 'Electricity' : 
+                          category.charAt(0).toUpperCase() + category.slice(1);
+  document.getElementById('drawerCategory').textContent = categoryDisplay;
   
-  document.getElementById('drawerCitizen').textContent = ticket.citizen_name || 'Unknown';
+  // Get reported by name (can be customer_name, citizen_name, user_name, or full_name)
+  const reportedBy = ticket.customer_name || ticket.citizen_name || ticket.user_name || ticket.full_name || 'Unknown';
+  document.getElementById('drawerCitizen').textContent = reportedBy;
   document.getElementById('drawerDate').textContent = formatDate(ticket.created_at);
-  document.getElementById('drawerLocation').textContent = ticket.address || 'N/A';
+  
+  // Get location (can be location, address, or service_address)
+  const location = ticket.location || ticket.address || ticket.service_address || 'N/A';
+  document.getElementById('drawerLocation').textContent = location;
   
   const statusBadge = document.getElementById('drawerStatusBadge');
-  statusBadge.textContent = ticket.status;
+  statusBadge.textContent = formatStatus(ticket.status);
   statusBadge.className = `text-xs font-bold px-2 py-1 rounded border ${getStatusBadge(ticket.status)}`;
   
   // Load technicians dropdown
@@ -424,7 +416,7 @@ async function openDrawer(ticketId) {
   
   // Show/hide resolved button
   const resolvedBtn = document.getElementById('markResolvedBtn');
-  if (ticket.status === 'Resolved') {
+  if ((ticket.status || '').toLowerCase() === 'resolved') {
     resolvedBtn.style.display = 'none';
   } else {
     resolvedBtn.style.display = 'block';
@@ -533,27 +525,29 @@ async function updatePriority() {
 
 // Update assignment
 async function updateAssignment() {
-  if (!selectedTicket) return;
+  console.log('=== updateAssignment called ===');
+  if (!selectedTicket) {
+    console.error('No ticket selected');
+    return;
+  }
   
   const techId = document.getElementById('technicianSelect').value;
+  console.log('Selected technician ID:', techId);
+  
   if (!techId) {
-<<<<<<< Updated upstream
-    UIHelpers.showError('Please select a technician');
-=======
     showToast('Please select a technician', 'error');
->>>>>>> Stashed changes
     return;
   }
   
   try {
-<<<<<<< Updated upstream
-    const response = await ApiClient.put(`/service-requests/${selectedTicket.id}/assign`, {
-      technician_id: techId
-=======
+    console.log('Calling API to assign technician...');
+    console.log('Request ID:', selectedTicket.id);
+    console.log('Technician ID:', techId);
+    
     // Use the existing /api/requests/{id}/assign endpoint
+    // Don't use parseInt for UUID strings
     const response = await ApiClient.post(`/requests/${selectedTicket.id}/assign`, {
-      technician_id: parseInt(techId)
->>>>>>> Stashed changes
+      technician_id: techId
     });
     if (response.success) {
       // Store the ticket ID before refreshing
@@ -567,17 +561,11 @@ async function updateAssignment() {
       
       // Refresh data from database to get latest state
       await loadTickets();
-<<<<<<< Updated upstream
-      openDrawer(selectedTicket.id); // Refresh drawer
-    } else {
-      showError(response.message || 'Failed to assign technician');
-=======
       
       setTimeout(() => {
         console.log('Reopening drawer after assignment update for ticket:', ticketId);
         openDrawer(ticketId);
       }, 100);
->>>>>>> Stashed changes
     }
   } catch (error) {
     console.error('Error assigning technician:', error);
@@ -596,7 +584,7 @@ async function updateStatus() {
   }
   
   // If marking as resolved, use the markResolved function
-  if (status === 'Resolved') {
+  if (status.toLowerCase() === 'resolved') {
     markResolved();
     return;
   }
@@ -632,19 +620,8 @@ async function updateStatus() {
 async function markResolved() {
   if (!selectedTicket) return;
   
-<<<<<<< Updated upstream
-  const ok = await UIHelpers.confirm({
-    title: 'Mark as Resolved',
-    message: 'Mark this ticket as resolved?',
-    confirmText: 'Mark Resolved',
-    cancelText: 'Cancel',
-    variant: 'primary'
-  });
-  if (!ok) return;
-=======
   if (!confirm(`Mark ticket ${selectedTicket.ticket_number || 'SR-' + selectedTicket.id} as resolved?\n\nThis will close the ticket and notify the citizen.`)) return;
   
->>>>>>> Stashed changes
   try {
     // Use the existing /api/requests/{id}/complete endpoint
     const response = await ApiClient.post(`/requests/${selectedTicket.id}/complete`, {
@@ -655,21 +632,15 @@ async function markResolved() {
       // Store the ticket ID before refreshing
       const ticketId = selectedTicket.id;
       
-      showSuccess('✓ Ticket marked as resolved');
+      showSuccess('? Ticket marked as resolved');
       
       // Refresh data from database to get latest state
       await loadTickets();
-<<<<<<< Updated upstream
-      openDrawer(selectedTicket.id); // Refresh drawer
-    } else {
-      showError(response.message || 'Failed to update status');
-=======
       
       setTimeout(() => {
         console.log('Reopening drawer after marking resolved for ticket:', ticketId);
         openDrawer(ticketId);
       }, 100);
->>>>>>> Stashed changes
     }
   } catch (error) {
     console.error('Error updating status:', error);
@@ -949,12 +920,23 @@ function getCategoryIcon(type) {
 }
 
 function getStatusBadge(status) {
-  switch(status) {
-    case 'Pending': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
-    case 'In Progress': return 'bg-blue-100 text-blue-700 border-blue-300';
-    case 'Resolved': return 'bg-green-100 text-green-700 border-green-300';
+  const statusLower = (status || '').toLowerCase().replace('_', ' ');
+  switch(statusLower) {
+    case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
+    case 'in progress': return 'bg-blue-100 text-blue-700 border-blue-300';
+    case 'resolved': return 'bg-green-100 text-green-700 border-green-300';
     default: return 'bg-slate-100 text-slate-700 border-slate-300';
   }
+}
+
+function formatStatus(status) {
+  if (!status) return 'Unknown';
+  // Convert database format (pending, in_progress, resolved) to display format
+  return status
+    .replace('_', ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 }
 
 function getPriorityClass(priority) {
@@ -1002,19 +984,11 @@ function escapeHtml(text) {
 }
 
 function showSuccess(message) {
-<<<<<<< Updated upstream
-  UIHelpers.showSuccess(message);
-}
-
-function showError(message) {
-  UIHelpers.showError(message);
-=======
   showToast(message, 'success');
 }
 
 function showError(message) {
   showToast(message, 'error');
->>>>>>> Stashed changes
 }
 
 // Toast notification system

@@ -68,12 +68,18 @@ class ServiceRequest
     /**
      * Find request by ID
      */
-    public function find(int $id): ?array
+    public function find(string $id): ?array
     {
         $sql = "SELECT sr.*, 
-                       CONCAT(u.first_name, ' ', u.last_name) as customer_name, 
+                       COALESCE(
+                           NULLIF(CONCAT(u.first_name, ' ', u.last_name), ' '),
+                           u.email
+                       ) as customer_name, 
                        u.email as customer_email,
-                       CONCAT(t.first_name, ' ', t.last_name) as technician_name, 
+                       COALESCE(
+                           NULLIF(CONCAT(t.first_name, ' ', t.last_name), ' '),
+                           t.email
+                       ) as technician_name, 
                        t.email as technician_email
                 FROM service_requests sr
                 LEFT JOIN users u ON sr.user_id = u.id
@@ -112,7 +118,7 @@ class ServiceRequest
                 FROM service_requests sr
                 LEFT JOIN users u ON sr.user_id = u.id
                 LEFT JOIN users t ON sr.assigned_technician_id = t.id
-                WHERE sr.tracking_number = :tracking_number";
+                WHERE sr.ticket_number = :tracking_number";
 
         try {
             $stmt = $this->db->prepare($sql);
@@ -136,9 +142,16 @@ class ServiceRequest
     public function getAll(array $filters = []): array
     {
         $sql = "SELECT sr.*, 
-                       CONCAT(u.first_name, ' ', u.last_name) as customer_name, 
+                       COALESCE(
+                           NULLIF(CONCAT(u.first_name, ' ', u.last_name), ' '),
+                           u.email
+                       ) as customer_name, 
                        u.email as customer_email,
-                       CONCAT(t.first_name, ' ', t.last_name) as technician_name
+                       COALESCE(
+                           NULLIF(CONCAT(t.first_name, ' ', t.last_name), ' '),
+                           t.email
+                       ) as technician_name,
+                       t.id as assigned_technician_id
                 FROM service_requests sr
                 LEFT JOIN users u ON sr.user_id = u.id
                 LEFT JOIN users t ON sr.assigned_technician_id = t.id
@@ -225,7 +238,7 @@ class ServiceRequest
     /**
      * Update request status with state validation
      */
-    public function updateStatus(int $id, string $newStatus, int $userId, ?string $notes = null): bool
+    public function updateStatus(string $id, string $newStatus, string $userId, ?string $notes = null): bool
     {
         // Get current request
         $request = $this->find($id);
@@ -275,11 +288,11 @@ class ServiceRequest
     /**
      * Update request details
      */
-    public function update(int $id, array $data): bool
+    public function update(string $id, array $data): bool
     {
         $allowedFields = ['category', 'issue_type', 'title', 'description', 'location', 
-                          'contact_phone', 'preferred_contact', 'priority', 'assigned_to', 
-                          'admin_notes', 'estimated_completion', 'rating', 'feedback', 
+                          'contact_phone', 'preferred_contact', 'priority', 'assigned_technician_id', 
+                          'status', 'admin_notes', 'estimated_completion', 'rating', 'feedback', 
                           'rated_at', 'resolution', 'technician_notes', 'resolved_at', 
                           'resolved_by'];
 
@@ -311,7 +324,7 @@ class ServiceRequest
     /**
      * Delete (cancel) a request
      */
-    public function delete(int $id, int $userId): bool
+    public function delete(string $id, string $userId): bool
     {
         return $this->updateStatus($id, 'cancelled', $userId, 'Request cancelled');
     }
@@ -319,7 +332,7 @@ class ServiceRequest
     /**
      * Get request timeline/updates
      */
-    public function getUpdates(int $requestId): array
+    public function getUpdates(string $requestId): array
     {
         $sql = "SELECT ru.*, u.name as user_name, u.role as user_role
                 FROM request_updates ru
