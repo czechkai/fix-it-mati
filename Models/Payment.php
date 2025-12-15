@@ -273,9 +273,7 @@ class Payment
                     t.payment_id,
                     t.amount,
                     t.status,
-                    t.payment_method,
-                    t.gateway,
-                    t.gateway_reference,
+                    p.payment_method,
                     t.created_at as transaction_date,
                     p.bill_month as billing_period,
                     p.due_date,
@@ -302,8 +300,7 @@ class Payment
         }
 
         $sql .= " GROUP BY t.id, t.reference_number, t.payment_id, t.amount, t.status, 
-                          t.payment_method, t.gateway, t.gateway_reference, t.created_at,
-                          p.bill_month, p.due_date, pi.category
+                          p.payment_method, t.created_at, p.bill_month, p.due_date, pi.category
                   ORDER BY t.created_at DESC";
 
         try {
@@ -628,7 +625,7 @@ class Payment
 
             $stmt = $this->db->prepare($sql);
             $stmt->execute(['transaction_id' => $transactionId]);
-            
+
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if ($result && $result['payment_id']) {
@@ -638,7 +635,7 @@ class Payment
                                   paid_date = NOW(),
                                   updated_at = NOW()
                               WHERE id = :payment_id";
-                
+
                 $stmt = $this->db->prepare($paymentSql);
                 $stmt->execute(['payment_id' => $result['payment_id']]);
             }

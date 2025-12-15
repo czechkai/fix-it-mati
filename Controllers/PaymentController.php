@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Payment Controller
  * 
@@ -16,35 +17,35 @@ use FixItMati\Services\ReceiptService;
 class PaymentController
 {
     private Payment $paymentModel;
-    
+
     public function __construct()
     {
         $this->paymentModel = new Payment();
     }
-    
+
     /**
      * Get current bills for authenticated user
      */
     public function getCurrentBills(Request $request): Response
     {
         $userId = $request->user()['id'] ?? null;
-        
+
         if (!$userId) {
             return Response::json([
                 'success' => false,
                 'message' => 'User not authenticated'
             ], 401);
         }
-        
+
         try {
             $bills = $this->paymentModel->getCurrentBills($userId);
             $totalDue = $this->paymentModel->getTotalDue($userId);
-            
+
             // Process bills data for frontend
             $processedBills = [];
             foreach ($bills as $bill) {
                 $items = json_decode($bill['items'], true);
-                
+
                 $processedBills[] = [
                     'id' => $bill['id'],
                     'bill_month' => $bill['bill_month'],
@@ -54,7 +55,7 @@ class PaymentController
                     'items' => $items
                 ];
             }
-            
+
             return Response::json([
                 'success' => true,
                 'data' => [
@@ -63,7 +64,6 @@ class PaymentController
                     'count' => count($processedBills)
                 ]
             ]);
-            
         } catch (\Exception $e) {
             error_log("Error fetching current bills: " . $e->getMessage());
             return Response::json([
@@ -79,7 +79,7 @@ class PaymentController
     public function processPayment(Request $request): Response
     {
         $userId = $request->user()['id'] ?? null;
-        
+
         if (!$userId) {
             return Response::json([
                 'success' => false,
@@ -91,7 +91,7 @@ class PaymentController
         $gateway = $request->input('gateway');
         $paymentId = $request->input('payment_id');
         $amount = (float) $request->input('amount');
-        
+
         if (!$gateway || !$paymentId || !$amount) {
             error_log("Payment validation failed - Gateway: $gateway, PaymentID: $paymentId, Amount: $amount");
             return Response::json([
@@ -99,7 +99,7 @@ class PaymentController
                 'message' => 'Gateway, payment ID, and amount are required'
             ], 400);
         }
-        
+
         // Validate payment belongs to user
         $payment = $this->paymentModel->find($paymentId);
         if (!$payment || $payment['user_id'] !== $userId) {
@@ -113,14 +113,14 @@ class PaymentController
             // Load payment gateway configuration
             $paymentConfig = require __DIR__ . '/../config/payment.php';
             $gatewayConfig = $paymentConfig[$gateway] ?? [];
-            
+
             if (empty($gatewayConfig) || !($gatewayConfig['enabled'] ?? false)) {
                 return Response::json([
                     'success' => false,
                     'message' => "Payment gateway '$gateway' is not enabled"
                 ], 400);
             }
-            
+
             // Create payment adapter
             try {
                 $adapter = PaymentAdapterFactory::createGateway($gateway, $gatewayConfig);
@@ -131,39 +131,39 @@ class PaymentController
                     'message' => 'Payment gateway initialization failed'
                 ], 500);
             }
-            
+
             // Prepare payment details
             $billMonth = $payment['bill_month'] ?? date('F Y');
             $paymentDetails = [
                 'description' => "FixItMati Bill Payment - {$billMonth}",
-                'return_url' => $request->input('return_url') ?? 
+                'return_url' => $request->input('return_url') ??
                     'http://localhost:8000/api/payments/' . $gateway . '/return',
-                'cancel_url' => $request->input('cancel_url') ?? 
+                'cancel_url' => $request->input('cancel_url') ??
                     'http://localhost:8000/api/payments/' . $gateway . '/cancel',
                 'webhook_url' => 'http://localhost:8000/api/webhooks/' . $gateway,
                 'mobile_number' => $request->input('mobile_number')
             ];
-            
+
             // Process payment through adapter
             $result = $adapter->processPayment($amount, $paymentDetails);
-            
+
             if (!$result['success']) {
                 return Response::json([
                     'success' => false,
                     'message' => $result['message'] ?? 'Payment processing failed'
                 ], 400);
             }
-            
+
             // Store transaction reference in database
             $referenceNumber = $result['transaction_id'];
-            
+
             // Update payment record with gateway info
             $this->paymentModel->updatePaymentStatus($paymentId, 'pending', [
                 'payment_method' => $gateway,
                 'reference_number' => $referenceNumber,
                 'gateway_transaction_id' => $referenceNumber
             ]);
-            
+
             // Return payment URL for redirect
             return Response::json([
                 'success' => true,
@@ -175,7 +175,6 @@ class PaymentController
                     'amount' => $amount
                 ]
             ]);
-            
         } catch (\Exception $e) {
             error_log("Payment processing error: " . $e->getMessage());
             return Response::json([
@@ -184,7 +183,7 @@ class PaymentController
             ], 500);
         }
     }
-    
+
     /**
      * Refund payment
      */
@@ -193,20 +192,20 @@ class PaymentController
         $gateway = $request->param('gateway');
         $transactionId = $request->param('transaction_id');
         $amount = (float) $request->param('amount');
-        
+
         if (!$gateway || !$transactionId || !$amount) {
             return Response::json([
                 'success' => false,
                 'message' => 'Gateway, transaction ID, and amount are required'
             ], 400);
         }
-        
+
         try {
             // Get gateway config
             $config = $this->getGatewayConfig($gateway);
             $paymentGateway = PaymentAdapterFactory::createGateway($gateway, $config);
             $result = $paymentGateway->refundPayment($transactionId, $amount);
-            
+
             if ($result['success']) {
                 return Response::json([
                     'success' => true,
@@ -219,7 +218,6 @@ class PaymentController
                     'message' => $result['message']
                 ], 400);
             }
-            
         } catch (\Exception $e) {
             return Response::json([
                 'success' => false,
@@ -227,7 +225,7 @@ class PaymentController
             ], 500);
         }
     }
-    
+
     /**
      * Get transaction status
      */
@@ -235,25 +233,24 @@ class PaymentController
     {
         $gateway = $request->param('gateway');
         $transactionId = $request->param('transaction_id');
-        
+
         if (!$gateway || !$transactionId) {
             return Response::json([
                 'success' => false,
                 'message' => 'Gateway and transaction ID are required'
             ], 400);
         }
-        
+
         try {
             // Get gateway config
             $config = $this->getGatewayConfig($gateway);
             $paymentGateway = PaymentAdapterFactory::createGateway($gateway, $config);
             $status = $paymentGateway->getTransactionStatus($transactionId);
-            
+
             return Response::json([
                 'success' => true,
                 'data' => $status
             ]);
-            
         } catch (\Exception $e) {
             return Response::json([
                 'success' => false,
@@ -261,22 +258,22 @@ class PaymentController
             ], 500);
         }
     }
-    
+
     /**
      * Get payment history for current user
      */
     public function getHistory(Request $request): Response
     {
         $userId = $request->user()['id'] ?? null;
-        
+
         if (!$userId) {
             return Response::error('User not authenticated', 401);
         }
-        
+
         try {
             $type = $request->query('type');
             $transactions = $this->paymentModel->getTransactionHistory($userId, $type);
-            
+
             // Process transaction data for frontend
             $processedHistory = [];
             foreach ($transactions as $transaction) {
@@ -284,19 +281,18 @@ class PaymentController
                     'id' => $transaction['id'],
                     'reference_number' => $transaction['reference_number'],
                     'amount' => (float) $transaction['amount'],
-                    'type' => $transaction['type'],
-                    'biller' => $transaction['biller'],
+                    'type' => $transaction['type'] ?? 'Services',
+                    'biller' => $transaction['biller'] ?? 'City Services',
                     'status' => ucfirst($transaction['status']),
                     'payment_method' => $transaction['payment_method'] ?? 'N/A',
                     'billing_period' => $transaction['billing_period'] ?? 'N/A',
                     'transaction_date' => $transaction['transaction_date'],
-                    'gateway' => $transaction['gateway'] ?? null,
-                    'gateway_reference' => $transaction['gateway_reference'] ?? null
+                    'gateway' => null,
+                    'gateway_reference' => null
                 ];
             }
-            
+
             return Response::success($processedHistory);
-            
         } catch (\Exception $e) {
             error_log("Error fetching payment history: " . $e->getMessage());
             return Response::json([
@@ -337,7 +333,7 @@ class PaymentController
             ]
         ]);
     }
-    
+
     /**
      * Get transaction history for authenticated user
      * GET /api/payments/history
@@ -345,7 +341,7 @@ class PaymentController
     public function getTransactionHistory(Request $request): Response
     {
         $userId = $request->user()['id'] ?? null;
-        
+
         if (!$userId) {
             return Response::error('User not authenticated', 401);
         }
@@ -385,7 +381,7 @@ class PaymentController
                 'public_key' => $_ENV['PAYMONGO_PUBLIC_KEY'] ?? ''
             ]
         ];
-        
+
         return $configs[$gateway] ?? [];
     }
 
@@ -400,7 +396,7 @@ class PaymentController
     public function getAllTransactions(Request $request): Response
     {
         $user = $request->user();
-        
+
         if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
             return Response::error('Unauthorized access', 403);
         }
@@ -423,7 +419,7 @@ class PaymentController
     public function getStats(Request $request): Response
     {
         $user = $request->user();
-        
+
         if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
             return Response::error('Unauthorized access', 403);
         }
@@ -445,7 +441,7 @@ class PaymentController
     public function getAllPayments(Request $request): Response
     {
         $user = $request->user();
-        
+
         if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
             return Response::error('Unauthorized access', 403);
         }
@@ -466,7 +462,7 @@ class PaymentController
     public function createInvoice(Request $request): Response
     {
         $user = $request->user();
-        
+
         if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
             return Response::error('Unauthorized access', 403);
         }
@@ -520,14 +516,14 @@ class PaymentController
     public function approveTransaction(Request $request, array $params): Response
     {
         $user = $request->user();
-        
+
         if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
             return Response::error('Unauthorized access', 403);
         }
 
         try {
             $transactionId = $params['id'] ?? null;
-            
+
             if (!$transactionId) {
                 return Response::error('Transaction ID required', 400);
             }
@@ -553,7 +549,7 @@ class PaymentController
     public function rejectTransaction(Request $request, array $params): Response
     {
         $user = $request->user();
-        
+
         if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
             return Response::error('Unauthorized access', 403);
         }
@@ -561,7 +557,7 @@ class PaymentController
         try {
             $transactionId = $params['id'] ?? null;
             $reason = $request->param('reason') ?? 'Transaction rejected by admin';
-            
+
             if (!$transactionId) {
                 return Response::error('Transaction ID required', 400);
             }
@@ -587,7 +583,7 @@ class PaymentController
     public function getAllUsers(Request $request): Response
     {
         $user = $request->user();
-        
+
         if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
             return Response::error('Unauthorized access', 403);
         }
@@ -611,7 +607,7 @@ class PaymentController
     public function exportTransactions(Request $request): Response
     {
         $user = $request->user();
-        
+
         if (!$user || !in_array($user['role'], ['admin', 'staff'])) {
             return Response::error('Unauthorized access', 403);
         }
@@ -622,12 +618,12 @@ class PaymentController
             // Generate CSV
             header('Content-Type: text/csv');
             header('Content-Disposition: attachment; filename="transactions-' . date('Y-m-d') . '.csv"');
-            
+
             $output = fopen('php://output', 'w');
-            
+
             // Add headers
             fputcsv($output, ['Transaction ID', 'User', 'Type', 'Amount', 'Method', 'Status', 'Date']);
-            
+
             // Add data
             foreach ($transactions as $transaction) {
                 fputcsv($output, [
@@ -640,7 +636,7 @@ class PaymentController
                     $transaction['created_at']
                 ]);
             }
-            
+
             fclose($output);
             exit;
         } catch (\Exception $e) {
@@ -648,7 +644,7 @@ class PaymentController
             return Response::error('Failed to export transactions', 500);
         }
     }
-    
+
     /**
      * Handle PayPal payment return
      * GET /api/payments/paypal/return
@@ -657,25 +653,25 @@ class PaymentController
     {
         $token = $request->query('token');
         $payerId = $request->query('PayerID');
-        
+
         if (!$token) {
             header('Location: /pages/user/payments.php?error=missing_token');
             exit;
         }
-        
+
         try {
             // Capture the payment
             $paymentConfig = require __DIR__ . '/../config/payment.php';
             $config = $paymentConfig['paypal'] ?? [];
-            
+
             $adapter = PaymentAdapterFactory::createGateway('paypal', $config);
             $accessToken = $this->getPayPalAccessToken($config);
-            
+
             // Capture order
-            $apiUrl = $config['mode'] === 'live' 
-                ? 'https://api-m.paypal.com' 
+            $apiUrl = $config['mode'] === 'live'
+                ? 'https://api-m.paypal.com'
                 : 'https://api-m.sandbox.paypal.com';
-            
+
             $ch = curl_init("$apiUrl/v2/checkout/orders/$token/capture");
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
@@ -683,28 +679,28 @@ class PaymentController
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . $accessToken
             ]);
-            
+
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-            
+
             $result = json_decode($response, true);
-            
+
             if ($httpCode === 201 && $result['status'] === 'COMPLETED') {
                 // Payment successful - update database
                 // TODO: Update payment status in database to 'paid'
-                
+
                 // Generate and send receipt
                 try {
                     $receiptService = new ReceiptService();
                     $receiptService->generatePDFReceipt($token);
-                    
+
                     // Get user email from session/token and send receipt
                     // $receiptService->sendReceiptEmail($token, $userEmail);
                 } catch (\Exception $e) {
                     error_log("Receipt generation error: " . $e->getMessage());
                 }
-                
+
                 header('Location: /pages/user/payment-success.php?ref=' . $token);
                 exit;
             } else {
@@ -717,7 +713,7 @@ class PaymentController
             exit;
         }
     }
-    
+
     /**
      * Handle PayPal payment cancellation
      * GET /api/payments/paypal/cancel
@@ -727,7 +723,7 @@ class PaymentController
         header('Location: /pages/user/payments.php?cancelled=1');
         exit;
     }
-    
+
     /**
      * Handle GCash payment return
      * GET /api/payments/gcash/return
@@ -736,7 +732,7 @@ class PaymentController
     {
         $reference = $request->query('ref');
         $status = $request->query('status');
-        
+
         if ($status === 'success') {
             header('Location: /pages/user/payment-success.php?ref=' . $reference);
         } else {
@@ -744,7 +740,7 @@ class PaymentController
         }
         exit;
     }
-    
+
     /**
      * Handle webhook from PayPal
      * POST /api/webhooks/paypal
@@ -753,20 +749,20 @@ class PaymentController
     {
         $payload = $request->getBody();
         $data = json_decode($payload, true);
-        
+
         error_log("PayPal webhook received: " . $payload);
-        
+
         // Verify webhook signature here
-        
+
         if ($data['event_type'] === 'PAYMENT.CAPTURE.COMPLETED') {
             // Update payment status in database
             $transactionId = $data['resource']['id'];
             // Update database...
         }
-        
+
         return Response::json(['success' => true]);
     }
-    
+
     /**
      * Handle webhook from GCash
      * POST /api/webhooks/gcash
@@ -775,14 +771,14 @@ class PaymentController
     {
         $payload = $request->getBody();
         $data = json_decode($payload, true);
-        
+
         error_log("GCash webhook received: " . $payload);
-        
+
         // Verify webhook signature here
-        
+
         return Response::json(['success' => true]);
     }
-    
+
     /**
      * Download receipt for a transaction
      * GET /api/payments/receipt/{transactionId}
@@ -790,15 +786,15 @@ class PaymentController
     public function downloadReceipt(Request $request): Response
     {
         $transactionId = $request->param('transactionId');
-        
+
         if (!$transactionId) {
             return Response::badRequest('Transaction ID is required');
         }
-        
+
         try {
             $receiptService = new ReceiptService();
             $html = $receiptService->generateHTMLReceipt($transactionId);
-            
+
             // Set headers for download
             header('Content-Type: text/html; charset=UTF-8');
             header('Content-Disposition: inline; filename="receipt_' . $transactionId . '.html"');
@@ -808,7 +804,7 @@ class PaymentController
             return Response::error($e->getMessage(), 404);
         }
     }
-    
+
     /**
      * Send receipt via email
      * POST /api/payments/receipt/send
@@ -817,15 +813,15 @@ class PaymentController
     {
         $transactionId = $request->input('transaction_id');
         $email = $request->input('email');
-        
+
         if (!$transactionId || !$email) {
             return Response::badRequest('Transaction ID and email are required');
         }
-        
+
         try {
             $receiptService = new ReceiptService();
             $sent = $receiptService->sendReceiptEmail($transactionId, $email);
-            
+
             if ($sent) {
                 return Response::success(['message' => 'Receipt sent successfully']);
             } else {
@@ -835,7 +831,7 @@ class PaymentController
             return Response::error($e->getMessage(), 500);
         }
     }
-    
+
     /**
      * Get PayPal access token
      */
@@ -843,20 +839,20 @@ class PaymentController
     {
         $clientId = $config['client_id'] ?? '';
         $clientSecret = $config['client_secret'] ?? '';
-        
-        $apiUrl = $config['mode'] === 'live' 
-            ? 'https://api-m.paypal.com' 
+
+        $apiUrl = $config['mode'] === 'live'
+            ? 'https://api-m.paypal.com'
             : 'https://api-m.sandbox.paypal.com';
-        
+
         $ch = curl_init("$apiUrl/v1/oauth2/token");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, 'grant_type=client_credentials');
         curl_setopt($ch, CURLOPT_USERPWD, "$clientId:$clientSecret");
-        
+
         $response = curl_exec($ch);
         curl_close($ch);
-        
+
         $result = json_decode($response, true);
         return $result['access_token'] ?? null;
     }

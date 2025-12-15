@@ -461,7 +461,7 @@ function attachEventListeners() {
   const statementBtn = document.getElementById("statementBtn");
   if (statementBtn) {
     statementBtn.addEventListener("click", function () {
-      UIHelpers.showInfo("View billing statement");
+      window.location.href = "payment-history.php";
     });
   }
 
