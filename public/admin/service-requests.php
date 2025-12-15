@@ -135,12 +135,9 @@
             <span>Overview</span>
           </div>
         </a>
-        <a href="/admin/service-requests.php" class="nav-item active w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors bg-blue-600 text-white shadow-md">
-          <div class="flex items-center gap-3">
-            <i data-lucide="ticket" class="w-5 h-5"></i>
-            <span>Service Requests</span>
-          </div>
-          <span id="pendingBadge" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+        <a href="/admin/service-requests.php" class="nav-item active w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors bg-blue-600 text-white shadow-md">
+          <i data-lucide="ticket" class="w-5 h-5"></i>
+          <span>Service Requests</span>
         </a>
         <a href="/admin/billing.php" class="nav-item w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
           <div class="flex items-center gap-3">

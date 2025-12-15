@@ -533,7 +533,7 @@ async function updateAssignment() {
   }
   
   // Show loading state
-  const assignBtn = document.getElementById('assignBtn');
+  const assignBtn = document.getElementById('updateAssignmentBtn');
   const originalBtnText = assignBtn.innerHTML;
   assignBtn.disabled = true;
   assignBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Updating...';
@@ -572,10 +572,11 @@ async function updateAssignment() {
     showError(error.message || 'Failed to assign technician');
   } finally {
     // Restore button state
-    const assignBtn = document.getElementById('assignBtn');
+    const assignBtn = document.getElementById('updateAssignmentBtn');
     if (assignBtn) {
       assignBtn.disabled = false;
-      assignBtn.innerHTML = 'Update Assignment';
+      assignBtn.innerHTML = '<i data-lucide="user-check" class="w-4 h-4"></i> Update Assignment';
+      lucide.createIcons();
     }
   }
 }
@@ -644,7 +645,7 @@ async function markResolved() {
   if (!confirm(`Mark ticket ${selectedTicket.ticket_number || 'SR-' + selectedTicket.id} as resolved?\n\nThis will close the ticket and notify the citizen.`)) return;
   
   // Show loading state
-  const resolveBtn = document.getElementById('resolveBtn');
+  const resolveBtn = document.getElementById('markResolvedBtn');
   const originalBtnText = resolveBtn.innerHTML;
   resolveBtn.disabled = true;
   resolveBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Resolving...';
@@ -676,10 +677,10 @@ async function markResolved() {
     showError(error.message || 'Failed to update status');
   } finally {
     // Restore button state
-    const resolveBtn = document.getElementById('resolveBtn');
+    const resolveBtn = document.getElementById('markResolvedBtn');
     if (resolveBtn) {
       resolveBtn.disabled = false;
-      resolveBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Mark as Resolved';
+      resolveBtn.innerHTML = 'Mark as Resolved';
       lucide.createIcons();
     }
   }
