@@ -11,10 +11,17 @@ error_reporting(E_ALL);
 ini_set('display_errors', '0'); // Don't display errors as HTML
 ini_set('log_errors', '1'); // Log errors instead
 
-// Allow CORS (adjust in production)
-header('Access-Control-Allow-Origin: *');
+// Start session before any output
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Allow CORS with credentials (development - localhost only)
+$origin = $_SERVER['HTTP_ORIGIN'] ?? 'http://localhost:8000';
+header('Access-Control-Allow-Origin: ' . $origin);
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Credentials: true');
 
 // Handle preflight requests
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -61,7 +68,16 @@ try {
     $router->post('/api/auth/login', 'AuthController@login');
     $router->post('/api/auth/logout', 'AuthController@logout');
     $router->post('/api/auth/refresh', 'AuthController@refresh');
+<<<<<<< HEAD
+    
+    // Email verification endpoints
+    $router->post('/api/auth/send-verification-code', 'AuthController@sendVerificationCode');
+    $router->post('/api/auth/verify-code', 'AuthController@verifyCode');
+    $router->post('/api/auth/verify-and-register', 'AuthController@verifyAndRegister');
+    
+=======
 
+>>>>>>> fb9c6aa8980f814eaf4aa2cf6a4bee81958f6229
     // Health check
     $router->get('/api/health', function () {
         return Response::success([

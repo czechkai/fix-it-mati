@@ -9,12 +9,12 @@
  * - Prevents multiple database connections
  * - Saves resources
  * - Provides global access point
- */
+ */ 
 
 namespace FixItMati\Core;
 
 use PDO;
-use PDOException;
+use PDOException;   
 use Exception;
 
 class Database {

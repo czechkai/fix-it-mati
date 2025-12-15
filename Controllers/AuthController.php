@@ -325,4 +325,219 @@ class AuthController {
             return Response::error('An error occurred while updating profile: ' . $e->getMessage());
         }
     }
+
+    /**
+     * POST /api/auth/send-verification-code
+     * Generate and send verification code to email
+     */
+    public function sendVerificationCode(Request $request): Response {
+        $data = $request->all();
+        $email = $data['email'] ?? null;
+
+        if (!$email) {
+            return Response::validationError('Email is required');
+        }
+
+        // Validate email format
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return Response::validationError('Invalid email format');
+        }
+
+        // Check if email already exists
+        $user = User::findByEmail($email);
+        if ($user) {
+            return Response::error('This email is already registered', 400);
+        }
+
+        try {
+            // Generate 6-digit verification code
+            $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            
+            // Log the generated code
+            error_log("=== SEND VERIFICATION CODE ===");
+            error_log("Session ID: " . session_id());
+            error_log("Email: $email");
+            error_log("Generated Code: $verificationCode");
+            
+            // Store in session with expiration (15 minutes from now)
+            $_SESSION['verification'] = [
+                'code' => $verificationCode,
+                'email' => $email,
+                'expires_at' => time() + (15 * 60),
+                'attempts' => 0
+            ];
+            
+            error_log("Stored in session: " . json_encode($_SESSION['verification']));
+
+            // Try to send email
+            $emailSent = $this->authService->sendVerificationEmail($email, $verificationCode);
+
+            if (!$emailSent) {
+                error_log("Failed to send verification email to: " . $email);
+                // Don't reveal email sending failure - just say code was sent
+                // This is a security practice
+            }
+
+            return Response::success([
+                'email' => $email,
+                'message' => 'Verification code sent successfully'
+            ], 'Verification code sent to ' . $email);
+
+        } catch (\Exception $e) {
+            error_log("Error sending verification code: " . $e->getMessage());
+            return Response::error('Failed to send verification code');
+        }
+    }
+
+    /**
+     * POST /api/auth/verify-code
+     * Verify the verification code
+     */
+    public function verifyCode(Request $request): Response {
+        $data = $request->all();
+        $verificationCode = $data['code'] ?? null;
+        $email = $data['email'] ?? null;
+
+        if (!$verificationCode || !$email) {
+            return Response::validationError('Code and email are required');
+        }
+
+        // Check if verification data exists in session
+        if (!isset($_SESSION['verification'])) {
+            return Response::error('No verification code was sent. Please send a new code.', 400);
+        }
+
+        $verification = $_SESSION['verification'];
+
+        // Check if code has expired
+        if (time() > $verification['expires_at']) {
+            unset($_SESSION['verification']);
+            return Response::error('Verification code has expired. Please request a new code.', 400);
+        }
+
+        // Check if email matches
+        if ($verification['email'] !== $email) {
+            return Response::error('Email does not match the one verification code was sent to.', 400);
+        }
+
+        // Check verification attempts (max 5 attempts)
+        if ($verification['attempts'] >= 5) {
+            unset($_SESSION['verification']);
+            return Response::error('Too many attempts. Please request a new code.', 400);
+        }
+
+        // Verify code
+        if ($verification['code'] !== $verificationCode) {
+            // Increment attempts
+            $_SESSION['verification']['attempts']++;
+            
+            $remaining = 5 - $_SESSION['verification']['attempts'];
+            return Response::error('Invalid verification code. ' . $remaining . ' attempts remaining.', 400);
+        }
+
+        // Code is valid - clean up session
+        unset($_SESSION['verification']);
+
+        // Store email in session for registration process
+        $_SESSION['verified_email'] = $email;
+
+        return Response::success([
+            'email' => $email
+        ], 'Email verified successfully');
+    }
+
+    /**
+     * POST /api/auth/verify-and-register
+     * Verify code and create account in one request
+     */
+    public function verifyAndRegister(Request $request): Response {
+        $data = $request->all();
+        $email = $data['email'] ?? null;
+        $verificationCode = $data['verification_code'] ?? null;
+
+        error_log("=== VERIFY AND REGISTER ===");
+        error_log("Session ID: " . session_id());
+        error_log("Received Email: $email");
+        error_log("Received Code (raw): $verificationCode");
+
+        if (!$verificationCode || !$email) {
+            return Response::validationError('Verification code and email are required');
+        }
+
+        // Remove spaces from verification code (user might paste with spaces)
+        $verificationCode = preg_replace('/\s+/', '', $verificationCode);
+        error_log("Received Code (cleaned): $verificationCode");
+
+        // Check if verification data exists in session
+        if (!isset($_SESSION['verification'])) {
+            error_log("ERROR: Session verification not found!");
+            error_log("Available session keys: " . implode(', ', array_keys($_SESSION)));
+            error_log("Full session: " . json_encode($_SESSION));
+            return Response::error('No verification code was sent. Please click "Create Account" first.', 400);
+        }
+
+        $verification = $_SESSION['verification'];
+        error_log("Stored Code: " . $verification['code']);
+        error_log("Stored Email: " . $verification['email']);
+
+        // Check if code has expired
+        $expiresAt = $verification['expires_at'];
+        $currentTime = time();
+        error_log("Current time: $currentTime, Expires at: $expiresAt, Expired: " . ($currentTime > $expiresAt ? 'YES' : 'NO'));
+        
+        if ($currentTime > $expiresAt) {
+            unset($_SESSION['verification']);
+            return Response::error('Verification code has expired. Please request a new code.', 400);
+        }
+
+        // Check if email matches
+        if ($verification['email'] !== $email) {
+            error_log("ERROR: Email mismatch!");
+            return Response::error('Email does not match. Please use the same email.', 400);
+        }
+
+        // Check verification attempts (max 5 attempts)
+        if ($verification['attempts'] >= 5) {
+            unset($_SESSION['verification']);
+            return Response::error('Too many attempts. Please request a new code.', 400);
+        }
+
+        // Verify code (also remove spaces from stored code just in case)
+        $storedCode = preg_replace('/\s+/', '', $verification['code']);
+        error_log("Comparing: stored='$storedCode' vs received='$verificationCode'");
+        error_log("Match: " . ($storedCode === $verificationCode ? 'YES' : 'NO'));
+        
+        if ($storedCode !== $verificationCode) {
+            error_log("ERROR: Code mismatch!");
+            $_SESSION['verification']['attempts']++;
+            $remaining = 5 - $_SESSION['verification']['attempts'];
+            return Response::error('Invalid verification code. ' . $remaining . ' attempts remaining.', 400);
+        }
+
+        error_log("SUCCESS: Code verified! Proceeding with registration...");
+
+        // Code is valid - proceed with registration
+        unset($_SESSION['verification']);
+
+        // Now register the user
+        $result = $this->authService->register($data);
+
+        if ($result['success']) {
+            error_log("User registered successfully: " . $result['user']['email']);
+            // Generate JWT token
+            $token = $this->authService->generateToken($result['user_object']);
+
+            return Response::created([
+                'user' => $result['user'],
+                'token' => $token,
+                'redirect' => '/public/pages/dashboard.php'
+            ], 'Account created and verified successfully! Redirecting...');
+        }
+
+        error_log("Registration failed: " . json_encode($result));
+        return Response::validationError(
+            'Registration failed',
+            $result['errors'] ?? null
+        );
+    }
 }

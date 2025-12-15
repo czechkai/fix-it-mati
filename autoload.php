@@ -4,6 +4,16 @@
  * PSR-4 compatible autoloader
  */
 
+// Load PHPMailer if available (check both vendor and manually extracted)
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require __DIR__ . '/vendor/autoload.php';
+} elseif (file_exists(__DIR__ . '/PHPMailer-master/src/PHPMailer.php')) {
+    // Manual PHPMailer loading (if not installed via Composer)
+    require __DIR__ . '/PHPMailer-master/src/Exception.php';
+    require __DIR__ . '/PHPMailer-master/src/PHPMailer.php';
+    require __DIR__ . '/PHPMailer-master/src/SMTP.php';
+}
+
 spl_autoload_register(function ($class) {
     // Base namespace
     $baseNamespace = 'FixItMati\\';

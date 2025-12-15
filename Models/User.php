@@ -167,21 +167,27 @@ class User
     {
         $conn = $this->db->getConnection();
 
+        // Map camelCase fields from frontend to snake_case for database
+        $firstName = $data['firstName'] ?? $data['first_name'] ?? '';
+        $lastName = $data['lastName'] ?? $data['last_name'] ?? '';
+        $phone = $data['phone'] ?? null;
+        
+        // Combine street and barangay into address
+        $street = $data['street'] ?? '';
+        $barangay = $data['barangay'] ?? '';
+        $address = trim("$street, $barangay");
+        
         // Hash password if provided
+        $passwordHash = null;
         if (!empty($data['password'])) {
-            $data['password_hash'] = password_hash($data['password'], PASSWORD_BCRYPT);
-            unset($data['password']);
+            $passwordHash = password_hash($data['password'], PASSWORD_BCRYPT);
         }
 
         // Generate account number if not provided
-        if (empty($data['account_number'])) {
-            $data['account_number'] = $this->generateAccountNumber();
-        }
+        $accountNumber = $data['account_number'] ?? $this->generateAccountNumber();
 
         // Set default role if not provided
-        if (empty($data['role'])) {
-            $data['role'] = 'customer';
-        }
+        $role = $data['role'] ?? 'customer';
 
         $sql = "INSERT INTO users (email, first_name, last_name, phone, address, account_number, role, password_hash, created_at, updated_at) 
                 VALUES (:email, :first_name, :last_name, :phone, :address, :account_number, :role, :password_hash, NOW(), NOW()) 
@@ -191,13 +197,13 @@ class User
             $stmt = $conn->prepare($sql);
             $stmt->execute([
                 'email' => $data['email'],
-                'first_name' => $data['first_name'] ?? '',
-                'last_name' => $data['last_name'] ?? '',
-                'phone' => $data['phone'] ?? null,
-                'address' => $data['address'] ?? null,
-                'account_number' => $data['account_number'],
-                'role' => $data['role'],
-                'password_hash' => $data['password_hash'] ?? null
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'phone' => $phone,
+                'address' => $address,
+                'account_number' => $accountNumber,
+                'role' => $role,
+                'password_hash' => $passwordHash
             ]);
 
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
